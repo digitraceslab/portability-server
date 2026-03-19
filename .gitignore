@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Django
+*.log
+db.sqlite3
+
+# local_settings
+.env
+study_server/local_settings.py
+
+# IDEs
+.vscode/
+.map/
+CLAUDE.md
+
+# Data
+data/
+
+# Automation
+celerybeat-schedule*
+
