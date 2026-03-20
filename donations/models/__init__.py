@@ -50,3 +50,6 @@ class ResearcherToken(models.Model):
 
     def __str__(self):
         return f"{self.name or 'unnamed'} ({self.permission})"
+
+
+from donations.models.google_portability import GoogleDonation  # noqa: E402

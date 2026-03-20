@@ -1,10 +1,17 @@
 """Tests for donations app functionality."""
+import os
+import tempfile
+from unittest.mock import patch, MagicMock
+
 from django.test import TestCase, RequestFactory
 from rest_framework.test import APIRequestFactory
 
-from donations.models import Donation, ResearcherToken
+from donations.models import Donation, GoogleDonation, ResearcherToken
 from donations.authentication import ResearcherTokenAuthentication
-from donations.utils.crypto import encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes
+from donations.utils.crypto import (
+    encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes,
+    write_encrypted_bytes,
+)
 
 
 class CryptoTests(TestCase):
@@ -80,3 +87,109 @@ class ResearcherTokenAuthTests(TestCase):
         request = self.factory.get('/')
         result = self.auth.authenticate(request)
         self.assertIsNone(result)
+
+
+class GoogleDonationModelTests(TestCase):
+    """Tests for GoogleDonation model behavior."""
+
+    def test_create_google_donation(self):
+        gd = GoogleDonation.objects.create()
+        self.assertEqual(gd.source_type, 'google_portability')
+        self.assertEqual(gd.status, 'pending')
+        self.assertIsNotNone(gd.participant_token)
+        self.assertIsNotNone(gd.researcher_token)
+
+    def test_inherits_donation(self):
+        gd = GoogleDonation.objects.create()
+        self.assertTrue(Donation.objects.filter(pk=gd.pk).exists())
+
+    def test_csv_path(self):
+        gd = GoogleDonation.objects.create()
+        path = gd._csv_path('youtube_history')
+        self.assertEqual(path, f'data/{gd.pk}/google_portability/youtube_history_processed.csv')
+
+    def test_get_data_types_empty_when_not_processed(self):
+        gd = GoogleDonation.objects.create()
+        self.assertEqual(gd.get_data_types(), [])
+
+    def test_get_data_types_returns_received(self):
+        gd = GoogleDonation.objects.create(
+            processing_status='processed',
+            data_type_status={
+                'youtube_history': {'received': True, 'received_at': '2026-01-01'},
+                'search': {'received': True, 'received_at': '2026-01-01'},
+            },
+        )
+        types = gd.get_data_types()
+        self.assertIn('youtube_history', types)
+        self.assertIn('search', types)
+        self.assertNotIn('discover', types)
+
+    def test_oauth_token_encryption(self):
+        gd = GoogleDonation.objects.create()
+        original_token = "ya29.a0AfH6SMBx-test-token"
+        gd.access_token = encrypt_text(original_token)
+        gd.save()
+        gd.refresh_from_db()
+        self.assertNotEqual(gd.access_token, original_token)
+        self.assertEqual(decrypt_text(gd.access_token), original_token)
+
+    @patch('donations.models.google_portability.requests.post')
+    def test_revoke_before_delete(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.raise_for_status = MagicMock()
+        mock_response.json.return_value = {
+            'access_token': 'new_token',
+            'expires_in': 3600,
+        }
+        mock_post.return_value = mock_response
+
+        gd = GoogleDonation.objects.create(
+            access_token=encrypt_text('test_access'),
+            refresh_token=encrypt_text('test_refresh'),
+        )
+        gd.revoke_before_delete()
+
+        # Should have called: refresh token + revoke
+        self.assertTrue(mock_post.called)
+        call_urls = [call[0][0] for call in mock_post.call_args_list]
+        self.assertTrue(any('oauth2.googleapis.com/token' in url for url in call_urls))
+        self.assertTrue(any('authorization:reset' in url for url in call_urls))
+
+    def test_fetch_data_and_count_with_encrypted_csv(self):
+        gd = GoogleDonation.objects.create(
+            processing_status='processed',
+            data_type_status={
+                'youtube_history': {'received': True, 'received_at': '2026-01-01'},
+            },
+        )
+        csv_content = "timestamp,title,device_id\n2026-01-15 10:00:00,Video A,1\n2026-01-16 11:00:00,Video B,1\n"
+        csv_path = gd._csv_path('youtube_history')
+        write_encrypted_bytes(csv_path, csv_content.encode())
+
+        try:
+            count = gd.count_rows('youtube_history')
+            self.assertEqual(count, 2)
+
+            rows = gd.fetch_data('youtube_history', limit=1)
+            self.assertEqual(len(rows), 1)
+
+            rows = gd.fetch_data('youtube_history', limit=10, offset=1)
+            self.assertEqual(len(rows), 1)
+        finally:
+            # Clean up test files
+            if os.path.exists(csv_path):
+                os.remove(csv_path)
+            # Remove empty dirs
+            dirpath = os.path.dirname(csv_path)
+            while dirpath and dirpath != 'data':
+                try:
+                    os.rmdir(dirpath)
+                except OSError:
+                    break
+                dirpath = os.path.dirname(dirpath)
+            try:
+                os.rmdir('data')
+            except OSError:
+                pass
