@@ -1,7 +1,7 @@
 """Admin configuration for donation models."""
 from django.contrib import admin
 
-from donations.models import Donation, GoogleDonation, ResearcherToken
+from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken
 
 
 @admin.register(Donation)
@@ -23,6 +23,14 @@ class ResearcherTokenAdmin(admin.ModelAdmin):
 @admin.register(GoogleDonation)
 class GoogleDonationAdmin(admin.ModelAdmin):
     """Admin interface for managing Google donations."""
+    list_display = ('id', 'status', 'processing_status', 'created_at')
+    list_filter = ('status', 'processing_status')
+    readonly_fields = ('participant_token', 'researcher_token', 'created_at')
+
+
+@admin.register(TikTokDonation)
+class TikTokDonationAdmin(admin.ModelAdmin):
+    """Admin interface for managing TikTok donations."""
     list_display = ('id', 'status', 'processing_status', 'created_at')
     list_filter = ('status', 'processing_status')
     readonly_fields = ('participant_token', 'researcher_token', 'created_at')

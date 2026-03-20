@@ -53,3 +53,4 @@ class ResearcherToken(models.Model):
 
 
 from donations.models.google_portability import GoogleDonation  # noqa: E402
+from donations.models.tiktok_portability import TikTokDonation  # noqa: E402

@@ -6,7 +6,7 @@ from unittest.mock import patch, MagicMock
 from django.test import TestCase, RequestFactory
 from rest_framework.test import APIRequestFactory
 
-from donations.models import Donation, GoogleDonation, ResearcherToken
+from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken
 from donations.authentication import ResearcherTokenAuthentication
 from donations.utils.crypto import (
     encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes,
@@ -193,3 +193,58 @@ class GoogleDonationModelTests(TestCase):
                 os.rmdir('data')
             except OSError:
                 pass
+
+
+class TikTokDonationModelTests(TestCase):
+    """Tests for TikTokDonation model behavior."""
+
+    def test_create_tiktok_donation(self):
+        td = TikTokDonation.objects.create()
+        self.assertEqual(td.source_type, 'tiktok_portability')
+        self.assertEqual(td.status, 'pending')
+        self.assertIsNotNone(td.participant_token)
+
+    def test_inherits_donation(self):
+        td = TikTokDonation.objects.create()
+        self.assertTrue(Donation.objects.filter(pk=td.pk).exists())
+
+    def test_pkce_pair(self):
+        verifier, challenge = TikTokDonation.generate_pkce_pair()
+        self.assertTrue(len(verifier) > 40)
+        self.assertTrue(len(challenge) > 40)
+        self.assertNotEqual(verifier, challenge)
+
+    def test_store_token_info(self):
+        td = TikTokDonation.objects.create()
+        token_info = {
+            'data': {
+                'access_token': 'test_access_token',
+                'refresh_token': 'test_refresh_token',
+                'expires_in': 3600,
+                'open_id': 'user123',
+            }
+        }
+        td._store_token_info(token_info)
+        td.save()
+        td.refresh_from_db()
+
+        self.assertIsNotNone(td.access_token)
+        self.assertEqual(decrypt_text(td.access_token), 'test_access_token')
+        self.assertEqual(decrypt_text(td.refresh_token), 'test_refresh_token')
+        self.assertEqual(td.tiktok_user_id, 'user123')
+        self.assertEqual(td.processing_status, 'authorized')
+        self.assertEqual(td.code_verifier, '')
+
+    def test_store_token_info_missing_access_token(self):
+        td = TikTokDonation.objects.create()
+        with self.assertRaises(KeyError):
+            td._store_token_info({'data': {}})
+
+    def test_fetch_data_not_processed(self):
+        td = TikTokDonation.objects.create()
+        self.assertEqual(td.fetch_data('tiktok_portability'), [])
+        self.assertEqual(td.count_rows('tiktok_portability'), 0)
+
+    def test_get_data_types(self):
+        td = TikTokDonation.objects.create()
+        self.assertEqual(td.get_data_types(), ['tiktok_portability'])
