@@ -1,3 +1,4 @@
+"""Tests for donations app functionality."""
 from django.test import TestCase, RequestFactory
 from rest_framework.test import APIRequestFactory
 
@@ -7,6 +8,7 @@ from donations.utils.crypto import encrypt_text, decrypt_text, encrypt_bytes, de
 
 
 class CryptoTests(TestCase):
+    """Tests for encryption and decryption utilities."""
     def test_text_roundtrip(self):
         original = "secret oauth token value"
         encrypted = encrypt_text(original)
@@ -24,6 +26,7 @@ class CryptoTests(TestCase):
 
 
 class DonationModelTests(TestCase):
+    """Tests for Donation model behavior."""
     def test_create_donation(self):
         donation = Donation.objects.create(source_type='google_portability')
         self.assertEqual(donation.status, 'pending')
@@ -39,6 +42,7 @@ class DonationModelTests(TestCase):
 
 
 class ResearcherTokenModelTests(TestCase):
+    """Tests for ResearcherToken model behavior."""
     def test_auto_generates_key(self):
         token = ResearcherToken.objects.create(permission='add_user', name='test')
         self.assertEqual(len(token.key), 40)
@@ -51,6 +55,7 @@ class ResearcherTokenModelTests(TestCase):
 
 
 class ResearcherTokenAuthTests(TestCase):
+    """Tests for researcher token authentication."""
     def setUp(self):
         self.auth = ResearcherTokenAuthentication()
         self.factory = APIRequestFactory()

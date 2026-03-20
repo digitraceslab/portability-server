@@ -1,3 +1,4 @@
+"""Django settings for portability-server project."""
 import environ
 from pathlib import Path
 

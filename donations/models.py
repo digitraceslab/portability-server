@@ -1,3 +1,4 @@
+"""Data models for managing donations and data downloads."""
 import uuid
 
 from django.db import models
@@ -5,6 +6,7 @@ from django.utils.crypto import get_random_string
 
 
 class Donation(models.Model):
+    """Track data donations with unique tokens."""
     participant_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     researcher_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     source_type = models.CharField(max_length=50)
@@ -29,6 +31,7 @@ class Donation(models.Model):
 
 
 class ResearcherToken(models.Model):
+    """API tokens with granular permissions."""
     PERMISSION_CHOICES = [
         ('add_user', 'Add User'),
         ('read_data', 'Read Data'),
@@ -40,6 +43,7 @@ class ResearcherToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        """Auto-generate token key if not provided."""
         if not self.key:
             self.key = get_random_string(40)
         super().save(*args, **kwargs)
