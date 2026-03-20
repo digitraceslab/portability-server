@@ -1,0 +1,17 @@
+{% extends "donations/base.html" %}
+{% block title %}Terms of Data Donation{% endblock %}
+{% block content %}
+<h1>Terms of Data Donation</h1>
+<p>By donating your data, you agree to the following terms:</p>
+<ul>
+    <li>Your data will be used for research purposes only.</li>
+    <li>Your data will be stored securely and encrypted.</li>
+    <li>You can revoke your donation at any time.</li>
+    <li>Your identity will not be shared with third parties.</li>
+</ul>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn">I Accept the Terms</button>
+</form>
+<p><a href="{% url 'donation-landing' participant_token %}">Back</a></p>
+{% endblock %}

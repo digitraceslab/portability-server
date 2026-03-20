@@ -1,0 +1,58 @@
+{% extends "donations/base.html" %}
+{% load donation_filters %}
+{% block title %}Data Preview{% endblock %}
+{% block content %}
+<h1>Data Preview</h1>
+
+<form method="get">
+    <label>Data type:
+        <select name="data_type">
+            {% for dt in data_types %}
+            <option value="{{ dt }}" {% if dt == selected_type %}selected{% endif %}>{{ dt }}</option>
+            {% endfor %}
+        </select>
+    </label>
+    <label>From: <input type="date" name="start_date" value="{{ start_date }}"></label>
+    <label>To: <input type="date" name="end_date" value="{{ end_date }}"></label>
+    <button type="submit" class="btn">Filter</button>
+</form>
+
+<p>Total rows: {{ total_count }}</p>
+
+{% if columns %}
+<table>
+    <thead>
+        <tr>
+            {% for col in columns %}
+            <th>{{ col }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+        <tr>
+            {% for col in columns %}
+            <td>{{ row|get_item:col }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if rows.has_other_pages %}
+<div class="pagination">
+    {% if rows.has_previous %}
+    <a href="?data_type={{ selected_type }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ rows.previous_page_number }}">Previous</a>
+    {% endif %}
+    Page {{ rows.number }} of {{ rows.paginator.num_pages }}
+    {% if rows.has_next %}
+    <a href="?data_type={{ selected_type }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ rows.next_page_number }}">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% else %}
+<p>No data available.</p>
+{% endif %}
+
+<p><a href="{% url 'donation-landing' participant_token %}">Back</a></p>
+{% endblock %}

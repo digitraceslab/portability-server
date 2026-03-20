@@ -1,0 +1,11 @@
+{% extends "donations/base.html" %}
+{% block title %}Revoke Donation{% endblock %}
+{% block content %}
+<h1>Revoke Your Donation</h1>
+<p>Are you sure you want to revoke your data donation? This will permanently delete your donated data.</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Yes, Revoke My Donation</button>
+</form>
+<p><a href="{% url 'donation-landing' participant_token %}">Cancel</a></p>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "donations/base.html" %}
+{% block title %}Donation Status{% endblock %}
+{% block content %}
+<h1>Data Donation</h1>
+{% if error %}<p class="error">{{ error }}</p>{% endif %}
+<p>Source: {{ donation.source_type }}</p>
+<p>Status: {{ donation.status }}</p>
+
+{% if not donation.terms_accepted_at %}
+    <p><a href="{% url 'accept-terms' participant_token %}" class="btn">Review &amp; Accept Terms</a></p>
+{% elif donation.status == 'pending' %}
+    <p>Terms accepted. <a href="{% url 'authorize' participant_token %}" class="btn">Authorize Data Access</a></p>
+{% elif donation.status == 'processed' %}
+    <p><a href="{% url 'data-preview' participant_token %}" class="btn">View Your Data</a></p>
+{% elif donation.status == 'processing' %}
+    <p>Your data is being processed. Please check back later.</p>
+{% endif %}
+
+<hr>
+<p><a href="{% url 'revoke-donation' participant_token %}" class="btn btn-danger">Revoke Donation</a></p>
+{% endblock %}

@@ -3,7 +3,7 @@ import os
 import tempfile
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, Client, RequestFactory
 from rest_framework.test import APIRequestFactory
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken
@@ -38,27 +38,32 @@ class DonationModelTests(TestCase):
         donation = Donation.objects.create(source_type='google_portability')
         self.assertEqual(donation.status, 'pending')
         self.assertIsNotNone(donation.participant_token)
-        self.assertIsNotNone(donation.researcher_token)
-        self.assertNotEqual(donation.participant_token, donation.researcher_token)
+        self.assertIsNone(donation.researcher)
 
     def test_unique_tokens(self):
         d1 = Donation.objects.create(source_type='google_portability')
         d2 = Donation.objects.create(source_type='tiktok_portability')
         self.assertNotEqual(d1.participant_token, d2.participant_token)
-        self.assertNotEqual(d1.researcher_token, d2.researcher_token)
+
+    def test_donation_with_researcher(self):
+        researcher = ResearcherToken.objects.create(name='lab-alpha')
+        donation = Donation.objects.create(
+            source_type='google_portability',
+            researcher=researcher,
+        )
+        self.assertEqual(donation.researcher, researcher)
 
 
 class ResearcherTokenModelTests(TestCase):
     """Tests for ResearcherToken model behavior."""
     def test_auto_generates_key(self):
-        token = ResearcherToken.objects.create(permission='add_user', name='test')
+        token = ResearcherToken.objects.create(name='test')
         self.assertEqual(len(token.key), 40)
 
-    def test_permission_choices(self):
-        t1 = ResearcherToken.objects.create(permission='add_user')
-        t2 = ResearcherToken.objects.create(permission='read_data')
-        self.assertEqual(t1.permission, 'add_user')
-        self.assertEqual(t2.permission, 'read_data')
+    def test_key_is_unique_across_tokens(self):
+        t1 = ResearcherToken.objects.create(name='token-one')
+        t2 = ResearcherToken.objects.create(name='token-two')
+        self.assertNotEqual(t1.key, t2.key)
 
 
 class ResearcherTokenAuthTests(TestCase):
@@ -66,15 +71,12 @@ class ResearcherTokenAuthTests(TestCase):
     def setUp(self):
         self.auth = ResearcherTokenAuthentication()
         self.factory = APIRequestFactory()
-        self.token = ResearcherToken.objects.create(
-            permission='add_user', name='test-auth'
-        )
+        self.token = ResearcherToken.objects.create(name='test-auth')
 
     def test_valid_token(self):
         request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.token.key}')
         user, auth_token = self.auth.authenticate(request)
         self.assertIsNone(user)
-        self.assertEqual(auth_token.permission, 'add_user')
         self.assertEqual(auth_token.key, self.token.key)
 
     def test_invalid_token(self):
@@ -97,7 +99,6 @@ class GoogleDonationModelTests(TestCase):
         self.assertEqual(gd.source_type, 'google_portability')
         self.assertEqual(gd.status, 'pending')
         self.assertIsNotNone(gd.participant_token)
-        self.assertIsNotNone(gd.researcher_token)
 
     def test_inherits_donation(self):
         gd = GoogleDonation.objects.create()
@@ -248,3 +249,111 @@ class TikTokDonationModelTests(TestCase):
     def test_get_data_types(self):
         td = TikTokDonation.objects.create()
         self.assertEqual(td.get_data_types(), ['tiktok_portability'])
+
+
+class DonationLandingViewTests(TestCase):
+    """Tests for the donation landing page view."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.url = f'/donate/{self.donation.participant_token}/'
+
+    def test_landing_page_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Data Donation')
+
+    def test_landing_shows_terms_link_when_not_accepted(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'Accept Terms')
+
+    def test_landing_404_for_invalid_token(self):
+        import uuid
+        response = self.client.get(f'/donate/{uuid.uuid4()}/')
+        self.assertEqual(response.status_code, 404)
+
+
+class AcceptTermsViewTests(TestCase):
+    """Tests for the terms acceptance view."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.url = f'/donate/{self.donation.participant_token}/terms/'
+
+    def test_terms_page_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Terms of Data Donation')
+
+    def test_accept_terms_post(self):
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.donation.refresh_from_db()
+        self.assertIsNotNone(self.donation.terms_accepted_at)
+
+
+class AuthorizeViewTests(TestCase):
+    """Tests for the OAuth authorization redirect view."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.url = f'/donate/{self.donation.participant_token}/authorize/'
+
+    def test_authorize_redirects_to_terms_if_not_accepted(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('terms', response.url)
+
+    def test_authorize_redirects_to_oauth_when_terms_accepted(self):
+        from django.utils import timezone
+        self.donation.terms_accepted_at = timezone.now()
+        self.donation.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('accounts.google.com', response.url)
+
+
+class DataPreviewViewTests(TestCase):
+    """Tests for the data preview view."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.url = f'/donate/{self.donation.participant_token}/data/'
+
+    def test_data_preview_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Data Preview')
+
+
+class RevokeDonationViewTests(TestCase):
+    """Tests for the donation revocation view."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.url = f'/donate/{self.donation.participant_token}/revoke/'
+
+    def test_revoke_confirm_page_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Revoke')
+
+    def test_revoke_post_deletes_donation(self):
+        pk = self.donation.pk
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Donation.objects.filter(pk=pk).exists())
+
+
+class OAuthCallbackViewTests(TestCase):
+    """Tests for OAuth callback views."""
+    def test_google_callback_404_without_state(self):
+        response = self.client.get('/oauth/google/callback/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_tiktok_callback_404_without_state(self):
+        response = self.client.get('/oauth/tiktok/callback/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_google_callback_404_with_invalid_state(self):
+        response = self.client.get('/oauth/google/callback/?state=invalid')
+        self.assertEqual(response.status_code, 404)
+
+    def test_tiktok_callback_404_with_invalid_state(self):
+        response = self.client.get('/oauth/tiktok/callback/?state=invalid')
+        self.assertEqual(response.status_code, 404)
