@@ -55,10 +55,13 @@ TEMPLATES = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'donations.authentication.ResearcherTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
 }
+
+# Encryption
+ENCRYPTION_KEY = env('ENCRYPTION_KEY', default='')
 
 WSGI_APPLICATION = 'portability_server.wsgi.application'
 
