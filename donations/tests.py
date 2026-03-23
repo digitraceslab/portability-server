@@ -1,12 +1,13 @@
 """Tests for donations app functionality."""
 import os
 import tempfile
+import uuid
 from unittest.mock import patch, MagicMock
 
 from django.test import TestCase, Client, RequestFactory
 from rest_framework.test import APIRequestFactory
 
-from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken
+from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant
 from donations.authentication import ResearcherTokenAuthentication
 from donations.utils.crypto import (
     encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes,
@@ -37,13 +38,13 @@ class DonationModelTests(TestCase):
     def test_create_donation(self):
         donation = Donation.objects.create(source_type='google_portability')
         self.assertEqual(donation.status, 'pending')
-        self.assertIsNotNone(donation.participant_token)
+        self.assertIsNotNone(donation.token)
         self.assertIsNone(donation.researcher)
 
     def test_unique_tokens(self):
         d1 = Donation.objects.create(source_type='google_portability')
         d2 = Donation.objects.create(source_type='tiktok_portability')
-        self.assertNotEqual(d1.participant_token, d2.participant_token)
+        self.assertNotEqual(d1.token, d2.token)
 
     def test_donation_with_researcher(self):
         researcher = ResearcherToken.objects.create(name='lab-alpha')
@@ -98,7 +99,7 @@ class GoogleDonationModelTests(TestCase):
         gd = GoogleDonation.objects.create()
         self.assertEqual(gd.source_type, 'google_portability')
         self.assertEqual(gd.status, 'pending')
-        self.assertIsNotNone(gd.participant_token)
+        self.assertIsNotNone(gd.token)
 
     def test_inherits_donation(self):
         gd = GoogleDonation.objects.create()
@@ -203,7 +204,7 @@ class TikTokDonationModelTests(TestCase):
         td = TikTokDonation.objects.create()
         self.assertEqual(td.source_type, 'tiktok_portability')
         self.assertEqual(td.status, 'pending')
-        self.assertIsNotNone(td.participant_token)
+        self.assertIsNotNone(td.token)
 
     def test_inherits_donation(self):
         td = TikTokDonation.objects.create()
@@ -255,7 +256,7 @@ class DonationLandingViewTests(TestCase):
     """Tests for the donation landing page view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.participant_token}/'
+        self.url = f'/donate/{self.donation.token}/'
 
     def test_landing_page_loads(self):
         response = self.client.get(self.url)
@@ -267,7 +268,6 @@ class DonationLandingViewTests(TestCase):
         self.assertContains(response, 'Accept Terms')
 
     def test_landing_404_for_invalid_token(self):
-        import uuid
         response = self.client.get(f'/donate/{uuid.uuid4()}/')
         self.assertEqual(response.status_code, 404)
 
@@ -276,7 +276,7 @@ class AcceptTermsViewTests(TestCase):
     """Tests for the terms acceptance view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.participant_token}/terms/'
+        self.url = f'/donate/{self.donation.token}/terms/'
 
     def test_terms_page_loads(self):
         response = self.client.get(self.url)
@@ -294,7 +294,7 @@ class AuthorizeViewTests(TestCase):
     """Tests for the OAuth authorization redirect view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.participant_token}/authorize/'
+        self.url = f'/donate/{self.donation.token}/authorize/'
 
     def test_authorize_redirects_to_terms_if_not_accepted(self):
         response = self.client.get(self.url)
@@ -314,7 +314,7 @@ class DataPreviewViewTests(TestCase):
     """Tests for the data preview view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.participant_token}/data/'
+        self.url = f'/donate/{self.donation.token}/data/'
 
     def test_data_preview_loads(self):
         response = self.client.get(self.url)
@@ -326,7 +326,7 @@ class RevokeDonationViewTests(TestCase):
     """Tests for the donation revocation view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.participant_token}/revoke/'
+        self.url = f'/donate/{self.donation.token}/revoke/'
 
     def test_revoke_confirm_page_loads(self):
         response = self.client.get(self.url)
@@ -356,4 +356,100 @@ class OAuthCallbackViewTests(TestCase):
 
     def test_tiktok_callback_404_with_invalid_state(self):
         response = self.client.get('/oauth/tiktok/callback/?state=invalid')
+        self.assertEqual(response.status_code, 404)
+
+
+class ParticipantModelTests(TestCase):
+    """Tests for Participant model behavior."""
+    def test_create_participant(self):
+        participant = Participant.objects.create()
+        self.assertIsNotNone(participant.token)
+        self.assertIsNotNone(participant.created_at)
+
+    def test_auto_uuid(self):
+        p1 = Participant.objects.create()
+        p2 = Participant.objects.create()
+        self.assertNotEqual(p1.token, p2.token)
+
+    def test_str(self):
+        participant = Participant.objects.create()
+        self.assertEqual(str(participant), str(participant.token))
+
+
+class DonationLandingParticipantTests(TestCase):
+    """Tests for participant token handling in the donation landing view."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.url = f'/donate/{self.donation.token}/'
+
+    def test_landing_page_shows_prepopulated_token(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        prepopulated_token = response.context['prepopulated_token']
+        self.assertIsNotNone(prepopulated_token)
+        uuid.UUID(str(prepopulated_token))
+
+    def test_post_creates_new_participant(self):
+        new_token = str(uuid.uuid4())
+        response = self.client.post(self.url, {'participant_token_input': new_token})
+        self.assertEqual(response.status_code, 302)
+        self.donation.refresh_from_db()
+        self.assertIsNotNone(self.donation.participant)
+        self.assertEqual(str(self.donation.participant.token), new_token)
+        self.assertTrue(Participant.objects.filter(token=new_token).exists())
+
+    def test_post_with_existing_participant_token(self):
+        existing_participant = Participant.objects.create()
+        initial_count = Participant.objects.count()
+        response = self.client.post(
+            self.url, {'participant_token_input': str(existing_participant.token)}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.participant, existing_participant)
+        self.assertEqual(Participant.objects.count(), initial_count)
+
+    def test_post_with_invalid_uuid(self):
+        response = self.client.post(self.url, {'participant_token_input': 'not-a-uuid'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('token_error', response.context)
+
+    def test_prepopulated_token_uses_existing_participant(self):
+        existing_participant = Participant.objects.create()
+        self.donation.participant = existing_participant
+        self.donation.save()
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            str(response.context['prepopulated_token']),
+            str(existing_participant.token),
+        )
+
+
+class ParticipantHomeViewTests(TestCase):
+    """Tests for the participant home page view."""
+    def setUp(self):
+        self.participant = Participant.objects.create()
+        self.donation1 = GoogleDonation.objects.create(participant=self.participant)
+        self.donation2 = GoogleDonation.objects.create(participant=self.participant)
+        self.url = f'/participant/{self.participant.token}/'
+
+    def test_participant_home_loads(self):
+        response = self.client.get(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, str(self.participant.token))
+
+    def test_lists_donations(self):
+        response = self.client.get(self.url)
+        self.assertContains(response, 'google_portability')
+        self.assertEqual(len(response.context['donations']), 2)
+
+    def test_only_shows_own_donations(self):
+        other_participant = Participant.objects.create()
+        GoogleDonation.objects.create(participant=other_participant)
+        response = self.client.get(self.url)
+        self.assertEqual(len(response.context['donations']), 2)
+
+    def test_404_for_invalid_token(self):
+        response = self.client.get(f'/participant/{uuid.uuid4()}/')
         self.assertEqual(response.status_code, 404)

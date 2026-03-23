@@ -5,9 +5,19 @@ from django.db import models
 from django.utils.crypto import get_random_string
 
 
+class Participant(models.Model):
+    """Persistent participant identity across donations."""
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.token)
+
+
 class Donation(models.Model):
     """Track data donations with unique tokens."""
-    participant_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    participant = models.ForeignKey('Participant', on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
     researcher = models.ForeignKey('ResearcherToken', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
     source_type = models.CharField(max_length=50)
     status = models.CharField(
@@ -51,3 +61,5 @@ class ResearcherToken(models.Model):
 
 from donations.models.google_portability import GoogleDonation  # noqa: E402
 from donations.models.tiktok_portability import TikTokDonation  # noqa: E402
+
+__all__ = ['Participant', 'Donation', 'ResearcherToken', 'GoogleDonation', 'TikTokDonation']
