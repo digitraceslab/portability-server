@@ -93,6 +93,12 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_WORKER_CONCURRENCY = 1
+CELERY_BEAT_SCHEDULE = {
+    'check-authorized-donations': {
+        'task': 'donations.tasks.check_pending_donations',
+        'schedule': 300,
+    },
+}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'

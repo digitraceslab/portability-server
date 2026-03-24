@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, Participant
+from donations.tasks import process_donation
 
 
 def _get_donation(donation_token):
@@ -142,6 +143,7 @@ def google_auth_callback(request):
     donation = get_object_or_404(GoogleDonation, oauth_state=state)
     success, message = donation.handle_auth_callback(request)
     if success:
+        process_donation.delay(donation.pk)
         return redirect('donation-landing', donation_token=donation.token)
     return render(request, 'donations/landing.html', {
         'donation': donation,
@@ -158,6 +160,7 @@ def tiktok_auth_callback(request):
     donation = get_object_or_404(TikTokDonation, oauth_state=state)
     success, message = donation.handle_auth_callback(request)
     if success:
+        process_donation.delay(donation.pk)
         return redirect('donation-landing', donation_token=donation.token)
     return render(request, 'donations/landing.html', {
         'donation': donation,
