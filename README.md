@@ -132,6 +132,28 @@ curl -X DELETE http://localhost:8000/api/donations/<id>/ \
 
 # Deployment
 
+## Before deploying
+
+Before deploying to production, you must:
+
+1. **Update Terms of Service and Privacy Notice** — review `templates/donations/terms_of_service.html`
+   and `templates/donations/privacy_notice.html`. Update contact information, age of consent, and any
+   institution-specific details.
+
+2. **Request Google Data Portability API access** — apply through the
+   [Google API Console](https://console.cloud.google.com/). You will need:
+   - A published privacy policy (served at `/privacy/`)
+   - OAuth consent screen configured with the correct scopes
+   - A Cloud Application Security Assessment (CASA) may be required for restricted scopes
+
+3. **Request TikTok Data Portability API access** — apply through the
+   [TikTok Developer Portal](https://developers.tiktok.com/). You will need:
+   - UX mockups showing the data donation flow
+   - A description of your data protection policies
+   - Documentation of how users can make data subject requests
+
+4. **Set up OAuth credentials** — once approved, add the client IDs and secrets to your `.env` file.
+
 ## Prerequisites
 
 - Python 3.12+
