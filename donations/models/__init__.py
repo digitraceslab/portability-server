@@ -34,12 +34,27 @@ class Donation(models.Model):
     data_start_date = models.DateField(null=True, blank=True)
     data_end_date = models.DateField(null=True, blank=True)
     processing_log = models.TextField(blank=True, default='')
+    retry_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     terms_changed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Donation {self.pk} ({self.source_type}, {self.status})"
+
+    def get_subclass(self):
+        """Return the most specific subclass instance (e.g. GoogleDonation)."""
+        from donations.models.google_portability import GoogleDonation
+        from donations.models.tiktok_portability import TikTokDonation
+        try:
+            return self.googledonation
+        except GoogleDonation.DoesNotExist:
+            pass
+        try:
+            return self.tiktokdonation
+        except TikTokDonation.DoesNotExist:
+            pass
+        return self
 
 
 class ResearcherToken(models.Model):

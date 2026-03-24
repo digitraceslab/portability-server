@@ -37,19 +37,6 @@ class DataQuerySerializer(serializers.Serializer):
     offset = serializers.IntegerField(required=False, default=0)
 
 
-def _resolve_donation(donation):
-    """Resolve base Donation to its most specific subclass."""
-    try:
-        return donation.googledonation
-    except GoogleDonation.DoesNotExist:
-        pass
-    try:
-        return donation.tiktokdonation
-    except TikTokDonation.DoesNotExist:
-        pass
-    return donation
-
-
 class DonationViewSet(viewsets.GenericViewSet):
     permission_classes = [IsResearcherAuthenticated]
     serializer_class = DonationSerializer
@@ -73,13 +60,13 @@ class DonationViewSet(viewsets.GenericViewSet):
 
     def retrieve(self, request, pk=None):
         donation = self.get_object()
-        donation = _resolve_donation(donation)
+        donation = donation.get_subclass()
         serializer = self.get_serializer(donation)
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
         donation = self.get_object()
-        donation = _resolve_donation(donation)
+        donation = donation.get_subclass()
         if hasattr(donation, 'revoke_before_delete'):
             donation.revoke_before_delete()
         donation.delete()
@@ -88,7 +75,7 @@ class DonationViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=['get'], url_path='data')
     def data(self, request, pk=None):
         donation = self.get_object()
-        donation = _resolve_donation(donation)
+        donation = donation.get_subclass()
 
         query_serializer = DataQuerySerializer(data=request.query_params)
         query_serializer.is_valid(raise_exception=True)

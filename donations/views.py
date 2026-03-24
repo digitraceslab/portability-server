@@ -14,16 +14,7 @@ from donations.tasks import process_donation
 def _get_donation(donation_token):
     """Get the most specific donation subclass for a donation token."""
     donation = get_object_or_404(Donation, token=donation_token)
-    # Try to get the specific subclass
-    try:
-        return donation.googledonation
-    except GoogleDonation.DoesNotExist:
-        pass
-    try:
-        return donation.tiktokdonation
-    except TikTokDonation.DoesNotExist:
-        pass
-    return donation
+    return donation.get_subclass()
 
 
 @require_http_methods(["GET", "POST"])
@@ -174,15 +165,7 @@ def participant_home(request, token):
     participant = get_object_or_404(Participant, token=token)
     donations = participant.donations.order_by('-created_at')
     # Resolve each donation to its most specific subclass
-    resolved_donations = []
-    for d in donations:
-        try:
-            resolved_donations.append(d.googledonation)
-        except GoogleDonation.DoesNotExist:
-            try:
-                resolved_donations.append(d.tiktokdonation)
-            except TikTokDonation.DoesNotExist:
-                resolved_donations.append(d)
+    resolved_donations = [d.get_subclass() for d in donations]
     return render(request, 'donations/participant_home.html', {
         'participant': participant,
         'donations': resolved_donations,
