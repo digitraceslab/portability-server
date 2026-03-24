@@ -1,23 +1,60 @@
 {% extends "donations/base.html" %}
 {% block title %}Privacy Notice{% endblock %}
 {% block content %}
-<h1>Privacy Notice for Data Donation Platform</h1>
 
-<!-- TODO: This is a template. Adapt the content below to your specific study. -->
+<h1>Privacy Notice for the Data Donation Service</h1>
 
-<p>If you have questions, contact
-<a href="mailto:rse@aalto.fi">rse@aalto.fi</a>.</p>
+<p>If you have questions, contact <a href="mailto:rse@aalto.fi">rse@aalto.fi</a>.</p>
 
-<p>You have been invited to participate in a research study. Participation in this study is voluntary.
-You can discontinue your participation at any time without negative consequences.
-This privacy notice describes the use of your data.</p>
+<p>You have been invited to donate data to a research study. Participation is voluntary.
+You can discontinue your participation at any time. Should you discontinue your participation,
+you will not be subject to any negative consequences. This privacy notice describes the use of your data.</p>
 
 <ol>
   <li>
+    <p><b>What is the purpose of this service and of processing personal data?</b></p>
+    <p>This service enables participants in research studies to donate data from third-party platforms
+    to Aalto University researchers. The service connects to platforms such as Google and TikTok using
+    their official data portability APIs, downloads the data you authorize, processes it according to
+    the study requirements, and makes it available for the researcher to download.</p>
+    <p>This service is a data processing pipeline, not a long-term data store. Data is held
+    temporarily while it is processed and made available to the researcher, after which it is deleted.</p>
+    <p><b>Your personal data is:</b> used without identification to perform research analysis.
+    Your data may contain identifying information that cannot be fully avoided.</p>
+  </li>
+
+  <li>
     <p><b>What personal data is processed?</b></p>
-    <p>Data donated through this platform may include data from third-party services such as
-    Google (search history, YouTube history, app usage) and TikTok (activity data).
-    The specific data types collected depend on the study configuration.</p>
+    <p>The specific data collected depends on the platform and the study configuration.
+    Only data types and date ranges specified by the study are collected.</p>
+    <p><b>Google Data Portability API:</b></p>
+    <ul>
+      <li>YouTube watch and action history</li>
+      <li>Google search history</li>
+      <li>Discover activity</li>
+      <li>Google Lens history</li>
+      <li>Google Play Games history</li>
+      <li>Google Play Store history</li>
+      <li>Image search history</li>
+      <li>Video search history</li>
+    </ul>
+    <p><b>TikTok Data Portability API:</b></p>
+    <ul>
+      <li>Browsing history, search history, liked list, comments, favorites and hashtags</li>
+    </ul>
+    <p>In addition, the service stores:</p>
+    <ul>
+      <li>OAuth tokens (encrypted) used to access the third-party platform on your behalf</li>
+      <li>A pseudonymous participant identifier to link your donations across sessions</li>
+      <li>Timestamps of consent and data processing</li>
+    </ul>
+  </li>
+
+  <li>
+    <p><b>Personal data is collected from the following sources:</b></p>
+    <ul>
+      <li>Third-party platforms (Google, TikTok) via their data portability APIs, authorized by you</li>
+    </ul>
   </li>
 
   <li>
@@ -25,55 +62,97 @@ This privacy notice describes the use of your data.</p>
     <ul>
       <li>Only data types specified by the study are collected.</li>
       <li>Date ranges can be restricted to the study period.</li>
-      <li>During analysis, all data is processed without identifiers.</li>
+      <li>Data which is not needed is not collected or is removed during processing.</li>
     </ul>
   </li>
 
   <li>
-    <p><b>Legal basis for processing personal data</b></p>
-    <p>The processing of personal data is required for the performance of a task carried out in the
-    public interest, namely scientific research.</p>
+    <p><b>Legal basis for processing of personal data</b></p>
+    <p>The processing of personal data is required for the performance of a task carried out in
+    the public interest, namely scientific research.</p>
   </li>
 
   <li>
     <p><b>Sharing of personal data</b></p>
-    <p>Aalto University may share research data with third-party collaborators who are processors of
-    your personal data. These collaborators will NOT have access to your name or contact information.
-    Data shared with collaborators will not be directly identifiable to you.</p>
+    <p>Processed data is made available to the researcher who created the donation via the
+    service's API. The researcher is responsible for the data after downloading it;
+    further sharing and long-term storage are governed by the study's own privacy notice
+    and data management plan.</p>
+    <p>This service does not share your data with any other parties. Your data will not be sold,
+    shared with advertisers, or used for any commercial purpose.</p>
   </li>
 
   <li>
     <p><b>Transfer of personal data to non-EU/EEA countries</b></p>
-    <p>Personal data is not transferred to non-EU/EEA countries.</p>
+    <p>Personal data processed by this service is not transferred to non-EU/EEA countries.</p>
   </li>
 
   <li>
-    <p><b>Storage period and anonymisation</b></p>
-    <p>Research data is stored such that it can be completely separated from your identifiers.
-    Research data is stored for five years after the end of the active phase of the study.</p>
-  </li>
-
-  <li>
-    <p><b>Rights of the study participant</b></p>
-    <p>According to the General Data Protection Regulation (GDPR), you have the right:</p>
+    <p><b>Storage and protection of personal data</b></p>
+    <p>Your personal data is processed in secure IT systems approved by Aalto University.
+    Access to all systems is protected by authentication and restricted to authorized personnel.</p>
     <ul>
-      <li>to obtain information on the processing of your personal data</li>
-      <li>of access to your data</li>
-      <li>to request rectification of your data</li>
-      <li>to request restricting the processing of your data</li>
-      <li>to object to the processing of your data</li>
-      <li>to request erasure of your data</li>
+      <li>All donated data files are encrypted at rest using industry-standard encryption.</li>
+      <li>OAuth access tokens and refresh tokens are encrypted at rest before storage.</li>
+      <li>All data transmitted to and from third-party platforms uses HTTPS/TLS.</li>
+      <li>Encryption keys are managed within the Aalto University IT infrastructure.</li>
     </ul>
-    <p>To exercise your rights, contact the Data Protection Officer of Aalto University.</p>
+    <p>In the event of any known or suspected unauthorized access to user data,
+    affected users and relevant parties (including Google at security@google.com
+    as required by the Data Portability API policy) will be notified promptly.</p>
   </li>
 
   <li>
-    <p><b>Contact information</b></p>
-    <p>Data Protection Officer: <a href="mailto:dpo@aalto.fi">dpo@aalto.fi</a></p>
+    <p><b>Retention and deletion of personal data</b></p>
+    <p>This service retains data only as long as needed for processing and researcher download.
+    Data is not archived or retained for further research on this service.</p>
+    <p>When you revoke a donation, OAuth access to the third-party platform is revoked immediately
+    and all data and tokens associated with the donation are deleted from this service.</p>
+    <p>Researchers may have downloaded data prior to revocation. Retention and deletion of
+    downloaded copies is governed by the study's own data management plan.</p>
+  </li>
+
+  <li>
+    <p><b>Rights of the research participant</b></p>
+    <p>According to the General Data Protection Regulation (GDPR), a data subject has the right to:</p>
+    <ul>
+      <li>receive information on the processing of their personal data</li>
+      <li>access the personal data collected and processed</li>
+      <li>request rectification of inaccurate personal data</li>
+      <li>request that the processing of personal data be restricted</li>
+      <li>object to the processing of personal data</li>
+      <li>right to erasure of personal data if the conditions of Article 17(1) of the
+      Data Protection Regulation are met</li>
+    </ul>
+    <p>Through this service, you can directly:</p>
+    <ul>
+      <li>View your donated data through the data preview on your donation page.</li>
+      <li>Revoke your donation at any time, which deletes your data and revokes OAuth access.</li>
+    </ul>
+    <p>To exercise other rights, contact the Data Protection Officer of Aalto University
+    or the service contact below.</p>
+  </li>
+
+  <li>
+    <p><b>Contact details of the controller</b></p>
+    <p>The controller is Aalto University Foundation sr., operating as Aalto University.</p>
+    <p><b>Service contact:</b> Aalto RSE, <a href="mailto:rse@aalto.fi">rse@aalto.fi</a></p>
+    <p><b>Data Protection Officer:</b> Tel. +358 9 47001, <a href="mailto:dpo@aalto.fi">dpo@aalto.fi</a></p>
     <p>Data requests: <a href="https://datarequest.aalto.fi/en-US/">datarequest.aalto.fi</a></p>
-    <p>If you believe your data has been processed in violation of the GDPR, you have the right to
-    lodge a complaint with the Data Protection Ombudsman
+    <p>If you feel that your personal data has been processed in violation of data protection legislation,
+    you have the right to lodge a complaint with the Data Protection Ombudsman
     (<a href="https://tietosuoja.fi/">tietosuoja.fi</a>).</p>
   </li>
+
+  <li>
+    <p><b>Third-party API compliance</b></p>
+    <p>The use of information received from the Google Data Portability API adheres to the
+    <a href="https://developers.google.com/data-portability/policy">Data Portability API
+    User Data and Developer Policy</a>, including the Limited Use Requirements.</p>
+    <p>This service complies with
+    <a href="https://developers.tiktok.com/doc/data-portability-api-application-guidelines">TikTok's
+    Data Portability API Application Guidelines</a> for user transparency and data protection.</p>
+  </li>
 </ol>
+
 {% endblock %}

@@ -1,64 +1,64 @@
 {% extends "donations/base.html" %}
 {% block title %}Terms of Service{% endblock %}
 {% block content %}
-<h1>Terms of Service for Data Donation Platform</h1>
+<h1>Terms of Service</h1>
 
-<ol>
-<li>
-    Introduction
-    <p>This platform facilitates research data donation from study participants to Aalto University researchers. By using this platform, you agree to the following terms and conditions.</p>
-    <p>Participants understand their data will be used for academic research as described in the <a href="{% url 'privacy-notice' %}">Privacy Notice</a> of the study they are taking part in.</p>
-    <p>Researchers agree to use the donated data solely for research purposes and in accordance with ethical guidelines.</p>
-    <p>Any future updates or changes to these terms of service will be communicated by updating this page.</p>
-</li>
+<h2>Introduction</h2>
+<p>This data donation service facilitates research data donation from participants to
+Aalto University researchers. By using this service, you agree to the following terms and conditions.</p>
+<p>Participants understand their data will be used for academic research as described in
+the <a href="{% url 'privacy-notice' %}">Privacy Notice</a>.</p>
+<p>Researchers agree to use the donated data solely for research purposes and in accordance
+with legal and ethical guidelines, following research plans pre-reviewed by the
+Aalto University research ethics committee.</p>
+<p>This service is a data processing pipeline: it downloads data you authorize from third-party
+platforms (such as Google and TikTok) using their official data portability APIs, processes it
+according to the study configuration, and makes it available to the researcher. It is not a
+long-term data store.</p>
 
-<li>
-    <p>Eligibility</p>
-    <p>The data donation platform is available to participants in research studies conducted by Aalto University researchers.</p>
-    <p>If you are under the age of 16, you cannot use this platform unless a guardian has separately reviewed the consent with the researchers.</p>
-    <p>Researchers must be affiliated with Aalto University or approved partner institutions as described in the privacy notice.</p>
-</li>
+<h2>Eligibility</h2>
+<p>This service is available to participants in research studies conducted by Aalto University
+researchers.</p>
+<p>If you are under the age of 15, you cannot use this service unless a guardian has
+separately reviewed the consent with the researchers.</p>
 
-<li>
-    Data Use and Restrictions
-    <ol>
-        <li>
-            <p>Permitted Uses:</p>
-            <p>Researchers may use participant data for academic research related to the stated purpose of their study.</p>
-        </li>
-        <li>
-            <p>Prohibited Uses:</p>
-            <p>Researchers may not commercially exploit, sell, or redistribute participant personal data, or use the data for purposes other than those permitted in these terms of use.</p>
-        </li>
-    </ol>
-</li>
+<h2>Data Use and Restrictions</h2>
+<p><b>Permitted Uses:</b>
+Researchers may use participant data solely for academic research as stated in the
+study's research plan.</p>
+<p><b>Prohibited Uses:</b>
+Researchers may not commercially exploit, sell, or redistribute participant personal data,
+or use the data for any purpose beyond those stated in the research plan.</p>
 
-<li>
-   <p>Data Storage &amp; Retention</p>
-   <p>Refer to the <a href="{% url 'privacy-notice' %}">Privacy Notice</a> for data retention periods and deletion procedures.</p>
-   <p>Upon participant withdrawal, data collection ceases immediately and identifiers are deleted within 30 days.</p>
-</li>
+<h2>Data Storage &amp; Retention</h2>
+<p>All donated data and OAuth tokens are encrypted at rest. The service is hosted on servers
+managed by Aalto University with access restricted to authorized personnel.</p>
+<p>Data is retained on this service only as long as needed for processing and researcher
+download. Your donated data may contain identifying information; this service does not
+remove identifiers. It is the researcher's responsibility to handle identifiers appropriately
+according to their study's data management plan.</p>
+<p>Data retention periods and deletion procedures are described in the
+<a href="{% url 'privacy-notice' %}">Privacy Notice</a>.</p>
 
-<li>
-   <p>Participant Withdrawal</p>
-   <p>Participants may withdraw from any study at any time. Withdrawal stops data collection immediately and triggers data deletion per Privacy Notice timelines.</p>
-</li>
+<h2>Participant Withdrawal</h2>
+<p>Participants may revoke a donation at any time via their donation page. Revocation immediately
+deletes all associated data and OAuth tokens from this service and revokes OAuth access to the
+third-party platform.</p>
+<p>Researchers may have downloaded data prior to revocation. Retention and deletion of
+downloaded copies is governed by the study's data management plan.</p>
 
-<li>
-    Researcher Obligations
-   <p>Researchers agree to process data only for research studies that have been reviewed by the Aalto University research ethics committee.</p>
-   <p>Researchers agree to institutional oversight and data auditing.</p>
-</li>
+<h2>Researcher Obligations</h2>
+<p>Researchers agree to process data only in accordance with research plans reviewed by the
+Aalto University research ethics committee, and to cooperate with institutional oversight
+and data auditing. Researchers must comply with all applicable data protection regulations,
+including GDPR and Finnish data protection law.</p>
 
-<li>
-    Compliance and Enforcement
-    <p>Researchers must adhere to these terms and to any other legal and research integrity guidelines that apply to academic research in Europe.</p>
-    <p>Violations may result in revocation of access or termination of data collection.</p>
-</li>
+<h2>Compliance and Enforcement</h2>
+<p>Researchers must adhere to these terms and to applicable legal and research integrity
+requirements. Violations may result in revocation of access or termination of data collection.</p>
 
-<li>
-    Contact Information
-    <p>Contact Aalto RSEs (<a href="mailto:rse@aalto.fi">rse@aalto.fi</a>) for more information or assistance regarding these terms of service.</p>
-</li>
-</ol>
+<h2>Contact Information</h2>
+<p>Contact Aalto RSEs (<a href="mailto:rse@aalto.fi">rse@aalto.fi</a>) for more information
+or assistance regarding these terms of service.</p>
+
 {% endblock %}
