@@ -6,7 +6,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from donations import views
-from donations.api import DonationViewSet
+from donations.api import DonationViewSet, api_docs
 
 router = DefaultRouter()
 router.register(r'donations', DonationViewSet, basename='api-donation')
@@ -32,5 +32,6 @@ urlpatterns = [
     # Participant views
     path('participant/<uuid:token>/', views.participant_home, name='participant-home'),
     # API
+    path('api/docs/', api_docs, name='api-docs'),
     path('api/', include(router.urls)),
 ]

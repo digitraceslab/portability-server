@@ -33,6 +33,7 @@ class Donation(models.Model):
     )
     data_start_date = models.DateField(null=True, blank=True)
     data_end_date = models.DateField(null=True, blank=True)
+    requested_data_types = models.JSONField(default=list, blank=True)
     processing_log = models.TextField(blank=True, default='')
     retry_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

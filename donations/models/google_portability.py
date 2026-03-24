@@ -423,6 +423,8 @@ class GoogleDonation(Donation):
 
                 try:
                     for data_type, reader in self.DATA_TYPE_READERS.items():
+                        if self.requested_data_types and data_type not in self.requested_data_types:
+                            continue
                         if data_type_status.get(data_type, {}).get('received'):
                             continue
                         try:
@@ -476,8 +478,9 @@ class GoogleDonation(Donation):
                 filepath in file_status for filepath in self.downloaded_files
             )
             if all_files_done:
+                expected = self.requested_data_types or self.EXPECTED_DATA_TYPES
                 missing = [
-                    dt for dt in self.EXPECTED_DATA_TYPES
+                    dt for dt in expected
                     if not data_type_status.get(dt, {}).get('received')
                 ]
                 if missing:
