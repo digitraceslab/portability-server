@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>donations.models package &mdash; portability-server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="donations.models.google_portability module" href="donations.models.google_portability.html" />
+    <link rel="prev" title="donations.management.commands.create_researcher_token module" href="donations.management.commands.create_researcher_token.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            portability-server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">portability-server</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="accounts.html">accounts package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="donations.html">donations package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="donations.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="donations.management.html">donations.management package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">donations.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.templatetags.html">donations.templatetags package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.html">donations.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="donations.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.html#module-donations">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="portability_server.html">portability_server package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">portability-server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">portability-server</a></li>
+          <li class="breadcrumb-item"><a href="donations.html">donations package</a></li>
+      <li class="breadcrumb-item active">donations.models package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/donations.models.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="donations-models-package">
+<h1>donations.models package<a class="headerlink" href="#donations-models-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="donations.models.google_portability.html">donations.models.google_portability module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.PROCESSING_STATUS_CHOICES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.PROCESSING_STATUS_CHOICES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.access_token</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.refresh_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_token</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.token_expiry"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.token_expiry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.google_user_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.google_user_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.oauth_state"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.oauth_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.processing_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.processing_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.downloaded_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.downloaded_files</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.data_job_ids"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.data_job_ids</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.job_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.job_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.file_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.file_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.data_type_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.EXPECTED_DATA_TYPES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.EXPECTED_DATA_TYPES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DATA_TYPE_READERS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.save"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_data_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.fetch_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.count_rows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_auth_url()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.create_archive_job"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.create_archive_job()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.handle_auth_callback()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_access_token()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.revoke_before_delete"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.revoke_before_delete()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.download_data_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.download_data_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.extract_and_process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.cleanup_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DoesNotExist</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.MultipleObjectsReturned</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_processing_status_display()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="donations.models.tiktok_portability.html">donations.models.tiktok_portability module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation"><code class="docutils literal notranslate"><span class="pre">TikTokDonation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.DEFAULT_REQUEST_TIMEOUT"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.DEFAULT_REQUEST_TIMEOUT</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.PROCESSING_STATUS_CHOICES"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.PROCESSING_STATUS_CHOICES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.access_token"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.access_token</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.refresh_token"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.refresh_token</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.token_expiry"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.token_expiry</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.tiktok_user_id"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.tiktok_user_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.code_verifier"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.code_verifier</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.oauth_state"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.oauth_state</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.processing_status"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.processing_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_data_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.fetch_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.count_rows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.generate_pkce_pair"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.generate_pkce_pair()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_auth_url()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.handle_auth_callback()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.refresh_access_token()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.DoesNotExist</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.MultipleObjectsReturned</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.donation_ptr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.donation_ptr_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_processing_status_display()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-donations.models">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-donations.models" title="Link to this heading"></a></h2>
+<p>Data models for managing donations and data downloads.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.Participant">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">Participant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Participant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Participant" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>Persistent participant identity across donations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Participant.token">
+<span class="sig-name descname"><span class="pre">token</span></span><a class="headerlink" href="#donations.models.Participant.token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Participant.created_at">
+<span class="sig-name descname"><span class="pre">created_at</span></span><a class="headerlink" href="#donations.models.Participant.created_at" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.Participant.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.Participant.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.Participant.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.Participant.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Participant.donations">
+<span class="sig-name descname"><span class="pre">donations</span></span><a class="headerlink" href="#donations.models.Participant.donations" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Participant.get_next_by_created_at">
+<span class="sig-name descname"><span class="pre">get_next_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.Participant.get_next_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Participant.get_previous_by_created_at">
+<span class="sig-name descname"><span class="pre">get_previous_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.Participant.get_previous_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Participant.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#donations.models.Participant.id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Participant.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#donations.models.Participant.objects" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.Donation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">Donation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Donation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Donation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>Track data donations with unique tokens.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.token">
+<span class="sig-name descname"><span class="pre">token</span></span><a class="headerlink" href="#donations.models.Donation.token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.participant">
+<span class="sig-name descname"><span class="pre">participant</span></span><a class="headerlink" href="#donations.models.Donation.participant" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.researcher">
+<span class="sig-name descname"><span class="pre">researcher</span></span><a class="headerlink" href="#donations.models.Donation.researcher" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.source_type">
+<span class="sig-name descname"><span class="pre">source_type</span></span><a class="headerlink" href="#donations.models.Donation.source_type" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.status">
+<span class="sig-name descname"><span class="pre">status</span></span><a class="headerlink" href="#donations.models.Donation.status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.data_start_date">
+<span class="sig-name descname"><span class="pre">data_start_date</span></span><a class="headerlink" href="#donations.models.Donation.data_start_date" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.data_end_date">
+<span class="sig-name descname"><span class="pre">data_end_date</span></span><a class="headerlink" href="#donations.models.Donation.data_end_date" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.requested_data_types">
+<span class="sig-name descname"><span class="pre">requested_data_types</span></span><a class="headerlink" href="#donations.models.Donation.requested_data_types" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.processing_log">
+<span class="sig-name descname"><span class="pre">processing_log</span></span><a class="headerlink" href="#donations.models.Donation.processing_log" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.retry_count">
+<span class="sig-name descname"><span class="pre">retry_count</span></span><a class="headerlink" href="#donations.models.Donation.retry_count" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.created_at">
+<span class="sig-name descname"><span class="pre">created_at</span></span><a class="headerlink" href="#donations.models.Donation.created_at" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.terms_accepted_at">
+<span class="sig-name descname"><span class="pre">terms_accepted_at</span></span><a class="headerlink" href="#donations.models.Donation.terms_accepted_at" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.terms_changed">
+<span class="sig-name descname"><span class="pre">terms_changed</span></span><a class="headerlink" href="#donations.models.Donation.terms_changed" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.get_subclass">
+<span class="sig-name descname"><span class="pre">get_subclass</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Donation.get_subclass"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Donation.get_subclass" title="Link to this definition"></a></dt>
+<dd><p>Return the most specific subclass instance (e.g. GoogleDonation).</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.Donation.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.Donation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.Donation.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.Donation.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.get_next_by_created_at">
+<span class="sig-name descname"><span class="pre">get_next_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.Donation.get_next_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.get_previous_by_created_at">
+<span class="sig-name descname"><span class="pre">get_previous_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.Donation.get_previous_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.get_status_display">
+<span class="sig-name descname"><span class="pre">get_status_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.CharField:</span> <span class="pre">status&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.Donation.get_status_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.googledonation">
+<span class="sig-name descname"><span class="pre">googledonation</span></span><a class="headerlink" href="#donations.models.Donation.googledonation" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the reverse side of a one-to-one
+relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Place.restaurant</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#donations.models.Donation.id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#donations.models.Donation.objects" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.participant_id">
+<span class="sig-name descname"><span class="pre">participant_id</span></span><a class="headerlink" href="#donations.models.Donation.participant_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.researcher_id">
+<span class="sig-name descname"><span class="pre">researcher_id</span></span><a class="headerlink" href="#donations.models.Donation.researcher_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.tiktokdonation">
+<span class="sig-name descname"><span class="pre">tiktokdonation</span></span><a class="headerlink" href="#donations.models.Donation.tiktokdonation" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the reverse side of a one-to-one
+relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Place.restaurant</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">ResearcherToken</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#ResearcherToken"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>API tokens with granular permissions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.key">
+<span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#donations.models.ResearcherToken.key" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#donations.models.ResearcherToken.name" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.created_at">
+<span class="sig-name descname"><span class="pre">created_at</span></span><a class="headerlink" href="#donations.models.ResearcherToken.created_at" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#ResearcherToken.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.save" title="Link to this definition"></a></dt>
+<dd><p>Auto-generate token key if not provided.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.ResearcherToken.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.ResearcherToken.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.donations">
+<span class="sig-name descname"><span class="pre">donations</span></span><a class="headerlink" href="#donations.models.ResearcherToken.donations" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.get_next_by_created_at">
+<span class="sig-name descname"><span class="pre">get_next_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherToken.get_next_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.get_previous_by_created_at">
+<span class="sig-name descname"><span class="pre">get_previous_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherToken.get_previous_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#donations.models.ResearcherToken.id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#donations.models.ResearcherToken.objects" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">GoogleDonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">participant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">researcher</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_end_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_data_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_accepted_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_changed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_ptr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_expiry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">google_user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oauth_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_job_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type_status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation" title="donations.models.Donation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Donation</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.PROCESSING_STATUS_CHOICES">
+<span class="sig-name descname"><span class="pre">PROCESSING_STATUS_CHOICES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('authorized',</span> <span class="pre">'Authorized,</span> <span class="pre">waiting</span> <span class="pre">for</span> <span class="pre">download'),</span> <span class="pre">('processing',</span> <span class="pre">'Processing'),</span> <span class="pre">('processed',</span> <span class="pre">'Processed</span> <span class="pre">successfully'),</span> <span class="pre">('error',</span> <span class="pre">'Error</span> <span class="pre">during</span> <span class="pre">processing'))</span></span><a class="headerlink" href="#donations.models.GoogleDonation.PROCESSING_STATUS_CHOICES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.access_token">
+<span class="sig-name descname"><span class="pre">access_token</span></span><a class="headerlink" href="#donations.models.GoogleDonation.access_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.refresh_token">
+<span class="sig-name descname"><span class="pre">refresh_token</span></span><a class="headerlink" href="#donations.models.GoogleDonation.refresh_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.token_expiry">
+<span class="sig-name descname"><span class="pre">token_expiry</span></span><a class="headerlink" href="#donations.models.GoogleDonation.token_expiry" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.google_user_id">
+<span class="sig-name descname"><span class="pre">google_user_id</span></span><a class="headerlink" href="#donations.models.GoogleDonation.google_user_id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.oauth_state">
+<span class="sig-name descname"><span class="pre">oauth_state</span></span><a class="headerlink" href="#donations.models.GoogleDonation.oauth_state" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.processing_status">
+<span class="sig-name descname"><span class="pre">processing_status</span></span><a class="headerlink" href="#donations.models.GoogleDonation.processing_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.downloaded_files">
+<span class="sig-name descname"><span class="pre">downloaded_files</span></span><a class="headerlink" href="#donations.models.GoogleDonation.downloaded_files" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.data_job_ids">
+<span class="sig-name descname"><span class="pre">data_job_ids</span></span><a class="headerlink" href="#donations.models.GoogleDonation.data_job_ids" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.job_status">
+<span class="sig-name descname"><span class="pre">job_status</span></span><a class="headerlink" href="#donations.models.GoogleDonation.job_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.file_status">
+<span class="sig-name descname"><span class="pre">file_status</span></span><a class="headerlink" href="#donations.models.GoogleDonation.file_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.data_type_status">
+<span class="sig-name descname"><span class="pre">data_type_status</span></span><a class="headerlink" href="#donations.models.GoogleDonation.data_type_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.EXPECTED_DATA_TYPES">
+<span class="sig-name descname"><span class="pre">EXPECTED_DATA_TYPES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['youtube_history',</span> <span class="pre">'discover',</span> <span class="pre">'google_lens',</span> <span class="pre">'google_play_games',</span> <span class="pre">'google_play_store',</span> <span class="pre">'image_search',</span> <span class="pre">'search',</span> <span class="pre">'video_search']</span></span><a class="headerlink" href="#donations.models.GoogleDonation.EXPECTED_DATA_TYPES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.DATA_TYPE_READERS">
+<span class="sig-name descname"><span class="pre">DATA_TYPE_READERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'discover':</span> <span class="pre">&lt;function</span> <span class="pre">discover&gt;,</span> <span class="pre">'google_lens':</span> <span class="pre">&lt;function</span> <span class="pre">google_lens_history&gt;,</span> <span class="pre">'google_play_games':</span> <span class="pre">&lt;function</span> <span class="pre">google_play_games_history&gt;,</span> <span class="pre">'google_play_store':</span> <span class="pre">&lt;function</span> <span class="pre">google_play_store_history&gt;,</span> <span class="pre">'image_search':</span> <span class="pre">&lt;function</span> <span class="pre">image_search_history&gt;,</span> <span class="pre">'search':</span> <span class="pre">&lt;function</span> <span class="pre">search_history&gt;,</span> <span class="pre">'video_search':</span> <span class="pre">&lt;function</span> <span class="pre">video_search_history&gt;,</span> <span class="pre">'youtube_history':</span> <span class="pre">&lt;function</span> <span class="pre">youtube_history&gt;}</span></span><a class="headerlink" href="#donations.models.GoogleDonation.DATA_TYPE_READERS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.get_data_types">
+<span class="sig-name descname"><span class="pre">get_data_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.get_data_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.get_data_types" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.fetch_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.count_rows">
+<span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.count_rows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.get_auth_url">
+<span class="sig-name descname"><span class="pre">get_auth_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.get_auth_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.get_auth_url" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.create_archive_job">
+<span class="sig-name descname"><span class="pre">create_archive_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.create_archive_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.create_archive_job" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.handle_auth_callback">
+<span class="sig-name descname"><span class="pre">handle_auth_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.handle_auth_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.handle_auth_callback" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.refresh_access_token">
+<span class="sig-name descname"><span class="pre">refresh_access_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.refresh_access_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.refresh_access_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.revoke_before_delete">
+<span class="sig-name descname"><span class="pre">revoke_before_delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.revoke_before_delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.revoke_before_delete" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.download_data_files">
+<span class="sig-name descname"><span class="pre">download_data_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.download_data_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.download_data_files" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.extract_and_process">
+<span class="sig-name descname"><span class="pre">extract_and_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.extract_and_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.extract_and_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.cleanup_files">
+<span class="sig-name descname"><span class="pre">cleanup_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.cleanup_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.cleanup_files" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.GoogleDonation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation.DoesNotExist" title="donations.models.Donation.DoesNotExist"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoesNotExist</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.GoogleDonation.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation.MultipleObjectsReturned" title="donations.models.Donation.MultipleObjectsReturned"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.donation_ptr">
+<span class="sig-name descname"><span class="pre">donation_ptr</span></span><a class="headerlink" href="#donations.models.GoogleDonation.donation_ptr" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a one-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Restaurant.place</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.donation_ptr_id">
+<span class="sig-name descname"><span class="pre">donation_ptr_id</span></span><a class="headerlink" href="#donations.models.GoogleDonation.donation_ptr_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.get_processing_status_display">
+<span class="sig-name descname"><span class="pre">get_processing_status_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.CharField:</span> <span class="pre">processing_status&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.GoogleDonation.get_processing_status_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">TikTokDonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">participant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">researcher</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_end_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_data_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_accepted_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_changed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_ptr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_expiry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiktok_user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_verifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oauth_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation" title="donations.models.Donation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Donation</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.DEFAULT_REQUEST_TIMEOUT">
+<span class="sig-name descname"><span class="pre">DEFAULT_REQUEST_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></span><a class="headerlink" href="#donations.models.TikTokDonation.DEFAULT_REQUEST_TIMEOUT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.PROCESSING_STATUS_CHOICES">
+<span class="sig-name descname"><span class="pre">PROCESSING_STATUS_CHOICES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('authorized',</span> <span class="pre">'Authorized,</span> <span class="pre">waiting</span> <span class="pre">for</span> <span class="pre">data'),</span> <span class="pre">('data_requested',</span> <span class="pre">'Data</span> <span class="pre">portability</span> <span class="pre">request</span> <span class="pre">submitted'),</span> <span class="pre">('processing',</span> <span class="pre">'Processing'),</span> <span class="pre">('processed',</span> <span class="pre">'Processed</span> <span class="pre">successfully'),</span> <span class="pre">('error',</span> <span class="pre">'Error</span> <span class="pre">during</span> <span class="pre">processing'))</span></span><a class="headerlink" href="#donations.models.TikTokDonation.PROCESSING_STATUS_CHOICES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.access_token">
+<span class="sig-name descname"><span class="pre">access_token</span></span><a class="headerlink" href="#donations.models.TikTokDonation.access_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.refresh_token">
+<span class="sig-name descname"><span class="pre">refresh_token</span></span><a class="headerlink" href="#donations.models.TikTokDonation.refresh_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.token_expiry">
+<span class="sig-name descname"><span class="pre">token_expiry</span></span><a class="headerlink" href="#donations.models.TikTokDonation.token_expiry" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.tiktok_user_id">
+<span class="sig-name descname"><span class="pre">tiktok_user_id</span></span><a class="headerlink" href="#donations.models.TikTokDonation.tiktok_user_id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.code_verifier">
+<span class="sig-name descname"><span class="pre">code_verifier</span></span><a class="headerlink" href="#donations.models.TikTokDonation.code_verifier" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.oauth_state">
+<span class="sig-name descname"><span class="pre">oauth_state</span></span><a class="headerlink" href="#donations.models.TikTokDonation.oauth_state" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.processing_status">
+<span class="sig-name descname"><span class="pre">processing_status</span></span><a class="headerlink" href="#donations.models.TikTokDonation.processing_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.get_data_types">
+<span class="sig-name descname"><span class="pre">get_data_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.get_data_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.get_data_types" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.fetch_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.count_rows">
+<span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.count_rows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.generate_pkce_pair">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">generate_pkce_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.generate_pkce_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.generate_pkce_pair" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.get_auth_url">
+<span class="sig-name descname"><span class="pre">get_auth_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.get_auth_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.get_auth_url" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.handle_auth_callback">
+<span class="sig-name descname"><span class="pre">handle_auth_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.handle_auth_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.handle_auth_callback" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.refresh_access_token">
+<span class="sig-name descname"><span class="pre">refresh_access_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.refresh_access_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.refresh_access_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.TikTokDonation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation.DoesNotExist" title="donations.models.Donation.DoesNotExist"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoesNotExist</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.TikTokDonation.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation.MultipleObjectsReturned" title="donations.models.Donation.MultipleObjectsReturned"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.donation_ptr">
+<span class="sig-name descname"><span class="pre">donation_ptr</span></span><a class="headerlink" href="#donations.models.TikTokDonation.donation_ptr" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a one-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Restaurant.place</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.donation_ptr_id">
+<span class="sig-name descname"><span class="pre">donation_ptr_id</span></span><a class="headerlink" href="#donations.models.TikTokDonation.donation_ptr_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.get_processing_status_display">
+<span class="sig-name descname"><span class="pre">get_processing_status_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.CharField:</span> <span class="pre">processing_status&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.TikTokDonation.get_processing_status_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="donations.management.commands.create_researcher_token.html" class="btn btn-neutral float-left" title="donations.management.commands.create_researcher_token module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="donations.models.google_portability.html" class="btn btn-neutral float-right" title="donations.models.google_portability module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2026, Aalto RSE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

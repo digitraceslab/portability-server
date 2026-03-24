@@ -1,0 +1,273 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>donations.models.tiktok_portability module &mdash; portability-server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="donations.templatetags package" href="donations.templatetags.html" />
+    <link rel="prev" title="donations.models.google_portability module" href="donations.models.google_portability.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            portability-server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">portability-server</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="accounts.html">accounts package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="donations.html">donations package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="donations.html#subpackages">Subpackages</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="donations.management.html">donations.management package</a></li>
+<li class="toctree-l4 current"><a class="reference internal" href="donations.models.html">donations.models package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.templatetags.html">donations.templatetags package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.html">donations.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="donations.html#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.html#module-donations">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="portability_server.html">portability_server package</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">portability-server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">portability-server</a></li>
+          <li class="breadcrumb-item"><a href="donations.html">donations package</a></li>
+          <li class="breadcrumb-item"><a href="donations.models.html">donations.models package</a></li>
+      <li class="breadcrumb-item active">donations.models.tiktok_portability module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/donations.models.tiktok_portability.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-donations.models.tiktok_portability">
+<span id="donations-models-tiktok-portability-module"></span><h1>donations.models.tiktok_portability module<a class="headerlink" href="#module-donations.models.tiktok_portability" title="Link to this heading"></a></h1>
+<p>TikTok Portability data source model and OAuth flow.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.tiktok_portability.</span></span><span class="sig-name descname"><span class="pre">TikTokDonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">participant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">researcher</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_end_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_data_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_accepted_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_changed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_ptr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_expiry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tiktok_user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">code_verifier</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oauth_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="donations.models.html#donations.models.Donation" title="donations.models.Donation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Donation</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.DEFAULT_REQUEST_TIMEOUT">
+<span class="sig-name descname"><span class="pre">DEFAULT_REQUEST_TIMEOUT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.DEFAULT_REQUEST_TIMEOUT" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.PROCESSING_STATUS_CHOICES">
+<span class="sig-name descname"><span class="pre">PROCESSING_STATUS_CHOICES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('authorized',</span> <span class="pre">'Authorized,</span> <span class="pre">waiting</span> <span class="pre">for</span> <span class="pre">data'),</span> <span class="pre">('data_requested',</span> <span class="pre">'Data</span> <span class="pre">portability</span> <span class="pre">request</span> <span class="pre">submitted'),</span> <span class="pre">('processing',</span> <span class="pre">'Processing'),</span> <span class="pre">('processed',</span> <span class="pre">'Processed</span> <span class="pre">successfully'),</span> <span class="pre">('error',</span> <span class="pre">'Error</span> <span class="pre">during</span> <span class="pre">processing'))</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.PROCESSING_STATUS_CHOICES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.access_token">
+<span class="sig-name descname"><span class="pre">access_token</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.access_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.refresh_token">
+<span class="sig-name descname"><span class="pre">refresh_token</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.refresh_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.token_expiry">
+<span class="sig-name descname"><span class="pre">token_expiry</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.token_expiry" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.tiktok_user_id">
+<span class="sig-name descname"><span class="pre">tiktok_user_id</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.tiktok_user_id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.code_verifier">
+<span class="sig-name descname"><span class="pre">code_verifier</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.code_verifier" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.oauth_state">
+<span class="sig-name descname"><span class="pre">oauth_state</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.oauth_state" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.processing_status">
+<span class="sig-name descname"><span class="pre">processing_status</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.processing_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.get_data_types">
+<span class="sig-name descname"><span class="pre">get_data_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.get_data_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.get_data_types" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.fetch_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.count_rows">
+<span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.count_rows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.generate_pkce_pair">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">generate_pkce_pair</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.generate_pkce_pair"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.generate_pkce_pair" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.get_auth_url">
+<span class="sig-name descname"><span class="pre">get_auth_url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.get_auth_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.get_auth_url" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.handle_auth_callback">
+<span class="sig-name descname"><span class="pre">handle_auth_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.handle_auth_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.handle_auth_callback" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.refresh_access_token">
+<span class="sig-name descname"><span class="pre">refresh_access_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/tiktok_portability.html#TikTokDonation.refresh_access_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.refresh_access_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="donations.models.html#donations.models.Donation.DoesNotExist" title="donations.models.Donation.DoesNotExist"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoesNotExist</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="donations.models.html#donations.models.Donation.MultipleObjectsReturned" title="donations.models.Donation.MultipleObjectsReturned"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.donation_ptr">
+<span class="sig-name descname"><span class="pre">donation_ptr</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.donation_ptr" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a one-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Restaurant.place</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.donation_ptr_id">
+<span class="sig-name descname"><span class="pre">donation_ptr_id</span></span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.donation_ptr_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.tiktok_portability.TikTokDonation.get_processing_status_display">
+<span class="sig-name descname"><span class="pre">get_processing_status_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.CharField:</span> <span class="pre">processing_status&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.tiktok_portability.TikTokDonation.get_processing_status_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="donations.models.google_portability.html" class="btn btn-neutral float-left" title="donations.models.google_portability module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="donations.templatetags.html" class="btn btn-neutral float-right" title="donations.templatetags package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2026, Aalto RSE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>donations.views &mdash; portability-server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            portability-server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">portability-server</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">portability-server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">donations.views</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for donations.views</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Views for participant-facing donation flow.&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.core.paginator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Paginator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Http404</span><span class="p">,</span> <span class="n">HttpResponseNotAllowed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.shortcuts</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_object_or_404</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.views.decorators.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_http_methods</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">Participant</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_donation</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the most specific donation subclass for a donation token.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Donation</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="donation_landing">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.donation_landing">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">donation_landing</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Status overview page with participant token handling.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">token_error</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">token_input</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;participant_token_input&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">token_uuid</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">token_input</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+            <span class="n">token_error</span> <span class="o">=</span> <span class="s1">&#39;Please enter a valid token.&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">participant</span><span class="p">,</span> <span class="n">created</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">token_uuid</span><span class="p">)</span>
+            <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
+            <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+
+    <span class="c1"># Prepopulate with existing participant token or generate new one</span>
+    <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="p">:</span>
+        <span class="n">prepopulated_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">prepopulated_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
+        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
+        <span class="s1">&#39;prepopulated_token&#39;</span><span class="p">:</span> <span class="n">prepopulated_token</span><span class="p">,</span>
+        <span class="s1">&#39;token_error&#39;</span><span class="p">:</span> <span class="n">token_error</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="accept_terms">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.accept_terms">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">accept_terms</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Show terms and record acceptance.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="n">donation</span><span class="o">.</span><span class="n">terms_accepted_at</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/terms.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
+        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="authorize">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.authorize">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Redirect to OAuth URL. Requires terms accepted.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">donation</span><span class="o">.</span><span class="n">terms_accepted_at</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;accept-terms&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">auth_url</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_auth_url</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">auth_url</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="data_preview">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.data_preview">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">data_preview</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Paginated data preview with filtering.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">data_types</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">()</span>
+    <span class="n">selected_type</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_type&#39;</span><span class="p">,</span> <span class="n">data_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">data_types</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">)</span>
+    <span class="n">end_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;end_date&#39;</span><span class="p">)</span>
+    <span class="n">page_number</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total_count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">selected_type</span> <span class="ow">and</span> <span class="n">selected_type</span> <span class="ow">in</span> <span class="n">data_types</span><span class="p">:</span>
+        <span class="n">total_count</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">count_rows</span><span class="p">(</span><span class="n">selected_type</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">)</span>
+        <span class="n">all_rows</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">selected_type</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">all_rows</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">paginator</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">(</span><span class="n">all_rows</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">page_obj</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">get_page</span><span class="p">(</span><span class="n">page_number</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">page_obj</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">paginator</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">([],</span> <span class="mi">50</span><span class="p">)</span>
+        <span class="n">page_obj</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">get_page</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">page_obj</span>
+
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/data_preview.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
+        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
+        <span class="s1">&#39;data_types&#39;</span><span class="p">:</span> <span class="n">data_types</span><span class="p">,</span>
+        <span class="s1">&#39;selected_type&#39;</span><span class="p">:</span> <span class="n">selected_type</span><span class="p">,</span>
+        <span class="s1">&#39;start_date&#39;</span><span class="p">:</span> <span class="n">start_date</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;end_date&#39;</span><span class="p">:</span> <span class="n">end_date</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;rows&#39;</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span>
+        <span class="s1">&#39;columns&#39;</span><span class="p">:</span> <span class="n">columns</span><span class="p">,</span>
+        <span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="n">total_count</span><span class="p">,</span>
+        <span class="s1">&#39;page_obj&#39;</span><span class="p">:</span> <span class="n">page_obj</span> <span class="k">if</span> <span class="s1">&#39;page_obj&#39;</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">rows</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="revoke_donation">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.revoke_donation">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">revoke_donation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Confirm and revoke a donation.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke_before_delete&#39;</span><span class="p">):</span>
+            <span class="n">donation</span><span class="o">.</span><span class="n">revoke_before_delete</span><span class="p">()</span>
+        <span class="n">donation</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoked.html&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
+        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="google_auth_callback">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.google_auth_callback">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">google_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle Google OAuth callback via oauth_state lookup.&quot;&quot;&quot;</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Missing state parameter&quot;</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">oauth_state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">handle_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+        <span class="n">process_donation</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
+        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">,</span>
+        <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="tiktok_auth_callback">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.tiktok_auth_callback">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">tiktok_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle TikTok OAuth callback via oauth_state lookup.&quot;&quot;&quot;</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Missing state parameter&quot;</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">oauth_state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
+    <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">handle_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+        <span class="n">process_donation</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
+        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">,</span>
+        <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+
+
+<div class="viewcode-block" id="participant_home">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.participant_home">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">participant_home</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Show all donations for a participant.&quot;&quot;&quot;</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Participant</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+    <span class="n">donations</span> <span class="o">=</span> <span class="n">participant</span><span class="o">.</span><span class="n">donations</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span>
+    <span class="c1"># Resolve each donation to its most specific subclass</span>
+    <span class="n">resolved_donations</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">donations</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/participant_home.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;participant&#39;</span><span class="p">:</span> <span class="n">participant</span><span class="p">,</span>
+        <span class="s1">&#39;donations&#39;</span><span class="p">:</span> <span class="n">resolved_donations</span><span class="p">,</span>
+    <span class="p">})</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2026, Aalto RSE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
