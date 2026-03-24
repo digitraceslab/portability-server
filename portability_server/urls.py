@@ -1,6 +1,7 @@
 """URL configuration for portability-server."""
 from django.contrib import admin
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.urls import include, path
 
 from rest_framework.routers import DefaultRouter
@@ -20,6 +21,8 @@ def health_check(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health-check'),
+    path('terms/', lambda r: render(r, 'donations/terms_of_service.html'), name='terms-of-service'),
+    path('privacy/', lambda r: render(r, 'donations/privacy_notice.html'), name='privacy-notice'),
     # Participant-facing views
     path('donate/<uuid:donation_token>/', views.donation_landing, name='donation-landing'),
     path('donate/<uuid:donation_token>/terms/', views.accept_terms, name='accept-terms'),
