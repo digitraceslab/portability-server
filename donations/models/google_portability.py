@@ -182,10 +182,7 @@ class GoogleDonation(Donation):
         api_url = 'https://dataportability.googleapis.com/v1/portabilityArchive:initiate'
         access_token = None
         if self.access_token:
-            try:
-                access_token = crypto.decrypt_text(self.access_token)
-            except Exception:
-                access_token = self.access_token
+            access_token = crypto.decrypt_text(self.access_token)
         headers = {'Authorization': f"Bearer {access_token}"}
         body = {
             'resources': [
@@ -279,10 +276,7 @@ class GoogleDonation(Donation):
             return False, "No refresh token available."
 
         token_url = 'https://oauth2.googleapis.com/token'
-        try:
-            refresh_token_plain = crypto.decrypt_text(self.refresh_token)
-        except Exception:
-            refresh_token_plain = self.refresh_token
+        refresh_token_plain = crypto.decrypt_text(self.refresh_token)
         token_data = {
             'refresh_token': refresh_token_plain,
             'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
@@ -313,10 +307,7 @@ class GoogleDonation(Donation):
     def revoke_before_delete(self):
         self.refresh_access_token()
         if self.access_token:
-            try:
-                token = crypto.decrypt_text(self.access_token)
-            except Exception:
-                token = self.access_token
+            token = crypto.decrypt_text(self.access_token)
             revoke_url = 'https://dataportability.googleapis.com/v1/authorization:reset'
             headers = {
                 'Authorization': f"Bearer {token}",
@@ -336,10 +327,7 @@ class GoogleDonation(Donation):
         if not self.access_token:
             return False, "Cannot download data: No valid access token."
 
-        try:
-            refresh_token_plain = crypto.decrypt_text(self.refresh_token)
-        except Exception:
-            refresh_token_plain = self.refresh_token
+        refresh_token_plain = crypto.decrypt_text(self.refresh_token)
         token_data = {
             'refresh_token': refresh_token_plain,
             'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,

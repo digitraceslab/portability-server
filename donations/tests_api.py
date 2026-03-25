@@ -2,8 +2,11 @@
 import uuid
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase
+from cryptography.fernet import Fernet
+from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
+
+TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
 from donations.models import (
     Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant,
@@ -15,7 +18,7 @@ class DonationAPITestCase(TestCase):
     def setUp(self):
         self.researcher = ResearcherToken.objects.create(name='test-researcher')
         self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.researcher.key}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.researcher._raw_key}')
 
 
 class TestCreateDonation(DonationAPITestCase):
@@ -95,6 +98,7 @@ class TestRetrieveDonation(DonationAPITestCase):
         self.assertEqual(response.status_code, 404)
 
 
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
 class TestDeleteDonation(DonationAPITestCase):
     def test_delete_own_donation(self):
         donation = GoogleDonation.objects.create(researcher=self.researcher)

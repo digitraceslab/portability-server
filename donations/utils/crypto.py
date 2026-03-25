@@ -6,20 +6,16 @@ import tempfile
 from cryptography.fernet import Fernet
 
 def _resolve_key():
+    from django.core.exceptions import ImproperlyConfigured
     key = getattr(settings, 'ENCRYPTION_KEY', None)
-    if key:
-        if isinstance(key, str):
-            try:
-                key_b = key.encode()
-                # assume already base64 urlsafe encoded
-                return key_b
-            except Exception:
-                pass
-        return key
-    # Fallback: derive from SECRET_KEY (not ideal for production)
-    secret = getattr(settings, 'SECRET_KEY', None) or ''
-    digest = hashlib.sha256(secret.encode()).digest()
-    return base64.urlsafe_b64encode(digest)
+    if not key:
+        raise ImproperlyConfigured(
+            "ENCRYPTION_KEY must be set. Generate one with: "
+            "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+        )
+    if isinstance(key, str):
+        return key.encode()
+    return key
 
 
 def _get_fernet():

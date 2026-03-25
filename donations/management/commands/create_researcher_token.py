@@ -18,6 +18,7 @@ class Command(BaseCommand):
         token = ResearcherToken.objects.create(
             name=options['name'],
         )
-        self.stdout.write(f"Created token: {token.key}")
+        self.stdout.write(f"Created token: {token._raw_key}")
+        self.stdout.write("Save this token now — it will not be shown again.")
         if token.name:
             self.stdout.write(f"  Name: {token.name}")

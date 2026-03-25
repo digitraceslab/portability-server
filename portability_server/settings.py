@@ -62,7 +62,7 @@ REST_FRAMEWORK = {
 }
 
 # Encryption
-ENCRYPTION_KEY = env('ENCRYPTION_KEY', default='')
+ENCRYPTION_KEY = env('ENCRYPTION_KEY', default=None)
 
 WSGI_APPLICATION = 'portability_server.wsgi.application'
 

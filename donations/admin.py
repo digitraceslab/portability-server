@@ -22,8 +22,8 @@ class DonationAdmin(admin.ModelAdmin):
 @admin.register(ResearcherToken)
 class ResearcherTokenAdmin(admin.ModelAdmin):
     """Admin interface for managing researcher tokens."""
-    list_display = ('name', 'key', 'created_at')
-    readonly_fields = ('created_at',)
+    list_display = ('name', 'created_at')
+    readonly_fields = ('key', 'created_at')
 
 
 @admin.register(GoogleDonation)

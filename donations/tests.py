@@ -4,7 +4,8 @@ import tempfile
 import uuid
 from unittest.mock import patch, MagicMock
 
-from django.test import TestCase, Client, RequestFactory
+from cryptography.fernet import Fernet
+from django.test import TestCase, Client, RequestFactory, override_settings
 from rest_framework.test import APIRequestFactory
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant
@@ -14,7 +15,10 @@ from donations.utils.crypto import (
     write_encrypted_bytes,
 )
 
+TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
+
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
 class CryptoTests(TestCase):
     """Tests for encryption and decryption utilities."""
     def test_text_roundtrip(self):
@@ -59,7 +63,7 @@ class ResearcherTokenModelTests(TestCase):
     """Tests for ResearcherToken model behavior."""
     def test_auto_generates_key(self):
         token = ResearcherToken.objects.create(name='test')
-        self.assertEqual(len(token.key), 40)
+        self.assertEqual(len(token.key), 64)  # SHA-256 hex digest
 
     def test_key_is_unique_across_tokens(self):
         t1 = ResearcherToken.objects.create(name='token-one')
@@ -75,7 +79,7 @@ class ResearcherTokenAuthTests(TestCase):
         self.token = ResearcherToken.objects.create(name='test-auth')
 
     def test_valid_token(self):
-        request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.token.key}')
+        request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.token._raw_key}')
         user, auth_token = self.auth.authenticate(request)
         self.assertIsNone(user)
         self.assertEqual(auth_token.key, self.token.key)
@@ -92,6 +96,7 @@ class ResearcherTokenAuthTests(TestCase):
         self.assertIsNone(result)
 
 
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
 class GoogleDonationModelTests(TestCase):
     """Tests for GoogleDonation model behavior."""
 
@@ -197,6 +202,7 @@ class GoogleDonationModelTests(TestCase):
                 pass
 
 
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
 class TikTokDonationModelTests(TestCase):
     """Tests for TikTokDonation model behavior."""
 

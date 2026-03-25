@@ -133,6 +133,8 @@ def google_auth_callback(request):
         raise Http404("Missing state parameter")
     donation = get_object_or_404(GoogleDonation, oauth_state=state)
     success, message = donation.handle_auth_callback(request)
+    donation.oauth_state = None
+    donation.save(update_fields=['oauth_state'])
     if success:
         process_donation.delay(donation.pk)
         return redirect('donation-landing', donation_token=donation.token)
@@ -150,6 +152,8 @@ def tiktok_auth_callback(request):
         raise Http404("Missing state parameter")
     donation = get_object_or_404(TikTokDonation, oauth_state=state)
     success, message = donation.handle_auth_callback(request)
+    donation.oauth_state = None
+    donation.save(update_fields=['oauth_state'])
     if success:
         process_donation.delay(donation.pk)
         return redirect('donation-landing', donation_token=donation.token)

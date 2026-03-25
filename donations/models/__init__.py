@@ -1,4 +1,5 @@
 """Data models for managing donations and data downloads."""
+import hashlib
 import uuid
 
 from django.db import models
@@ -61,15 +62,21 @@ class Donation(models.Model):
 class ResearcherToken(models.Model):
     """API tokens with granular permissions."""
 
-    key = models.CharField(max_length=40, unique=True)
+    key = models.CharField(max_length=64, unique=True)
     name = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        """Auto-generate token key if not provided."""
+        """Auto-generate token key and store its SHA-256 hash."""
         if not self.key:
-            self.key = get_random_string(40)
+            raw_key = get_random_string(40)
+            self._raw_key = raw_key
+            self.key = hashlib.sha256(raw_key.encode()).hexdigest()
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def hash_key(raw_key):
+        return hashlib.sha256(raw_key.encode()).hexdigest()
 
     def __str__(self):
         return self.name or 'unnamed'

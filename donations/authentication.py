@@ -19,8 +19,9 @@ class ResearcherTokenAuthentication(authentication.BaseAuthentication):
         return self.authenticate_credentials(token_key)
 
     def authenticate_credentials(self, key):
+        key_hash = ResearcherToken.hash_key(key)
         try:
-            token = ResearcherToken.objects.get(key=key)
+            token = ResearcherToken.objects.get(key=key_hash)
         except ResearcherToken.DoesNotExist:
             raise exceptions.AuthenticationFailed('Invalid token.')
         return (None, token)
