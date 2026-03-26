@@ -3,6 +3,13 @@
 {% block content %}
 <h1>Revoke Your Donation</h1>
 <p>Are you sure you want to revoke your data donation? This will permanently delete your donated data.</p>
+{% if error %}
+<div class="alert alert-danger">
+    <strong>Revocation failed:</strong> {{ error }}
+    <p>Your donation was <strong>not</strong> deleted.</p>
+    <p>To manually revoke access, visit <a href="https://myaccount.google.com/permissions" target="_blank">myaccount.google.com/permissions</a> and remove the portability app. You can then retry below.</p>
+</div>
+{% endif %}
 <form method="post">
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">Yes, Revoke My Donation</button>

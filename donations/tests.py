@@ -4,6 +4,8 @@ import tempfile
 import uuid
 from unittest.mock import patch, MagicMock
 
+import requests
+
 from cryptography.fernet import Fernet
 from django.test import TestCase, Client, RequestFactory, override_settings
 from rest_framework.test import APIRequestFactory
@@ -156,13 +158,34 @@ class GoogleDonationModelTests(TestCase):
             access_token=encrypt_text('test_access'),
             refresh_token=encrypt_text('test_refresh'),
         )
-        gd.revoke_before_delete()
+        result = gd.revoke_before_delete()
+
+        # Should return (True, ...) on success
+        self.assertTrue(result[0])
 
         # Should have called: refresh token + revoke
         self.assertTrue(mock_post.called)
         call_urls = [call[0][0] for call in mock_post.call_args_list]
         self.assertTrue(any('oauth2.googleapis.com/token' in url for url in call_urls))
         self.assertTrue(any('authorization:reset' in url for url in call_urls))
+
+    @patch('donations.models.google_portability.requests.post')
+    def test_revoke_before_delete_refresh_fails(self, mock_post):
+        mock_post.side_effect = requests.RequestException("network error")
+
+        gd = GoogleDonation.objects.create(
+            access_token=encrypt_text('test_access'),
+            refresh_token=encrypt_text('test_refresh'),
+        )
+        result = gd.revoke_before_delete()
+
+        # Should return (False, ...) when refresh fails
+        self.assertFalse(result[0])
+
+        # Only the refresh token call should have been attempted, not the revoke
+        call_urls = [call[0][0] for call in mock_post.call_args_list]
+        self.assertTrue(any('oauth2.googleapis.com/token' in url for url in call_urls))
+        self.assertFalse(any('authorization:reset' in url for url in call_urls))
 
     def test_fetch_data_and_count_with_encrypted_csv(self):
         gd = GoogleDonation.objects.create(
@@ -339,7 +362,26 @@ class RevokeDonationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Revoke')
 
-    def test_revoke_post_deletes_donation(self):
+    @patch('donations.models.google_portability.GoogleDonation.revoke_before_delete')
+    def test_revoke_post_deletes_donation(self, mock_revoke):
+        mock_revoke.return_value = (True, "Authorization revoked successfully.")
+        pk = self.donation.pk
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Donation.objects.filter(pk=pk).exists())
+
+    @patch('donations.models.google_portability.GoogleDonation.revoke_before_delete')
+    def test_revoke_post_keeps_donation_on_failure(self, mock_revoke):
+        mock_revoke.return_value = (False, "Token refresh failed: network error")
+        pk = self.donation.pk
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Donation.objects.filter(pk=pk).exists())
+        self.assertContains(response, "Token refresh failed: network error")
+
+    @patch('donations.models.google_portability.GoogleDonation.revoke_before_delete')
+    def test_revoke_post_deletes_donation_on_success(self, mock_revoke):
+        mock_revoke.return_value = (True, "Authorization revoked successfully.")
         pk = self.donation.pk
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, 200)

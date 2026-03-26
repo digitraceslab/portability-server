@@ -305,7 +305,10 @@ class GoogleDonation(Donation):
             return False, f"Error parsing token response: Missing key {e}"
 
     def revoke_before_delete(self):
-        self.refresh_access_token()
+        success, message = self.refresh_access_token()
+        if not success:
+            return False, message
+
         if self.access_token:
             token = crypto.decrypt_text(self.access_token)
             revoke_url = 'https://dataportability.googleapis.com/v1/authorization:reset'
@@ -317,10 +320,13 @@ class GoogleDonation(Donation):
                 response = requests.post(revoke_url, headers=headers)
                 response.raise_for_status()
             except requests.RequestException as e:
-                self.processing_log += f"Failed to revoke Google OAuth token: {e}\n"
+                error_message = f"Failed to revoke Google OAuth token: {e}"
+                self.processing_log += error_message + "\n"
                 self.save()
+                return False, error_message
 
         self.cleanup_files()
+        return True, "Authorization revoked successfully."
 
     def download_data_files(self):
         self.refresh_access_token()
