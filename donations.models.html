@@ -456,8 +456,13 @@ object the first time, the query is executed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#ResearcherToken.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.save" title="Link to this definition"></a></dt>
-<dd><p>Auto-generate token key if not provided.</p>
+<dd><p>Auto-generate token key and store its SHA-256 hash.</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.hash_key">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hash_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#ResearcherToken.hash_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.hash_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.DoesNotExist">

@@ -97,8 +97,9 @@
 <div class="viewcode-block" id="ResearcherTokenAuthentication.authenticate_credentials">
 <a class="viewcode-back" href="../../donations.authentication.html#donations.authentication.ResearcherTokenAuthentication.authenticate_credentials">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">authenticate_credentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="n">key_hash</span> <span class="o">=</span> <span class="n">ResearcherToken</span><span class="o">.</span><span class="n">hash_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">token</span> <span class="o">=</span> <span class="n">ResearcherToken</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">token</span> <span class="o">=</span> <span class="n">ResearcherToken</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key_hash</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">ResearcherToken</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">exceptions</span><span class="o">.</span><span class="n">AuthenticationFailed</span><span class="p">(</span><span class="s1">&#39;Invalid token.&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span></div>
