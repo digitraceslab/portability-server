@@ -164,7 +164,7 @@ Before deploying to production, you must:
 
 1. **Clone the repository**
    ```bash
-   git clone git@github.com:digitraceslab/portability-server.git
+   git clone https://github.com/digitraceslab/portability-server.git
    cd portability-server
    ```
 
@@ -230,13 +230,12 @@ sudo apt install python3 python3.12-venv postgresql nginx redis-server
 ### Application setup
 
 ```bash
-git clone git@github.com:digitraceslab/portability-server.git /opt/portability-server
+git clone https://github.com/digitraceslab/portability-server.git /opt/portability-server
 cd /opt/portability-server
 
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-pip install gunicorn
 
 cp .env.example .env
 # Edit .env with production values: DEBUG=False, proper SECRET_KEY, ALLOWED_HOSTS, etc.
@@ -257,9 +256,10 @@ After=network.target
 
 [Service]
 User=USERNAME
-Group=www-data
+Group=USERNAME
 WorkingDirectory=/opt/portability-server
-ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/opt/portability-server/portability-server.sock portability_server.wsgi:application
+ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application
+RuntimeDirectory=portability-server
 
 [Install]
 WantedBy=multi-user.target
@@ -276,7 +276,7 @@ After=network.target redis-server.service
 
 [Service]
 User=USERNAME
-Group=www-data
+Group=USERNAME
 WorkingDirectory=/opt/portability-server
 ExecStart=/opt/portability-server/venv/bin/celery -A portability_server worker -l info
 Restart=always
@@ -296,7 +296,7 @@ After=network.target redis-server.service
 
 [Service]
 User=USERNAME
-Group=www-data
+Group=USERNAME
 WorkingDirectory=/opt/portability-server
 ExecStart=/opt/portability-server/venv/bin/celery -A portability_server beat -l info --schedule=/opt/portability-server/celerybeat-schedule
 Restart=always
@@ -331,12 +331,12 @@ server {
 
     location = /favicon.ico { access_log off; log_not_found off; }
     location /static/ {
-        root /opt/portability-server;
+        alias /opt/portability-server/staticfiles/;
     }
 
     location / {
         include proxy_params;
-        proxy_pass http://unix:/opt/portability-server/portability-server.sock;
+        proxy_pass http://unix:/run/portability-server/portability-server.sock;
     }
 }
 ```

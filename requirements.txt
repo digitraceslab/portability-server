@@ -6,4 +6,5 @@ celery==5.5.3
 redis==7.0.1
 cryptography==46.0.5
 requests==2.32.5
+gunicorn==23.0.0
 niimpy @ git+https://github.com/digitraceslab/niimpy.git@development
