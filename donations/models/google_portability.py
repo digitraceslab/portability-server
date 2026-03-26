@@ -486,7 +486,8 @@ class GoogleDonation(Donation):
 
     def _process_data(self):
         self.download_data_files()
-        self.extract_and_process()
+        if self.downloaded_files:
+            self.extract_and_process()
 
     def cleanup_files(self):
         for filepath in self.downloaded_files:
