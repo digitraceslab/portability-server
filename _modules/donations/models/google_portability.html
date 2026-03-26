@@ -593,7 +593,8 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">download_data_files</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">extract_and_process</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaded_files</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extract_and_process</span><span class="p">()</span>
 
 <div class="viewcode-block" id="GoogleDonation.cleanup_files">
 <a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.cleanup_files">[docs]</a>
