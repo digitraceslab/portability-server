@@ -1,0 +1,20 @@
+{% extends "donations/base.html" %}
+
+{% block title %}Data Portability Service{% endblock %}
+
+{% block content %}
+<h1>Data Portability Service</h1>
+<p>This service enables researchers to collect data donations from participants through platform data portability APIs (Google Takeout, TikTok).</p>
+
+<h2>Researchers</h2>
+<p>Use the API to create and manage data donations. See the <a href="{% url 'api-docs' %}">API documentation</a> to get started.</p>
+
+<h2>Participants</h2>
+<p>If you received a donation link from a researcher, use that link to get started.</p>
+
+<h2>Documentation</h2>
+<ul>
+    <li><a href="{% url 'terms-of-service' %}">Terms of Service</a></li>
+    <li><a href="{% url 'privacy-notice' %}">Privacy Notice</a></li>
+</ul>
+{% endblock %}

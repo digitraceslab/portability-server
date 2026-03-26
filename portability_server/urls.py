@@ -19,6 +19,7 @@ def health_check(request):
 
 
 urlpatterns = [
+    path('', lambda r: render(r, 'home.html'), name='home'),
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health-check'),
     path('terms/', lambda r: render(r, 'donations/terms_of_service.html'), name='terms-of-service'),

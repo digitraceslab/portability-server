@@ -1,0 +1,15 @@
+{
+  "issues": [
+    {
+      "id": "return-donation-url-on-create",
+      "title": "API should return donation URL on create",
+      "status": "open",
+      "description": "When a new donation is created via `POST /api/donations/`, the response includes the donation's `id`, `token`, and `source_type`, but not the participant-facing donation URL (e.g. `/donate/{token}/`). Researchers need this URL to share with participants so they can begin the OAuth authorization flow. The URL should be an absolute URL so it can be sent directly to participants.",
+      "tasks": [
+        {"text": "Add `donation_url` field to `DonationSerializer` in `donations/api.py`", "done": false},
+        {"text": "Build absolute URL using the request context and donation token", "done": false},
+        {"text": "Update API docs endpoint to document the new field", "done": false}
+      ]
+    }
+  ]
+}
