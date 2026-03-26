@@ -10,6 +10,30 @@
         {"text": "Build absolute URL using the request context and donation token", "done": false},
         {"text": "Update API docs endpoint to document the new field", "done": false}
       ]
+    },
+    {
+      "id": "oauth-scopes-match-requested-data-types",
+      "title": "OAuth flow should only request scopes for requested data types",
+      "status": "open",
+      "description": "The OAuth authorization flow currently requests all 7 Data Portability scopes regardless of the donation's `requested_data_types`. This means participants are asked to authorize access to more data than the researcher actually requested. The OAuth scopes should be filtered to match only the data types specified in the donation. This is important both for user trust and for passing Google's OAuth verification with minimal scope requirements.",
+      "tasks": [
+        {"text": "Create a mapping from data types to OAuth scopes in `donations/models/google_portability.py`", "done": false},
+        {"text": "Update `get_authorization_url()` to filter scopes based on `requested_data_types`", "done": false},
+        {"text": "Handle empty `requested_data_types` (request all scopes as default)", "done": false},
+        {"text": "Update `create_archive_job()` resources list to match the filtered scopes", "done": false}
+      ]
+    },
+    {
+      "id": "revoke-fails-silently",
+      "title": "Revoke fails silently when token refresh fails",
+      "status": "open",
+      "description": "`revoke_before_delete()` in `donations/models/google_portability.py` calls `refresh_access_token()` first, but if the refresh fails (e.g. different encryption key, invalid credentials), it silently skips the Google `authorization:reset` API call. The donation is deleted locally but Google still shows the app as authorized. The user gets no feedback that the revoke failed, so they don't know to manually revoke at myaccount.google.com/permissions. This blocks re-authorization for restricted scopes.",
+      "tasks": [
+        {"text": "Surface revoke failure to the user in the UI (show warning/error on revoke page) in `donations/views.py`", "done": false},
+        {"text": "Log the refresh_access_token result before checking self.access_token in `donations/models/google_portability.py`", "done": false},
+        {"text": "Show manual revoke instructions (myaccount.google.com/permissions) when automatic revoke fails", "done": false},
+        {"text": "Consider not deleting the donation if revoke fails, or at least confirming with the user", "done": false}
+      ]
     }
   ]
 }
