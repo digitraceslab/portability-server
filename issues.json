@@ -26,13 +26,24 @@
     {
       "id": "revoke-fails-silently",
       "title": "Revoke fails silently when token refresh fails",
-      "status": "open",
+      "status": "done",
       "description": "`revoke_before_delete()` in `donations/models/google_portability.py` calls `refresh_access_token()` first, but if the refresh fails (e.g. different encryption key, invalid credentials), it silently skips the Google `authorization:reset` API call. The donation is deleted locally but Google still shows the app as authorized. The user gets no feedback that the revoke failed, so they don't know to manually revoke at myaccount.google.com/permissions. This blocks re-authorization for restricted scopes.",
       "tasks": [
-        {"text": "Surface revoke failure to the user in the UI (show warning/error on revoke page) in `donations/views.py`", "done": false},
-        {"text": "Log the refresh_access_token result before checking self.access_token in `donations/models/google_portability.py`", "done": false},
-        {"text": "Show manual revoke instructions (myaccount.google.com/permissions) when automatic revoke fails", "done": false},
-        {"text": "Consider not deleting the donation if revoke fails, or at least confirming with the user", "done": false}
+        {"text": "Surface revoke failure to the user in the UI (show warning/error on revoke page) in `donations/views.py`", "done": true},
+        {"text": "Log the refresh_access_token result before checking self.access_token in `donations/models/google_portability.py`", "done": true},
+        {"text": "Show manual revoke instructions (myaccount.google.com/permissions) when automatic revoke fails", "done": true},
+        {"text": "Consider not deleting the donation if revoke fails, or at least confirming with the user", "done": true}
+      ]
+    },
+    {
+      "id": "participant-id-regenerated-on-load",
+      "title": "Participant ID regenerated on every page load",
+      "status": "open",
+      "description": "In `donation_landing()` in `donations/views.py`, when a donation has no participant assigned, a new `uuid.uuid4()` is generated on every GET request to prepopulate the token field (line 42). If the participant doesn't submit the form before authorizing, `google_auth_callback()` doesn't assign one either, so `donation.participant` stays `None` and every page load shows a different ID.",
+      "tasks": [
+        {"text": "Add a `suggested_participant_token` UUID field to the Donation model, auto-generated on creation", "done": false},
+        {"text": "In `donation_landing()`, use `donation.suggested_participant_token` instead of generating a new uuid each load", "done": false},
+        {"text": "Create and assign a Participant (using the suggested token) in `google_auth_callback()` and `tiktok_auth_callback()` if none is set, or when the participant submits the token form", "done": false}
       ]
     }
   ]
