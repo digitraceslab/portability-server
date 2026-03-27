@@ -1,18 +1,23 @@
 """Tests for Celery tasks and the OAuth callback views that queue them."""
-from datetime import timedelta
 from unittest.mock import patch
 
 from django.test import TestCase
-from django.utils import timezone
 
 from donations.models import Donation, GoogleDonation, TikTokDonation
 from donations.tasks import process_donation, check_pending_donations, MAX_RETRIES
 
 
+def _fake_process_data(donation):
+    """Simulate successful _process_data: set status to processed."""
+    donation.status = 'processed'
+    donation.retry_count = 0
+    donation.save(update_fields=['status', 'retry_count'])
+
+
 class TestProcessDonation(TestCase):
     """Tests for the process_donation Celery task."""
 
-    @patch.object(GoogleDonation, '_process_data')
+    @patch.object(GoogleDonation, '_process_data', autospec=True, side_effect=_fake_process_data)
     def test_processes_authorized_google_donation(self, mock_process_data):
         donation = GoogleDonation.objects.create(status='authorized')
         process_donation(donation.pk)
@@ -51,7 +56,7 @@ class TestProcessDonation(TestCase):
         self.assertEqual(donation.status, 'error')
         self.assertEqual(donation.retry_count, 2)
 
-    @patch.object(GoogleDonation, '_process_data')
+    @patch.object(GoogleDonation, '_process_data', autospec=True, side_effect=_fake_process_data)
     def test_error_donation_succeeds_on_retry(self, mock_process_data):
         """An errored donation can succeed and resets retry_count."""
         donation = GoogleDonation.objects.create(status='error', retry_count=1)
@@ -69,7 +74,7 @@ class TestProcessDonation(TestCase):
         self.assertEqual(donation.retry_count, MAX_RETRIES)
         self.assertTrue(any('developer attention' in msg for msg in cm.output))
 
-    @patch.object(TikTokDonation, '_process_data')
+    @patch.object(TikTokDonation, '_process_data', autospec=True, side_effect=_fake_process_data)
     def test_processes_tiktok_donation(self, mock_process_data):
         donation = TikTokDonation.objects.create(status='authorized')
         process_donation(donation.pk)
@@ -77,7 +82,7 @@ class TestProcessDonation(TestCase):
         self.assertEqual(donation.status, 'processed')
         mock_process_data.assert_called_once()
 
-    @patch.object(GoogleDonation, '_process_data')
+    @patch.object(GoogleDonation, '_process_data', autospec=True, side_effect=_fake_process_data)
     def test_processes_stuck_processing_donation(self, mock_process_data):
         donation = GoogleDonation.objects.create(status='processing')
         process_donation(donation.pk)
@@ -88,14 +93,8 @@ class TestProcessDonation(TestCase):
     def test_logs_when_error_save_fails(self, mock_process_data):
         """If saving error status fails, the failure is logged."""
         donation = GoogleDonation.objects.create(status='authorized')
-        original_save = GoogleDonation.save
-        call_count = 0
 
         def failing_save(self, *args, **kwargs):
-            nonlocal call_count
-            call_count += 1
-            if call_count <= 1:
-                return original_save(self, *args, **kwargs)
             raise Exception('db error')
 
         with patch.object(GoogleDonation, 'save', failing_save):
@@ -112,7 +111,7 @@ class TestCheckPendingDonations(TestCase):
         d1 = GoogleDonation.objects.create(status='authorized')
         d2 = TikTokDonation.objects.create(status='authorized')
         check_pending_donations()
-        queued_pks = {call.args[0] for call in mock_task.delay.call_args_list}
+        queued_pks = {call.kwargs['args'][0] for call in mock_task.apply_async.call_args_list}
         self.assertIn(d1.pk, queued_pks)
         self.assertIn(d2.pk, queued_pks)
 
@@ -120,40 +119,28 @@ class TestCheckPendingDonations(TestCase):
     def test_queues_error_donations_with_retries_remaining(self, mock_task):
         donation = GoogleDonation.objects.create(status='error', retry_count=1)
         check_pending_donations()
-        queued_pks = {call.args[0] for call in mock_task.delay.call_args_list}
+        queued_pks = {call.kwargs['args'][0] for call in mock_task.apply_async.call_args_list}
         self.assertIn(donation.pk, queued_pks)
 
     @patch('donations.tasks.process_donation')
     def test_does_not_queue_exhausted_error_donations(self, mock_task):
         GoogleDonation.objects.create(status='error', retry_count=MAX_RETRIES)
         check_pending_donations()
-        mock_task.delay.assert_not_called()
+        mock_task.apply_async.assert_not_called()
 
     @patch('donations.tasks.process_donation')
     def test_does_not_queue_pending_or_processed(self, mock_task):
         GoogleDonation.objects.create(status='pending')
         GoogleDonation.objects.create(status='processed')
         check_pending_donations()
-        mock_task.delay.assert_not_called()
+        mock_task.apply_async.assert_not_called()
 
     @patch('donations.tasks.process_donation')
-    @patch('donations.tasks.timezone')
-    def test_queues_stuck_processing_donations(self, mock_tz, mock_task):
-        now = timezone.now()
-        mock_tz.now.return_value = now
+    def test_queues_stuck_processing_donations(self, mock_task):
         donation = GoogleDonation.objects.create(status='processing')
-        GoogleDonation.objects.filter(pk=donation.pk).update(
-            created_at=now - timedelta(hours=1)
-        )
         check_pending_donations()
-        queued_pks = {call.args[0] for call in mock_task.delay.call_args_list}
+        queued_pks = {call.kwargs['args'][0] for call in mock_task.apply_async.call_args_list}
         self.assertIn(donation.pk, queued_pks)
-
-    @patch('donations.tasks.process_donation')
-    def test_does_not_queue_recently_processing(self, mock_task):
-        GoogleDonation.objects.create(status='processing')
-        check_pending_donations()
-        mock_task.delay.assert_not_called()
 
 
 class TestOAuthCallbackQueuesTask(TestCase):

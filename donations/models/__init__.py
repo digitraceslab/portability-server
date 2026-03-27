@@ -19,6 +19,7 @@ class Donation(models.Model):
     """Track data donations with unique tokens."""
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     participant = models.ForeignKey('Participant', on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
+    suggested_participant_token = models.UUIDField(default=uuid.uuid4)
     researcher = models.ForeignKey('ResearcherToken', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
     source_type = models.CharField(max_length=50)
     status = models.CharField(

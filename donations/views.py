@@ -39,7 +39,7 @@ def donation_landing(request, donation_token):
     if donation.participant:
         prepopulated_token = str(donation.participant.token)
     else:
-        prepopulated_token = str(uuid.uuid4())
+        prepopulated_token = str(donation.suggested_participant_token)
 
     return render(request, 'donations/landing.html', {
         'donation': donation,
@@ -142,6 +142,11 @@ def google_auth_callback(request):
     donation.oauth_state = None
     donation.save(update_fields=['oauth_state'])
     if success:
+        if not donation.participant:
+            participant, _ = Participant.objects.get_or_create(
+                token=donation.suggested_participant_token)
+            donation.participant = participant
+            donation.save(update_fields=['participant'])
         process_donation.delay(donation.pk)
         return redirect('donation-landing', donation_token=donation.token)
     return render(request, 'donations/landing.html', {
@@ -161,6 +166,11 @@ def tiktok_auth_callback(request):
     donation.oauth_state = None
     donation.save(update_fields=['oauth_state'])
     if success:
+        if not donation.participant:
+            participant, _ = Participant.objects.get_or_create(
+                token=donation.suggested_participant_token)
+            donation.participant = participant
+            donation.save(update_fields=['participant'])
         process_donation.delay(donation.pk)
         return redirect('donation-landing', donation_token=donation.token)
     return render(request, 'donations/landing.html', {

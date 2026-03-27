@@ -431,11 +431,13 @@ class DonationLandingParticipantTests(TestCase):
         self.url = f'/donate/{self.donation.token}/'
 
     def test_landing_page_shows_prepopulated_token(self):
-        response = self.client.get(self.url)
-        self.assertEqual(response.status_code, 200)
-        prepopulated_token = response.context['prepopulated_token']
-        self.assertIsNotNone(prepopulated_token)
-        uuid.UUID(str(prepopulated_token))
+        response1 = self.client.get(self.url)
+        response2 = self.client.get(self.url)
+        self.assertEqual(response1.status_code, 200)
+        token1 = response1.context['prepopulated_token']
+        token2 = response2.context['prepopulated_token']
+        self.assertEqual(token1, token2)
+        uuid.UUID(str(token1))
 
     def test_post_creates_new_participant(self):
         new_token = str(uuid.uuid4())
@@ -472,6 +474,30 @@ class DonationLandingParticipantTests(TestCase):
             str(response.context['prepopulated_token']),
             str(existing_participant.token),
         )
+
+    @patch('donations.views.process_donation')
+    @patch.object(GoogleDonation, 'handle_auth_callback', return_value=(True, ''))
+    def test_google_auth_callback_creates_participant(self, mock_handle, mock_task):
+        self.donation.oauth_state = 'test-state-create'
+        self.donation.save()
+        self.client.get('/oauth/google/callback/?state=test-state-create&code=testcode')
+        self.donation.refresh_from_db()
+        self.assertIsNotNone(self.donation.participant)
+        self.assertEqual(
+            self.donation.participant.token,
+            self.donation.suggested_participant_token,
+        )
+
+    @patch('donations.views.process_donation')
+    @patch.object(GoogleDonation, 'handle_auth_callback', return_value=(True, ''))
+    def test_google_auth_callback_preserves_existing_participant(self, mock_handle, mock_task):
+        existing_participant = Participant.objects.create()
+        self.donation.participant = existing_participant
+        self.donation.oauth_state = 'test-state-preserve'
+        self.donation.save()
+        self.client.get('/oauth/google/callback/?state=test-state-preserve&code=testcode')
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.participant, existing_participant)
 
 
 class ParticipantHomeViewTests(TestCase):

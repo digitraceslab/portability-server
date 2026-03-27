@@ -367,9 +367,6 @@ All configuration is done via `.env` (copy from `.env.example`):
 ## Testing
 
 ```bash
-python manage.py test donations
+python manage.py test
 ```
 
-## License
-
-<!-- TODO: Choose and add license -->

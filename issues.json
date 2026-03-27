@@ -38,12 +38,12 @@
     {
       "id": "participant-id-regenerated-on-load",
       "title": "Participant ID regenerated on every page load",
-      "status": "open",
+      "status": "done",
       "description": "In `donation_landing()` in `donations/views.py`, when a donation has no participant assigned, a new `uuid.uuid4()` is generated on every GET request to prepopulate the token field (line 42). If the participant doesn't submit the form before authorizing, `google_auth_callback()` doesn't assign one either, so `donation.participant` stays `None` and every page load shows a different ID.",
       "tasks": [
-        {"text": "Add a `suggested_participant_token` UUID field to the Donation model, auto-generated on creation", "done": false},
-        {"text": "In `donation_landing()`, use `donation.suggested_participant_token` instead of generating a new uuid each load", "done": false},
-        {"text": "Create and assign a Participant (using the suggested token) in `google_auth_callback()` and `tiktok_auth_callback()` if none is set, or when the participant submits the token form", "done": false}
+        {"text": "Add a `suggested_participant_token` UUID field to the Donation model, auto-generated on creation", "done": true},
+        {"text": "In `donation_landing()`, use `donation.suggested_participant_token` instead of generating a new uuid each load", "done": true},
+        {"text": "Create and assign a Participant (using the suggested token) in `google_auth_callback()` and `tiktok_auth_callback()` if none is set, or when the participant submits the token form", "done": true}
       ]
     }
   ]
