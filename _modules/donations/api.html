@@ -70,6 +70,7 @@
              
   <h1>Source code for donations.api</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;REST API for researcher donation management.&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.urls</span><span class="w"> </span><span class="kn">import</span> <span class="n">reverse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">serializers</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">viewsets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">action</span><span class="p">,</span> <span class="n">api_view</span><span class="p">,</span> <span class="n">permission_classes</span> <span class="k">as</span> <span class="n">perm_classes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.permissions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllowAny</span><span class="p">,</span> <span class="n">BasePermission</span>
@@ -123,12 +124,24 @@
 <div class="viewcode-block" id="DonationSerializer">
 <a class="viewcode-back" href="../../donations.api.html#donations.api.DonationSerializer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DonationSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="n">donation_url</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">SerializerMethodField</span><span class="p">()</span>
+
 <div class="viewcode-block" id="DonationSerializer.Meta">
 <a class="viewcode-back" href="../../donations.api.html#donations.api.DonationSerializer.Meta">[docs]</a>
     <span class="k">class</span><span class="w"> </span><span class="nc">Meta</span><span class="p">:</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">Donation</span>
-        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;source_type&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;data_start_date&#39;</span><span class="p">,</span> <span class="s1">&#39;data_end_date&#39;</span><span class="p">,</span> <span class="s1">&#39;requested_data_types&#39;</span><span class="p">]</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;source_type&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">,</span> <span class="s1">&#39;data_start_date&#39;</span><span class="p">,</span> <span class="s1">&#39;data_end_date&#39;</span><span class="p">,</span> <span class="s1">&#39;requested_data_types&#39;</span><span class="p">,</span> <span class="s1">&#39;donation_url&#39;</span><span class="p">]</span>
         <span class="n">read_only_fields</span> <span class="o">=</span> <span class="n">fields</span></div>
+
+
+<div class="viewcode-block" id="DonationSerializer.get_donation_url">
+<a class="viewcode-back" href="../../donations.api.html#donations.api.DonationSerializer.get_donation_url">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_donation_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;request&#39;</span><span class="p">)</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">token</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">request</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">build_absolute_uri</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span></div>
 </div>
 
 
@@ -184,7 +197,7 @@
             <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
                 <span class="n">create_kwargs</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
         <span class="n">donation</span> <span class="o">=</span> <span class="n">model_class</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="o">**</span><span class="n">create_kwargs</span><span class="p">)</span>
-        <span class="n">serializer</span> <span class="o">=</span> <span class="n">DonationSerializer</span><span class="p">(</span><span class="n">donation</span><span class="p">)</span>
+        <span class="n">serializer</span> <span class="o">=</span> <span class="n">DonationSerializer</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;request&#39;</span><span class="p">:</span> <span class="n">request</span><span class="p">})</span>
         <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">serializer</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">)</span></div>
 
 
