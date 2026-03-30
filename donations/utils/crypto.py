@@ -1,12 +1,10 @@
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 import os
-import base64
-import hashlib
 import tempfile
 from cryptography.fernet import Fernet
 
 def _resolve_key():
-    from django.core.exceptions import ImproperlyConfigured
     key = getattr(settings, 'ENCRYPTION_KEY', None)
     if not key:
         raise ImproperlyConfigured(

@@ -49,7 +49,7 @@ POST /api/donations/
 
 Available Google data types: `youtube_history`, `discover`, `google_lens`, `google_play_games`, `google_play_store`, `image_search`, `search`, `video_search`.
 
-Returns a donation object including a `token` (UUID). Send the participant to `/donate/<token>/` to begin the OAuth flow.
+Returns a donation object including a `donation_url` — an absolute URL to send directly to the participant to begin the OAuth flow.
 
 Example
 ``` bash

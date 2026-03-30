@@ -1,4 +1,5 @@
 """REST API for researcher donation management."""
+from django.urls import reverse
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes as perm_classes
 from rest_framework.permissions import AllowAny, BasePermission
@@ -41,10 +42,19 @@ class DonationCreateSerializer(serializers.Serializer):
 
 
 class DonationSerializer(serializers.ModelSerializer):
+    donation_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Donation
-        fields = ['id', 'token', 'source_type', 'status', 'created_at', 'data_start_date', 'data_end_date', 'requested_data_types']
+        fields = ['id', 'token', 'source_type', 'status', 'created_at', 'data_start_date', 'data_end_date', 'requested_data_types', 'donation_url']
         read_only_fields = fields
+
+    def get_donation_url(self, obj):
+        request = self.context.get('request')
+        path = reverse('donation-landing', kwargs={'donation_token': obj.token})
+        if request:
+            return request.build_absolute_uri(path)
+        return path
 
 
 class DataQuerySerializer(serializers.Serializer):
@@ -82,7 +92,7 @@ class DonationViewSet(viewsets.GenericViewSet):
             if value:
                 create_kwargs[field] = value
         donation = model_class.objects.create(**create_kwargs)
-        serializer = DonationSerializer(donation)
+        serializer = DonationSerializer(donation, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):

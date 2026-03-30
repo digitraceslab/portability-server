@@ -1,6 +1,6 @@
 """Celery tasks for asynchronous donation processing."""
 import logging
-
+from donations.models import Donation
 from celery import shared_task
 
 logger = logging.getLogger(__name__)
@@ -15,8 +15,6 @@ def process_donation(donation_id):
     Called by check_pending_donations (periodic) and OAuth callbacks (immediate).
     Skips donations that are already processed or have exceeded retry limit.
     """
-    from donations.models import Donation
-
     donation = Donation.objects.get(pk=donation_id)
     donation = donation.get_subclass()
 
@@ -60,8 +58,6 @@ def check_pending_donations():
     - error: failed donations that haven't exceeded retry limit
     - processing: donations stuck longer than the task time limit
     """
-    from donations.models import Donation
-
     needs_processing = Donation.objects.filter(
         status__in=('authorized', 'processing', 'error')
     )
