@@ -81,6 +81,64 @@ class GoogleDonation(Donation):
         'video_search': np_read_video_search,
     }
 
+    DATA_TYPE_SCOPE_MAP = {
+        'discover': {
+            'scopes': ['discover.likes', 'discover.follows', 'discover.not_interested'],
+            'resources': ['discover.likes', 'discover.follows', 'discover.not_interested'],
+        },
+        'youtube_history': {
+            'scopes': ['myactivity.youtube'],
+            'resources': ['myactivity.youtube'],
+        },
+        'search': {
+            'scopes': ['myactivity.search'],
+            'resources': ['myactivity.search'],
+        },
+        'google_play_games': {
+            'scopes': ['myactivity.play'],
+            'resources': ['myactivity.play'],
+        },
+        'google_play_store': {
+            'scopes': ['myactivity.play'],
+            'resources': ['myactivity.play'],
+        },
+        'image_search': {
+            'scopes': ['myactivity.search'],
+            'resources': ['myactivity.search'],
+        },
+        'video_search': {
+            'scopes': ['myactivity.search'],
+            'resources': ['myactivity.search'],
+        },
+        'google_lens': {
+            'scopes': ['chrome.history'],
+            'resources': ['chrome.history'],
+        },
+    }
+
+    def _get_scopes_and_resources(self):
+        """Return (scopes, resources) filtered by requested_data_types. Empty means all."""
+        scope_prefix = 'https://www.googleapis.com/auth/dataportability.'
+        if not self.requested_data_types:
+            types = self.EXPECTED_DATA_TYPES
+        else:
+            types = self.requested_data_types
+        scopes = []
+        resources = []
+        for dt in types:
+            mapping = self.DATA_TYPE_SCOPE_MAP.get(dt)
+            if mapping:
+                for s in mapping['scopes']:
+                    if s not in scopes:
+                        scopes.append(s)
+                for r in mapping['resources']:
+                    if r not in resources:
+                        resources.append(r)
+        return (
+            [scope_prefix + s for s in scopes],
+            resources,
+        )
+
     def save(self, *args, **kwargs):
         if not self.source_type:
             self.source_type = 'google_portability'
@@ -159,19 +217,12 @@ class GoogleDonation(Donation):
             reverse('google-auth-callback')
         )
 
+        scopes, _ = self._get_scopes_and_resources()
         params = {
             'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
             'redirect_uri': redirect_url,
             'response_type': 'code',
-            'scope': (
-                'https://www.googleapis.com/auth/dataportability.discover.likes '
-                'https://www.googleapis.com/auth/dataportability.discover.follows '
-                'https://www.googleapis.com/auth/dataportability.discover.not_interested '
-                'https://www.googleapis.com/auth/dataportability.chrome.history '
-                'https://www.googleapis.com/auth/dataportability.myactivity.play '
-                'https://www.googleapis.com/auth/dataportability.myactivity.search '
-                'https://www.googleapis.com/auth/dataportability.myactivity.youtube'
-            ),
+            'scope': ' '.join(scopes),
             'access_type': 'offline',
             'state': state_token,
             'prompt': 'consent',
@@ -184,16 +235,9 @@ class GoogleDonation(Donation):
         if self.access_token:
             access_token = crypto.decrypt_text(self.access_token)
         headers = {'Authorization': f"Bearer {access_token}"}
+        _, resources = self._get_scopes_and_resources()
         body = {
-            'resources': [
-                'discover.likes',
-                'discover.follows',
-                'discover.not_interested',
-                'chrome.history',
-                'myactivity.play',
-                'myactivity.search',
-                'myactivity.youtube',
-            ]
+            'resources': resources
         }
         api_response = requests.post(api_url, headers=headers, json=body)
 

@@ -527,3 +527,72 @@ class ParticipantHomeViewTests(TestCase):
     def test_404_for_invalid_token(self):
         response = self.client.get(f'/participant/{uuid.uuid4()}/')
         self.assertEqual(response.status_code, 404)
+
+
+class TestScopeFiltering(TestCase):
+    """Tests for GoogleDonation._get_scopes_and_resources() scope/resource filtering."""
+
+    SCOPE_PREFIX = 'https://www.googleapis.com/auth/dataportability.'
+
+    def test_empty_requested_types_returns_all(self):
+        gd = GoogleDonation.objects.create(requested_data_types=[])
+        scopes, resources = gd._get_scopes_and_resources()
+
+        # 8 data types collapse to 7 unique raw values after deduplication
+        # (myactivity.play appears for both google_play_games and google_play_store;
+        #  myactivity.search appears for image_search, search, and video_search)
+        expected_raw = [
+            'myactivity.youtube',
+            'discover.likes',
+            'discover.follows',
+            'discover.not_interested',
+            'chrome.history',
+            'myactivity.play',
+            'myactivity.search',
+        ]
+        self.assertEqual(len(scopes), 7)
+        self.assertEqual(len(resources), 7)
+        for raw in expected_raw:
+            self.assertIn(self.SCOPE_PREFIX + raw, scopes)
+            self.assertIn(raw, resources)
+
+    def test_single_type_returns_matching_scopes(self):
+        gd = GoogleDonation.objects.create(requested_data_types=['youtube_history'])
+        scopes, resources = gd._get_scopes_and_resources()
+
+        self.assertEqual(scopes, [self.SCOPE_PREFIX + 'myactivity.youtube'])
+        self.assertEqual(resources, ['myactivity.youtube'])
+
+    def test_discover_returns_three_scopes(self):
+        gd = GoogleDonation.objects.create(requested_data_types=['discover'])
+        scopes, resources = gd._get_scopes_and_resources()
+
+        expected_raw = ['discover.likes', 'discover.follows', 'discover.not_interested']
+        self.assertEqual(len(scopes), 3)
+        self.assertEqual(len(resources), 3)
+        for raw in expected_raw:
+            self.assertIn(self.SCOPE_PREFIX + raw, scopes)
+            self.assertIn(raw, resources)
+
+    def test_deduplication(self):
+        gd = GoogleDonation.objects.create(
+            requested_data_types=['google_play_games', 'google_play_store']
+        )
+        scopes, resources = gd._get_scopes_and_resources()
+
+        # Both types map to myactivity.play — should appear exactly once
+        self.assertEqual(scopes, [self.SCOPE_PREFIX + 'myactivity.play'])
+        self.assertEqual(resources, ['myactivity.play'])
+
+    def test_multiple_types(self):
+        gd = GoogleDonation.objects.create(
+            requested_data_types=['youtube_history', 'search']
+        )
+        scopes, resources = gd._get_scopes_and_resources()
+
+        self.assertEqual(len(scopes), 2)
+        self.assertEqual(len(resources), 2)
+        self.assertIn(self.SCOPE_PREFIX + 'myactivity.youtube', scopes)
+        self.assertIn(self.SCOPE_PREFIX + 'myactivity.search', scopes)
+        self.assertIn('myactivity.youtube', resources)
+        self.assertIn('myactivity.search', resources)
