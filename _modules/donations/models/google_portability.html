@@ -155,6 +155,64 @@
         <span class="s1">&#39;video_search&#39;</span><span class="p">:</span> <span class="n">np_read_video_search</span><span class="p">,</span>
     <span class="p">}</span>
 
+    <span class="n">DATA_TYPE_SCOPE_MAP</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;discover&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;discover.likes&#39;</span><span class="p">,</span> <span class="s1">&#39;discover.follows&#39;</span><span class="p">,</span> <span class="s1">&#39;discover.not_interested&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;discover.likes&#39;</span><span class="p">,</span> <span class="s1">&#39;discover.follows&#39;</span><span class="p">,</span> <span class="s1">&#39;discover.not_interested&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;youtube_history&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.youtube&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.youtube&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;search&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.search&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.search&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;google_play_games&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.play&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.play&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;google_play_store&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.play&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.play&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;image_search&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.search&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.search&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;video_search&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.search&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;myactivity.search&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+        <span class="s1">&#39;google_lens&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;scopes&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;chrome.history&#39;</span><span class="p">],</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;chrome.history&#39;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_scopes_and_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return (scopes, resources) filtered by requested_data_types. Empty means all.&quot;&quot;&quot;</span>
+        <span class="n">scope_prefix</span> <span class="o">=</span> <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">requested_data_types</span><span class="p">:</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">EXPECTED_DATA_TYPES</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">types</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">requested_data_types</span>
+        <span class="n">scopes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">resources</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="n">types</span><span class="p">:</span>
+            <span class="n">mapping</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE_SCOPE_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">mapping</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">[</span><span class="s1">&#39;scopes&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">s</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">scopes</span><span class="p">:</span>
+                        <span class="n">scopes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">mapping</span><span class="p">[</span><span class="s1">&#39;resources&#39;</span><span class="p">]:</span>
+                    <span class="k">if</span> <span class="n">r</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+                        <span class="n">resources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">scope_prefix</span> <span class="o">+</span> <span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">scopes</span><span class="p">],</span>
+            <span class="n">resources</span><span class="p">,</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="GoogleDonation.save">
 <a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.save">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -247,19 +305,12 @@
             <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;google-auth-callback&#39;</span><span class="p">)</span>
         <span class="p">)</span>
 
+        <span class="n">scopes</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scopes_and_resources</span><span class="p">()</span>
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">GOOGLE_OAUTH_CLIENT_ID</span><span class="p">,</span>
             <span class="s1">&#39;redirect_uri&#39;</span><span class="p">:</span> <span class="n">redirect_url</span><span class="p">,</span>
             <span class="s1">&#39;response_type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;scope&#39;</span><span class="p">:</span> <span class="p">(</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.discover.likes &#39;</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.discover.follows &#39;</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.discover.not_interested &#39;</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.chrome.history &#39;</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.myactivity.play &#39;</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.myactivity.search &#39;</span>
-                <span class="s1">&#39;https://www.googleapis.com/auth/dataportability.myactivity.youtube&#39;</span>
-            <span class="p">),</span>
+            <span class="s1">&#39;scope&#39;</span><span class="p">:</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">scopes</span><span class="p">),</span>
             <span class="s1">&#39;access_type&#39;</span><span class="p">:</span> <span class="s1">&#39;offline&#39;</span><span class="p">,</span>
             <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="n">state_token</span><span class="p">,</span>
             <span class="s1">&#39;prompt&#39;</span><span class="p">:</span> <span class="s1">&#39;consent&#39;</span><span class="p">,</span>
@@ -275,16 +326,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span><span class="p">:</span>
             <span class="n">access_token</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">decrypt_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_token</span><span class="p">)</span>
         <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Authorization&#39;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Bearer </span><span class="si">{</span><span class="n">access_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">}</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">resources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_scopes_and_resources</span><span class="p">()</span>
         <span class="n">body</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s1">&#39;discover.likes&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;discover.follows&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;discover.not_interested&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;chrome.history&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;myactivity.play&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;myactivity.search&#39;</span><span class="p">,</span>
-                <span class="s1">&#39;myactivity.youtube&#39;</span><span class="p">,</span>
-            <span class="p">]</span>
+            <span class="s1">&#39;resources&#39;</span><span class="p">:</span> <span class="n">resources</span>
         <span class="p">}</span>
         <span class="n">api_response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">api_url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">body</span><span class="p">)</span>
 
