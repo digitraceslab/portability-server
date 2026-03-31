@@ -167,6 +167,16 @@
         <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">raw_key</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
 
 
+<div class="viewcode-block" id="ResearcherToken.regenerate_key">
+<a class="viewcode-back" href="../../donations.models.html#donations.models.ResearcherToken.regenerate_key">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a new token key, replacing the old one. Returns the raw key.&quot;&quot;&quot;</span>
+        <span class="n">raw_key</span> <span class="o">=</span> <span class="n">get_random_string</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">raw_key</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">raw_key</span></div>
+
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">or</span> <span class="s1">&#39;unnamed&#39;</span></div>
 

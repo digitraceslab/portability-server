@@ -201,8 +201,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Confirm and revoke a donation.&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke_before_delete&#39;</span><span class="p">):</span>
-            <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">revoke_before_delete</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke&#39;</span><span class="p">):</span>
+            <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">revoke</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span>
                     <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>

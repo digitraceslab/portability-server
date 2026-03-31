@@ -120,7 +120,7 @@
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.create_archive_job"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.create_archive_job()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.handle_auth_callback()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_access_token()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.revoke_before_delete"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.revoke_before_delete()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.revoke"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.revoke()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.download_data_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.download_data_files()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.extract_and_process()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.cleanup_files()</span></code></a></li>
@@ -472,6 +472,12 @@ object the first time, the query is executed.</p>
 <span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hash_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#ResearcherToken.hash_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.hash_key" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.regenerate_key">
+<span class="sig-name descname"><span class="pre">regenerate_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#ResearcherToken.regenerate_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.regenerate_key" title="Link to this definition"></a></dt>
+<dd><p>Generate a new token key, replacing the old one. Returns the raw key.</p>
+</dd></dl>
+
 <dl class="py exception">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.DoesNotExist">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.ResearcherToken.DoesNotExist" title="Link to this definition"></a></dt>
@@ -670,8 +676,8 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="donations.models.GoogleDonation.revoke_before_delete">
-<span class="sig-name descname"><span class="pre">revoke_before_delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.revoke_before_delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.revoke_before_delete" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="donations.models.GoogleDonation.revoke">
+<span class="sig-name descname"><span class="pre">revoke</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models/google_portability.html#GoogleDonation.revoke"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.GoogleDonation.revoke" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

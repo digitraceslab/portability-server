@@ -215,8 +215,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">destroy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">donation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_object</span><span class="p">()</span>
         <span class="n">donation</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke_before_delete&#39;</span><span class="p">):</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">revoke_before_delete</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke&#39;</span><span class="p">):</span>
+            <span class="n">donation</span><span class="o">.</span><span class="n">revoke</span><span class="p">()</span>
         <span class="n">donation</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">)</span></div>
 
