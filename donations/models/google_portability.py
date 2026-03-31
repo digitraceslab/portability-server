@@ -348,7 +348,7 @@ class GoogleDonation(Donation):
         except KeyError as e:
             return False, f"Error parsing token response: Missing key {e}"
 
-    def revoke_before_delete(self):
+    def revoke(self):
         success, message = self.refresh_access_token()
         if not success:
             return False, message

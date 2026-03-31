@@ -144,7 +144,7 @@ class GoogleDonationModelTests(TestCase):
         self.assertEqual(decrypt_text(gd.access_token), original_token)
 
     @patch('donations.models.google_portability.requests.post')
-    def test_revoke_before_delete(self, mock_post):
+    def test_revoke(self, mock_post):
         mock_response = MagicMock()
         mock_response.ok = True
         mock_response.raise_for_status = MagicMock()
@@ -158,7 +158,7 @@ class GoogleDonationModelTests(TestCase):
             access_token=encrypt_text('test_access'),
             refresh_token=encrypt_text('test_refresh'),
         )
-        result = gd.revoke_before_delete()
+        result = gd.revoke()
 
         # Should return (True, ...) on success
         self.assertTrue(result[0])
@@ -170,14 +170,14 @@ class GoogleDonationModelTests(TestCase):
         self.assertTrue(any('authorization:reset' in url for url in call_urls))
 
     @patch('donations.models.google_portability.requests.post')
-    def test_revoke_before_delete_refresh_fails(self, mock_post):
+    def test_revoke_refresh_fails(self, mock_post):
         mock_post.side_effect = requests.RequestException("network error")
 
         gd = GoogleDonation.objects.create(
             access_token=encrypt_text('test_access'),
             refresh_token=encrypt_text('test_refresh'),
         )
-        result = gd.revoke_before_delete()
+        result = gd.revoke()
 
         # Should return (False, ...) when refresh fails
         self.assertFalse(result[0])
@@ -362,7 +362,7 @@ class RevokeDonationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Revoke')
 
-    @patch('donations.models.google_portability.GoogleDonation.revoke_before_delete')
+    @patch('donations.models.google_portability.GoogleDonation.revoke')
     def test_revoke_post_deletes_donation(self, mock_revoke):
         mock_revoke.return_value = (True, "Authorization revoked successfully.")
         pk = self.donation.pk
@@ -370,7 +370,7 @@ class RevokeDonationViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Donation.objects.filter(pk=pk).exists())
 
-    @patch('donations.models.google_portability.GoogleDonation.revoke_before_delete')
+    @patch('donations.models.google_portability.GoogleDonation.revoke')
     def test_revoke_post_keeps_donation_on_failure(self, mock_revoke):
         mock_revoke.return_value = (False, "Token refresh failed: network error")
         pk = self.donation.pk
@@ -379,7 +379,7 @@ class RevokeDonationViewTests(TestCase):
         self.assertTrue(Donation.objects.filter(pk=pk).exists())
         self.assertContains(response, "Token refresh failed: network error")
 
-    @patch('donations.models.google_portability.GoogleDonation.revoke_before_delete')
+    @patch('donations.models.google_portability.GoogleDonation.revoke')
     def test_revoke_post_deletes_donation_on_success(self, mock_revoke):
         mock_revoke.return_value = (True, "Authorization revoked successfully.")
         pk = self.donation.pk

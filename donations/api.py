@@ -104,8 +104,8 @@ class DonationViewSet(viewsets.GenericViewSet):
     def destroy(self, request, pk=None):
         donation = self.get_object()
         donation = donation.get_subclass()
-        if hasattr(donation, 'revoke_before_delete'):
-            donation.revoke_before_delete()
+        if hasattr(donation, 'revoke'):
+            donation.revoke()
         donation.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

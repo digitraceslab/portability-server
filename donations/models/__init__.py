@@ -79,6 +79,13 @@ class ResearcherToken(models.Model):
     def hash_key(raw_key):
         return hashlib.sha256(raw_key.encode()).hexdigest()
 
+    def regenerate_key(self):
+        """Generate a new token key, replacing the old one. Returns the raw key."""
+        raw_key = get_random_string(40)
+        self.key = hashlib.sha256(raw_key.encode()).hexdigest()
+        self.save()
+        return raw_key
+
     def __str__(self):
         return self.name or 'unnamed'
 

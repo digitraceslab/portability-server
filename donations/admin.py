@@ -1,5 +1,5 @@
 """Admin configuration for donation models."""
-from django.contrib import admin
+from django.contrib import admin, messages
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant
 
@@ -24,6 +24,20 @@ class ResearcherTokenAdmin(admin.ModelAdmin):
     """Admin interface for managing researcher tokens."""
     list_display = ('name', 'created_at')
     readonly_fields = ('key', 'created_at')
+    actions = ['regenerate_token']
+
+    @admin.action(description="Regenerate selected token (select only one)")
+    def regenerate_token(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Please select exactly one token to regenerate.", messages.WARNING)
+            return
+        token_obj = queryset.first()
+        raw_key = token_obj.regenerate_key()
+        self.message_user(
+            request,
+            f"New token for '{token_obj.name or token_obj.pk}': {raw_key} — Save this now, it will not be shown again.",
+            messages.SUCCESS,
+        )
 
 
 @admin.register(GoogleDonation)

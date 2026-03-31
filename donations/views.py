@@ -116,8 +116,8 @@ def revoke_donation(request, donation_token):
     """Confirm and revoke a donation."""
     donation = _get_donation(donation_token)
     if request.method == 'POST':
-        if hasattr(donation, 'revoke_before_delete'):
-            success, message = donation.revoke_before_delete()
+        if hasattr(donation, 'revoke'):
+            success, message = donation.revoke()
             if not success:
                 return render(request, 'donations/revoke_confirm.html', {
                     'donation': donation,
