@@ -1,6 +1,7 @@
 """TikTok Portability data source model and OAuth flow."""
 import base64
 import hashlib
+import logging
 import secrets
 from datetime import timedelta
 from urllib.parse import urlencode
@@ -13,6 +14,8 @@ from django.utils import timezone
 
 from donations.models import Donation
 from donations.utils import crypto
+
+logger = logging.getLogger(__name__)
 
 
 class TikTokDonation(Donation):
@@ -140,6 +143,14 @@ class TikTokDonation(Donation):
         if not self.code_verifier:
             return False, "Missing code verifier. Authorization may have expired."
 
+        if settings.TIKTOK_SANDBOX_MODE:
+            logger.info("TikTok sandbox mode: skipping real token exchange.")
+            self.processing_status = 'authorized'
+            self.code_verifier = ''
+            self.status = 'processing'
+            self.save()
+            return True, "Authorization successful (sandbox mode)."
+
         token_url = 'https://open.tiktokapis.com/v2/oauth/token/'
         token_data = {
             'code': code,
@@ -154,6 +165,7 @@ class TikTokDonation(Donation):
             response = requests.post(token_url, data=token_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
             response.raise_for_status()
             token_info = response.json()
+            logger.info("TikTok token exchange response: %s", token_info)
             try:
                 self._store_token_info(token_info)
             except KeyError:
