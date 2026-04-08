@@ -144,7 +144,7 @@ class TikTokDonation(Donation):
             return False, "Missing code verifier. Authorization may have expired."
 
         if settings.TIKTOK_SANDBOX_MODE:
-            logger.info("TikTok sandbox mode: skipping real token exchange.")
+            logger.info("TikTok sandbox mode: callback params: %s", dict(request.GET))
             self.processing_status = 'authorized'
             self.code_verifier = ''
             self.status = 'processing'
