@@ -50,23 +50,27 @@ class TikTokDonation(Donation):
     def get_data_types(self):
         return ['tiktok_portability']
 
+    EXAMPLE_DATA = [
+        {'date': '2026-01-01', 'type': 'video_post', 'description': 'Example video post #1', 'detail': 'Placeholder data for demonstration'},
+        {'date': '2026-01-02', 'type': 'video_post', 'description': 'Example video post #2', 'detail': 'Placeholder data for demonstration'},
+        {'date': '2026-01-03', 'type': 'comment', 'description': 'Example comment #1', 'detail': 'Placeholder data for demonstration'},
+        {'date': '2026-01-04', 'type': 'like', 'description': 'Example like #1', 'detail': 'Placeholder data for demonstration'},
+        {'date': '2026-01-05', 'type': 'search', 'description': 'Example search #1', 'detail': 'Placeholder data for demonstration'},
+    ]
+
     def fetch_data(self, data_type, limit=1000, start_date=None, end_date=None, offset=0):
         if data_type != 'tiktok_portability':
             return []
         if self.processing_status != 'processed':
             return []
-        return [{
-            'data_type': 'tiktok_portability',
-            'data': {'message': 'TikTok portability data fetched successfully.'},
-            'fetched_at': timezone.now().isoformat(),
-        }]
+        return self.EXAMPLE_DATA[offset:offset + limit]
 
     def count_rows(self, data_type, start_date=None, end_date=None):
         if data_type != 'tiktok_portability':
             return 0
         if self.processing_status != 'processed':
             return 0
-        return 1
+        return len(self.EXAMPLE_DATA)
 
     @staticmethod
     def generate_pkce_pair():
@@ -143,14 +147,6 @@ class TikTokDonation(Donation):
         if not self.code_verifier:
             return False, "Missing code verifier. Authorization may have expired."
 
-        if settings.TIKTOK_SANDBOX_MODE:
-            logger.info("TikTok sandbox mode: callback params: %s", dict(request.GET))
-            self.processing_status = 'authorized'
-            self.code_verifier = ''
-            self.status = 'processing'
-            self.save()
-            return True, "Authorization successful (sandbox mode)."
-
         token_url = 'https://open.tiktokapis.com/v2/oauth/token/'
         token_data = {
             'code': code,
@@ -165,6 +161,15 @@ class TikTokDonation(Donation):
             response = requests.post(token_url, data=token_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
             response.raise_for_status()
             token_info = response.json()
+
+            if settings.TIKTOK_SANDBOX_MODE:
+                logger.info("TikTok sandbox token exchange response: %s", token_info)
+                self.processing_status = 'authorized'
+                self.code_verifier = ''
+                self.status = 'processing'
+                self.save()
+                return True, "Authorization successful (sandbox mode)."
+
             logger.info("TikTok token exchange response: %s", token_info)
             try:
                 self._store_token_info(token_info)
