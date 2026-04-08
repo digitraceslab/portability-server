@@ -61,14 +61,14 @@ class TikTokDonation(Donation):
     def fetch_data(self, data_type, limit=1000, start_date=None, end_date=None, offset=0):
         if data_type != 'tiktok_portability':
             return []
-        if self.processing_status != 'processed':
+        if self.status != 'processed':
             return []
         return self.EXAMPLE_DATA[offset:offset + limit]
 
     def count_rows(self, data_type, start_date=None, end_date=None):
         if data_type != 'tiktok_portability':
             return 0
-        if self.processing_status != 'processed':
+        if self.status != 'processed':
             return 0
         return len(self.EXAMPLE_DATA)
 
