@@ -238,7 +238,7 @@
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Missing code verifier. Authorization may have expired.&quot;</span>
 
         <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_SANDBOX_MODE</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TikTok sandbox mode: skipping real token exchange.&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TikTok sandbox mode: callback params: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;authorized&#39;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">code_verifier</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
