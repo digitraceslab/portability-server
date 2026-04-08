@@ -4,59 +4,56 @@
 <h1>Terms of Service</h1>
 
 <h2>Introduction</h2>
-<p>This data donation service facilitates research data donation from participants to
-Aalto University researchers. By using this service, you agree to the following terms and conditions.</p>
-<p>Participants understand their data will be used for academic research as described in
+<p>Niimport is a data donation service operated at Aalto University. It allows you to donate your data for academic research. 
+By using Niimport, you agree to the following terms and conditions.</p>
+<p>As a participant, you understand that your data will be used for academic research as described in
 the <a href="{% url 'privacy-notice' %}">Privacy Notice</a>.</p>
 <p>Researchers agree to use the donated data solely for research purposes and in accordance
 with legal and ethical guidelines, following research plans pre-reviewed by the
 Aalto University research ethics committee.</p>
-<p>This service is a data processing pipeline: it downloads data you authorize from third-party
-platforms (such as Google and TikTok) using their official data portability APIs, processes it
-according to the study configuration, and makes it available to the researcher. It is not a
-long-term data store.</p>
+<p>This service downloads data you authorize from third-party
+platforms (such as Google and TikTok) using their official data portability APIs.
+It processes the data according to the study configuration, and makes it available to the researcher.
+It is not a long-term data store.</p>
 
 <h2>Eligibility</h2>
-<p>This service is available to participants in research studies conducted by Aalto University
-researchers.</p>
-<p>If you are under the age of 15, you cannot use this service unless a guardian has
-separately reviewed the consent with the researchers.</p>
+<p>Niimport is available to participants in specific studies conducted by Aalto University researchers.</p>
+<p>If you are under the age of 15, a guardian must separately review the consent
+forms and information with the researchers.</p>
 
 <h2>Data Use and Restrictions</h2>
 <p><b>Permitted Uses:</b>
-Researchers may use participant data solely for academic research as stated in the
+Researchers may use participant data only for academic research as stated in the
 study's research plan.</p>
 <p><b>Prohibited Uses:</b>
-Researchers may not commercially exploit, sell, or redistribute participant personal data,
+Researchers may not commercially exploit, sell, or redistribute donated data,
 or use the data for any purpose beyond those stated in the research plan.</p>
 
 <h2>Data Storage &amp; Retention</h2>
-<p>Data is retained on this service only as long as needed for processing and researcher
-download. Your donated data may contain identifying information; this service does not
-remove identifiers. It is the researcher's responsibility to handle identifiers appropriately
-according to their study's data management plan.</p>
-<p>Data protection measures, retention periods, and deletion procedures are described in the
-<a href="{% url 'privacy-notice' %}">Privacy Notice</a>.</p>
+<p>Niimport only stores data as long as needed for processing and handing it over to researchers.
+Your donated data may contain identifying information. The service does not
+remove identifiers. It is the researcher's responsibility to handle identifiers appropriately, following their study's data management plan.</p>
+<p>The <a href="{% url 'privacy-notice' %}">Privacy Notice</a> covers data protection measures, retention periods, and deletion procedures.</p>
 
 <h2>Participant Withdrawal</h2>
-<p>Participants may revoke a donation at any time via their donation page. Revocation immediately
-deletes all associated data and OAuth tokens from this service and revokes OAuth access to the
+<p>You can revoke a donation at any time via your donation page. Revocation immediately
+deletes all associated data and OAuth tokens from this service and removes access to the
 third-party platform.</p>
-<p>Researchers may have downloaded data prior to revocation. Retention and deletion of
+<p>Researchers may have downloaded data before you revoke access. Retention and deletion of
 downloaded copies is governed by the study's data management plan.</p>
 
 <h2>Researcher Obligations</h2>
-<p>Researchers agree to process data only in accordance with research plans reviewed by the
-Aalto University research ethics committee, and to cooperate with institutional oversight
+<p>Researchers agree to only process data in accordance with a research plan reviewed by the
+Aalto University research ethics committee. They will cooperate with institutional oversight
 and data auditing. Researchers must comply with all applicable data protection regulations,
 including GDPR and Finnish data protection law.</p>
 
 <h2>Compliance and Enforcement</h2>
-<p>Researchers must adhere to these terms and to applicable legal and research integrity
+<p>Researchers must follow these terms and any applicable legal and research integrity
 requirements. Violations may result in revocation of access or termination of data collection.</p>
 
 <h2>Contact Information</h2>
 <p>Contact Aalto RSEs (<a href="mailto:rse@aalto.fi">rse@aalto.fi</a>) for more information
-or assistance regarding these terms of service.</p>
+or assistance about these terms of service.</p>
 
 {% endblock %}
