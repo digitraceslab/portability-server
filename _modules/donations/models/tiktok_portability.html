@@ -130,6 +130,14 @@
         <span class="k">return</span> <span class="p">[</span><span class="s1">&#39;tiktok_portability&#39;</span><span class="p">]</span></div>
 
 
+    <span class="n">EXAMPLE_DATA</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="s1">&#39;2026-01-01&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;video_post&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Example video post #1&#39;</span><span class="p">,</span> <span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39;Placeholder data for demonstration&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="s1">&#39;2026-01-02&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;video_post&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Example video post #2&#39;</span><span class="p">,</span> <span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39;Placeholder data for demonstration&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="s1">&#39;2026-01-03&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;comment&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Example comment #1&#39;</span><span class="p">,</span> <span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39;Placeholder data for demonstration&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="s1">&#39;2026-01-04&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;like&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Example like #1&#39;</span><span class="p">,</span> <span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39;Placeholder data for demonstration&#39;</span><span class="p">},</span>
+        <span class="p">{</span><span class="s1">&#39;date&#39;</span><span class="p">:</span> <span class="s1">&#39;2026-01-05&#39;</span><span class="p">,</span> <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;search&#39;</span><span class="p">,</span> <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Example search #1&#39;</span><span class="p">,</span> <span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39;Placeholder data for demonstration&#39;</span><span class="p">},</span>
+    <span class="p">]</span>
+
 <div class="viewcode-block" id="TikTokDonation.fetch_data">
 <a class="viewcode-back" href="../../../donations.models.tiktok_portability.html#donations.models.TikTokDonation.fetch_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
@@ -137,11 +145,7 @@
             <span class="k">return</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">!=</span> <span class="s1">&#39;processed&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">[]</span>
-        <span class="k">return</span> <span class="p">[{</span>
-            <span class="s1">&#39;data_type&#39;</span><span class="p">:</span> <span class="s1">&#39;tiktok_portability&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;data&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;TikTok portability data fetched successfully.&#39;</span><span class="p">},</span>
-            <span class="s1">&#39;fetched_at&#39;</span><span class="p">:</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
-        <span class="p">}]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">EXAMPLE_DATA</span><span class="p">[</span><span class="n">offset</span><span class="p">:</span><span class="n">offset</span> <span class="o">+</span> <span class="n">limit</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="TikTokDonation.count_rows">
@@ -151,7 +155,7 @@
             <span class="k">return</span> <span class="mi">0</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">!=</span> <span class="s1">&#39;processed&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">0</span>
-        <span class="k">return</span> <span class="mi">1</span></div>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">EXAMPLE_DATA</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TikTokDonation.generate_pkce_pair">
@@ -237,14 +241,6 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">code_verifier</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Missing code verifier. Authorization may have expired.&quot;</span>
 
-        <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_SANDBOX_MODE</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TikTok sandbox mode: callback params: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="p">))</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;authorized&#39;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">code_verifier</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;Authorization successful (sandbox mode).&quot;</span>
-
         <span class="n">token_url</span> <span class="o">=</span> <span class="s1">&#39;https://open.tiktokapis.com/v2/oauth/token/&#39;</span>
         <span class="n">token_data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
@@ -259,6 +255,15 @@
             <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">token_url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">token_data</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_REQUEST_TIMEOUT</span><span class="p">)</span>
             <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
             <span class="n">token_info</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_SANDBOX_MODE</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TikTok sandbox token exchange response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">token_info</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;authorized&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">code_verifier</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;Authorization successful (sandbox mode).&quot;</span>
+
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TikTok token exchange response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">token_info</span><span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_store_token_info</span><span class="p">(</span><span class="n">token_info</span><span class="p">)</span>
