@@ -1,4 +1,5 @@
 {% extends "donations/base.html" %}
+{% load static %}
 
 <meta name="description" content="Niimport: A service for research data donations.">
 
@@ -7,16 +8,19 @@ Niimport
 {% endblock %}
 
 {% block content %}
-<h1>Niimport</h1>
-<p>This service enables researchers to collect data donations from participants through platform data portability APIs (Google Takeout, TikTok).</p>
+<div style="text-align: center; margin-bottom: 2rem;">
+    <img src="{% static 'img/niimport-logo.svg' %}" alt="Niimport" style="max-width: 300px;">
+</div>
 
-<h2>Researchers</h2>
-<p>Use the API to create and manage data donations. See the <a href="{% url 'api-docs' %}">API documentation</a> to get started.</p>
+<p>Niimport enables research participants to donate their platform data for academic studies through secure data portability APIs.</p>
 
-<h2>Participants</h2>
+<h2>For Researchers</h2>
+<p>Use the <a href="{% url 'api-docs' %}">API</a> to create and manage data donations.</p>
+
+<h2>For Participants</h2>
 <p>If you received a donation link from a researcher, use that link to get started.</p>
 
-<h2>Documentation</h2>
+<h2>Legal</h2>
 <ul>
     <li><a href="{% url 'terms-of-service' %}">Terms of Service</a></li>
     <li><a href="{% url 'privacy-notice' %}">Privacy Notice</a></li>
