@@ -84,6 +84,7 @@ class GoogleDonation(Donation):
     }
 
     DATA_TYPE_SCOPE_MAP = {
+        # Existing data types with parsers
         'discover': {
             'scopes': ['discover.likes', 'discover.follows', 'discover.not_interested'],
             'resources': ['discover.likes', 'discover.follows', 'discover.not_interested'],
@@ -116,13 +117,130 @@ class GoogleDonation(Donation):
             'scopes': ['chrome.history'],
             'resources': ['chrome.history'],
         },
+        # Additional data types (no parser yet, scopes only)
+        'alerts': {
+            'scopes': ['alerts.subscriptions'],
+            'resources': ['alerts.subscriptions'],
+        },
+        'chrome': {
+            'scopes': [
+                'chrome.autofill', 'chrome.bookmarks', 'chrome.dictionary',
+                'chrome.extensions', 'chrome.reading_list', 'chrome.settings',
+            ],
+            'resources': [
+                'chrome.autofill', 'chrome.bookmarks', 'chrome.dictionary',
+                'chrome.extensions', 'chrome.reading_list', 'chrome.settings',
+            ],
+        },
+        'maps': {
+            'scopes': [
+                'maps.aliased_places', 'maps.commute_routes', 'maps.commute_settings',
+                'maps.ev_profile', 'maps.factual_contributions', 'maps.offering_contributions',
+                'maps.photos_videos', 'maps.questions_answers', 'maps.reviews',
+                'maps.starred_places', 'maps.vehicle_profile',
+            ],
+            'resources': [
+                'maps.aliased_places', 'maps.commute_routes', 'maps.commute_settings',
+                'maps.ev_profile', 'maps.factual_contributions', 'maps.offering_contributions',
+                'maps.photos_videos', 'maps.questions_answers', 'maps.reviews',
+                'maps.starred_places', 'maps.vehicle_profile',
+            ],
+        },
+        'maps_activity': {
+            'scopes': ['myactivity.maps'],
+            'resources': ['myactivity.maps'],
+        },
+        'shopping_activity': {
+            'scopes': ['myactivity.shopping'],
+            'resources': ['myactivity.shopping'],
+        },
+        'ad_center_activity': {
+            'scopes': ['myactivity.myadcenter'],
+            'resources': ['myactivity.myadcenter'],
+        },
+        'mymaps': {
+            'scopes': ['mymaps.maps'],
+            'resources': ['mymaps.maps'],
+        },
+        'nest': {
+            'scopes': [
+                'nest.camera_event', 'nest.camera_feature', 'nest.camera_video',
+                'nest.store', 'nest.user',
+            ],
+            'resources': [
+                'nest.camera_event', 'nest.camera_feature', 'nest.camera_video',
+                'nest.store', 'nest.user',
+            ],
+        },
+        'order_reserve': {
+            'scopes': ['order_reserve.purchases_reservations'],
+            'resources': ['order_reserve.purchases_reservations'],
+        },
+        'play': {
+            'scopes': [
+                'play.devices', 'play.grouping', 'play.installs', 'play.library',
+                'play.playpoints', 'play.promotions', 'play.purchases',
+                'play.redemptions', 'play.subscriptions', 'play.usersettings',
+            ],
+            'resources': [
+                'play.devices', 'play.grouping', 'play.installs', 'play.library',
+                'play.playpoints', 'play.promotions', 'play.purchases',
+                'play.redemptions', 'play.subscriptions', 'play.usersettings',
+            ],
+        },
+        'saved': {
+            'scopes': ['saved.collections'],
+            'resources': ['saved.collections'],
+        },
+        'search_ugc': {
+            'scopes': [
+                'search_ugc.comments', 'search_ugc.media.reviews_and_stars',
+                'search_ugc.media.streaming_video_providers', 'search_ugc.media.thumbs',
+                'search_ugc.media.watched',
+            ],
+            'resources': [
+                'search_ugc.comments', 'search_ugc.media.reviews_and_stars',
+                'search_ugc.media.streaming_video_providers', 'search_ugc.media.thumbs',
+                'search_ugc.media.watched',
+            ],
+        },
+        'search_notifications': {
+            'scopes': ['searchnotifications.settings', 'searchnotifications.subscriptions'],
+            'resources': ['searchnotifications.settings', 'searchnotifications.subscriptions'],
+        },
+        'shopping': {
+            'scopes': ['shopping.addresses', 'shopping.reviews'],
+            'resources': ['shopping.addresses', 'shopping.reviews'],
+        },
+        'streetview': {
+            'scopes': ['streetview.imagery'],
+            'resources': ['streetview.imagery'],
+        },
+        'youtube': {
+            'scopes': [
+                'youtube.channel', 'youtube.clips', 'youtube.comments',
+                'youtube.conversations', 'youtube.live_chat', 'youtube.music',
+                'youtube.playable', 'youtube.posts', 'youtube.private_playlists',
+                'youtube.private_videos', 'youtube.public_playlists',
+                'youtube.public_videos', 'youtube.shopping', 'youtube.subscriptions',
+                'youtube.unlisted_playlists', 'youtube.unlisted_videos',
+            ],
+            'resources': [
+                'youtube.channel', 'youtube.clips', 'youtube.comments',
+                'youtube.conversations', 'youtube.live_chat', 'youtube.music',
+                'youtube.playable', 'youtube.posts', 'youtube.private_playlists',
+                'youtube.private_videos', 'youtube.public_playlists',
+                'youtube.public_videos', 'youtube.shopping', 'youtube.subscriptions',
+                'youtube.unlisted_playlists', 'youtube.unlisted_videos',
+            ],
+        },
     }
 
     def _get_scopes_and_resources(self):
-        """Return (scopes, resources) filtered by requested_data_types. Empty means all."""
+        """Return (scopes, resources) filtered by requested_data_types. Empty means default set, ['all'] means everything."""
         scope_prefix = 'https://www.googleapis.com/auth/dataportability.'
-        if not self.requested_data_types:
-            types = self.EXPECTED_DATA_TYPES
+        if self.requested_data_types == ['all']:
+            types = list(self.DATA_TYPE_SCOPE_MAP.keys())
         else:
             types = self.requested_data_types
         scopes = []
@@ -150,8 +268,8 @@ class GoogleDonation(Donation):
         if self.processing_status not in ('processed', 'processing', 'error'):
             return []
         return [
-            dt for dt in self.EXPECTED_DATA_TYPES
-            if self.data_type_status.get(dt, {}).get('received')
+            dt for dt, status in self.data_type_status.items()
+            if status.get('received')
         ]
 
     def _csv_path(self, data_type):
@@ -463,7 +581,7 @@ class GoogleDonation(Donation):
 
                 try:
                     for data_type, reader in self.DATA_TYPE_READERS.items():
-                        if self.requested_data_types and data_type not in self.requested_data_types:
+                        if self.requested_data_types != ['all'] and data_type not in self.requested_data_types:
                             continue
                         if data_type_status.get(data_type, {}).get('received'):
                             continue
@@ -518,7 +636,10 @@ class GoogleDonation(Donation):
                 filepath in file_status for filepath in self.downloaded_files
             )
             if all_files_done:
-                expected = self.requested_data_types or self.EXPECTED_DATA_TYPES
+                if self.requested_data_types == ['all']:
+                    expected = list(self.DATA_TYPE_READERS.keys())
+                else:
+                    expected = self.requested_data_types
                 missing = [
                     dt for dt in expected
                     if not data_type_status.get(dt, {}).get('received')

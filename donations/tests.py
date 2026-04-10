@@ -542,27 +542,18 @@ class TestScopeFiltering(TestCase):
 
     SCOPE_PREFIX = 'https://www.googleapis.com/auth/dataportability.'
 
-    def test_empty_requested_types_returns_all(self):
+    def test_empty_requested_types_returns_none(self):
         gd = GoogleDonation.objects.create(requested_data_types=[])
         scopes, resources = gd._get_scopes_and_resources()
+        self.assertEqual(scopes, [])
+        self.assertEqual(resources, [])
 
-        # 8 data types collapse to 7 unique raw values after deduplication
-        # (myactivity.play appears for both google_play_games and google_play_store;
-        #  myactivity.search appears for image_search, search, and video_search)
-        expected_raw = [
-            'myactivity.youtube',
-            'discover.likes',
-            'discover.follows',
-            'discover.not_interested',
-            'chrome.history',
-            'myactivity.play',
-            'myactivity.search',
-        ]
-        self.assertEqual(len(scopes), 7)
-        self.assertEqual(len(resources), 7)
-        for raw in expected_raw:
-            self.assertIn(self.SCOPE_PREFIX + raw, scopes)
-            self.assertIn(raw, resources)
+    def test_all_requested_types_returns_all(self):
+        gd = GoogleDonation.objects.create(requested_data_types=['all'])
+        scopes, resources = gd._get_scopes_and_resources()
+        self.assertGreater(len(scopes), 7)
+        self.assertIn(self.SCOPE_PREFIX + 'myactivity.youtube', scopes)
+        self.assertIn(self.SCOPE_PREFIX + 'youtube.channel', scopes)
 
     def test_single_type_returns_matching_scopes(self):
         gd = GoogleDonation.objects.create(requested_data_types=['youtube_history'])
