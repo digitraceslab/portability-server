@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class TikTokDonation(Donation):
+    source_type_display = 'TikTok'
+
     DEFAULT_REQUEST_TIMEOUT = 10
 
     PROCESSING_STATUS_CHOICES = (

@@ -26,6 +26,8 @@ import donations.utils.crypto as crypto
 
 
 class GoogleDonation(Donation):
+    source_type_display = 'Google'
+
     PROCESSING_STATUS_CHOICES = (
         ('authorized', 'Authorized, waiting for download'),
         ('processing', 'Processing'),

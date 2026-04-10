@@ -22,6 +22,11 @@ class Donation(models.Model):
     suggested_participant_token = models.UUIDField(default=uuid.uuid4)
     researcher = models.ForeignKey('ResearcherToken', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
     source_type = models.CharField(max_length=50)
+
+    @property
+    def source_type_display(self):
+        return self.source_type
+    
     status = models.CharField(
         max_length=20,
         choices=[

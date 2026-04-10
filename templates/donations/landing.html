@@ -1,10 +1,15 @@
 {% extends "donations/base.html" %}
+{% load static %}
 {% block title %}Donation Status{% endblock %}
 {% block content %}
-<h1>Data Donation</h1>
+<div style="text-align: center; margin-bottom: 1.5rem;">
+    <img src="{% static 'img/niimport-icon.svg' %}" alt="Niimport" style="max-width: 180px;">
+    <h1>Niimport</h1>
+    <p>Donate your {{ donation.source_type_display }} data for academic research.</p>
+</div>
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
-<p>Source: {{ donation.source_type }}</p>
-<p>Status: {{ donation.status }}</p>
+<p>Source: {{ donation.source_type_display }}</p>
+<p>Status: {{ donation.get_status_display }}</p>
 
 {% if not donation.terms_accepted_at %}
     <p><a href="{% url 'accept-terms' donation_token %}" class="btn">Review &amp; Accept Terms</a></p>
@@ -21,7 +26,7 @@
     {% csrf_token %}
     <div class="form-group">
         <label for="participant_token_input">Your participant token</label>
-        <p class="help-text">This token identifies you across donations. If you are a returning participant, replace this with your existing token.</p>
+        <p class="help-text">You can use this participant token to access multiple donations through one link. If you are a returning participant, enter your existing token.</p>
         <input type="text" name="participant_token_input" id="participant_token_input" value="{{ prepopulated_token }}" class="form-control">
         {% if token_error %}<p class="error">{{ token_error }}</p>{% endif %}
     </div>

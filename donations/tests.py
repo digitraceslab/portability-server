@@ -108,6 +108,10 @@ class GoogleDonationModelTests(TestCase):
         self.assertEqual(gd.status, 'pending')
         self.assertIsNotNone(gd.token)
 
+    def test_source_type_display(self):
+        gd = GoogleDonation.objects.create()
+        self.assertEqual(gd.source_type_display, 'Google')
+
     def test_inherits_donation(self):
         gd = GoogleDonation.objects.create()
         self.assertTrue(Donation.objects.filter(pk=gd.pk).exists())
@@ -235,6 +239,10 @@ class TikTokDonationModelTests(TestCase):
         self.assertEqual(td.status, 'pending')
         self.assertIsNotNone(td.token)
 
+    def test_source_type_display(self):
+        td = TikTokDonation.objects.create()
+        self.assertEqual(td.source_type_display, 'TikTok')
+
     def test_inherits_donation(self):
         td = TikTokDonation.objects.create()
         self.assertTrue(Donation.objects.filter(pk=td.pk).exists())
@@ -290,7 +298,7 @@ class DonationLandingViewTests(TestCase):
     def test_landing_page_loads(self):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Data Donation')
+        self.assertContains(response, 'Niimport')
 
     def test_landing_shows_terms_link_when_not_accepted(self):
         response = self.client.get(self.url)
