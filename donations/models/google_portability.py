@@ -83,12 +83,44 @@ class GoogleDonation(Donation):
         'video_search': np_read_video_search,
     }
 
+    # Individual scopes: each key maps to exactly one scope/resource.
+    _INDIVIDUAL_SCOPES = [
+        'alerts.subscriptions',
+        'chrome.autofill', 'chrome.bookmarks', 'chrome.dictionary',
+        'chrome.extensions', 'chrome.history', 'chrome.reading_list',
+        'chrome.settings',
+        'discover.likes', 'discover.follows', 'discover.not_interested',
+        'maps.aliased_places', 'maps.commute_routes', 'maps.commute_settings',
+        'maps.ev_profile', 'maps.factual_contributions',
+        'maps.offering_contributions', 'maps.photos_videos',
+        'maps.questions_answers', 'maps.reviews', 'maps.starred_places',
+        'maps.vehicle_profile',
+        'myactivity.maps', 'myactivity.myadcenter', 'myactivity.play',
+        'myactivity.search', 'myactivity.shopping', 'myactivity.youtube',
+        'mymaps.maps',
+        'nest.camera_event', 'nest.camera_feature', 'nest.camera_video',
+        'nest.store', 'nest.user',
+        'order_reserve.purchases_reservations',
+        'play.devices', 'play.grouping', 'play.installs', 'play.library',
+        'play.playpoints', 'play.promotions', 'play.purchases',
+        'play.redemptions', 'play.subscriptions', 'play.usersettings',
+        'saved.collections',
+        'search_ugc.comments', 'search_ugc.media.reviews_and_stars',
+        'search_ugc.media.streaming_video_providers',
+        'search_ugc.media.thumbs', 'search_ugc.media.watched',
+        'searchnotifications.settings', 'searchnotifications.subscriptions',
+        'shopping.addresses', 'shopping.reviews',
+        'streetview.imagery',
+        'youtube.channel', 'youtube.clips', 'youtube.comments',
+        'youtube.conversations', 'youtube.live_chat', 'youtube.music',
+        'youtube.playable', 'youtube.posts', 'youtube.private_playlists',
+        'youtube.private_videos', 'youtube.public_playlists',
+        'youtube.public_videos', 'youtube.shopping', 'youtube.subscriptions',
+        'youtube.unlisted_playlists', 'youtube.unlisted_videos',
+    ]
+
     DATA_TYPE_SCOPE_MAP = {
-        # Existing data types with parsers
-        'discover': {
-            'scopes': ['discover.likes', 'discover.follows', 'discover.not_interested'],
-            'resources': ['discover.likes', 'discover.follows', 'discover.not_interested'],
-        },
+        # Parser-backed bundle aliases (mapped to a single underlying scope)
         'youtube_history': {
             'scopes': ['myactivity.youtube'],
             'resources': ['myactivity.youtube'],
@@ -117,10 +149,10 @@ class GoogleDonation(Donation):
             'scopes': ['chrome.history'],
             'resources': ['chrome.history'],
         },
-        # Additional data types (no parser yet, scopes only)
-        'alerts': {
-            'scopes': ['alerts.subscriptions'],
-            'resources': ['alerts.subscriptions'],
+        # Multi-scope bundles (convenience)
+        'discover': {
+            'scopes': ['discover.likes', 'discover.follows', 'discover.not_interested'],
+            'resources': ['discover.likes', 'discover.follows', 'discover.not_interested'],
         },
         'chrome': {
             'scopes': [
@@ -146,22 +178,6 @@ class GoogleDonation(Donation):
                 'maps.starred_places', 'maps.vehicle_profile',
             ],
         },
-        'maps_activity': {
-            'scopes': ['myactivity.maps'],
-            'resources': ['myactivity.maps'],
-        },
-        'shopping_activity': {
-            'scopes': ['myactivity.shopping'],
-            'resources': ['myactivity.shopping'],
-        },
-        'ad_center_activity': {
-            'scopes': ['myactivity.myadcenter'],
-            'resources': ['myactivity.myadcenter'],
-        },
-        'mymaps': {
-            'scopes': ['mymaps.maps'],
-            'resources': ['mymaps.maps'],
-        },
         'nest': {
             'scopes': [
                 'nest.camera_event', 'nest.camera_feature', 'nest.camera_video',
@@ -171,10 +187,6 @@ class GoogleDonation(Donation):
                 'nest.camera_event', 'nest.camera_feature', 'nest.camera_video',
                 'nest.store', 'nest.user',
             ],
-        },
-        'order_reserve': {
-            'scopes': ['order_reserve.purchases_reservations'],
-            'resources': ['order_reserve.purchases_reservations'],
         },
         'play': {
             'scopes': [
@@ -187,10 +199,6 @@ class GoogleDonation(Donation):
                 'play.playpoints', 'play.promotions', 'play.purchases',
                 'play.redemptions', 'play.subscriptions', 'play.usersettings',
             ],
-        },
-        'saved': {
-            'scopes': ['saved.collections'],
-            'resources': ['saved.collections'],
         },
         'search_ugc': {
             'scopes': [
@@ -212,10 +220,6 @@ class GoogleDonation(Donation):
             'scopes': ['shopping.addresses', 'shopping.reviews'],
             'resources': ['shopping.addresses', 'shopping.reviews'],
         },
-        'streetview': {
-            'scopes': ['streetview.imagery'],
-            'resources': ['streetview.imagery'],
-        },
         'youtube': {
             'scopes': [
                 'youtube.channel', 'youtube.clips', 'youtube.comments',
@@ -235,14 +239,18 @@ class GoogleDonation(Donation):
             ],
         },
     }
+    # Add one entry per individual scope, named by replacing '.' with '_'.
+    for _scope in _INDIVIDUAL_SCOPES:
+        DATA_TYPE_SCOPE_MAP[_scope.replace('.', '_')] = {
+            'scopes': [_scope],
+            'resources': [_scope],
+        }
+    del _scope
 
     def _get_scopes_and_resources(self):
         """Return (scopes, resources) filtered by requested_data_types. Empty means default set, ['all'] means everything."""
         scope_prefix = 'https://www.googleapis.com/auth/dataportability.'
-        if self.requested_data_types == ['all']:
-            types = list(self.DATA_TYPE_SCOPE_MAP.keys())
-        else:
-            types = self.requested_data_types
+        types = self.requested_data_types
         scopes = []
         resources = []
         for dt in types:
@@ -581,7 +589,7 @@ class GoogleDonation(Donation):
 
                 try:
                     for data_type, reader in self.DATA_TYPE_READERS.items():
-                        if self.requested_data_types != ['all'] and data_type not in self.requested_data_types:
+                        if data_type not in self.requested_data_types:
                             continue
                         if data_type_status.get(data_type, {}).get('received'):
                             continue
@@ -636,10 +644,10 @@ class GoogleDonation(Donation):
                 filepath in file_status for filepath in self.downloaded_files
             )
             if all_files_done:
-                if self.requested_data_types == ['all']:
-                    expected = list(self.DATA_TYPE_READERS.keys())
-                else:
-                    expected = self.requested_data_types
+                expected = [
+                    dt for dt in self.requested_data_types
+                    if dt in self.DATA_TYPE_READERS
+                ]
                 missing = [
                     dt for dt in expected
                     if not data_type_status.get(dt, {}).get('received')

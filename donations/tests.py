@@ -548,13 +548,6 @@ class TestScopeFiltering(TestCase):
         self.assertEqual(scopes, [])
         self.assertEqual(resources, [])
 
-    def test_all_requested_types_returns_all(self):
-        gd = GoogleDonation.objects.create(requested_data_types=['all'])
-        scopes, resources = gd._get_scopes_and_resources()
-        self.assertGreater(len(scopes), 7)
-        self.assertIn(self.SCOPE_PREFIX + 'myactivity.youtube', scopes)
-        self.assertIn(self.SCOPE_PREFIX + 'youtube.channel', scopes)
-
     def test_single_type_returns_matching_scopes(self):
         gd = GoogleDonation.objects.create(requested_data_types=['youtube_history'])
         scopes, resources = gd._get_scopes_and_resources()
