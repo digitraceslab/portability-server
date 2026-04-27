@@ -75,13 +75,36 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">ResearcherToken</span><span class="p">,</span> <span class="n">Participant</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_regenerate_one</span><span class="p">(</span><span class="n">modeladmin</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Shared helper for regenerate-token admin actions.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">queryset</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">modeladmin</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span>
+            <span class="n">request</span><span class="p">,</span> <span class="s2">&quot;Please select exactly one row to regenerate.&quot;</span><span class="p">,</span> <span class="n">messages</span><span class="o">.</span><span class="n">WARNING</span><span class="p">)</span>
+        <span class="k">return</span>
+    <span class="n">obj</span> <span class="o">=</span> <span class="n">queryset</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="n">raw_token</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">regenerate_token</span><span class="p">()</span>
+    <span class="n">modeladmin</span><span class="o">.</span><span class="n">message_user</span><span class="p">(</span>
+        <span class="n">request</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;New </span><span class="si">{</span><span class="n">kind</span><span class="si">}</span><span class="s2"> token for #</span><span class="si">{</span><span class="n">obj</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">raw_token</span><span class="si">}</span><span class="s2"> — Save this now, it will not be shown again.&quot;</span><span class="p">,</span>
+        <span class="n">messages</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,</span>
+    <span class="p">)</span>
+
+
 <div class="viewcode-block" id="ParticipantAdmin">
 <a class="viewcode-back" href="../../donations.admin.html#donations.admin.ParticipantAdmin">[docs]</a>
 <span class="nd">@admin</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">Participant</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ParticipantAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Admin interface for managing participants.&quot;&quot;&quot;</span>
-    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
-    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span></div>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;regenerate_token&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ParticipantAdmin.regenerate_token">
+<a class="viewcode-back" href="../../donations.admin.html#donations.admin.ParticipantAdmin.regenerate_token">[docs]</a>
+    <span class="nd">@admin</span><span class="o">.</span><span class="n">action</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Regenerate selected participant token (select only one)&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+        <span class="n">_regenerate_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">,</span> <span class="s1">&#39;participant&#39;</span><span class="p">)</span></div>
+</div>
 
 
 
@@ -92,7 +115,15 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Admin interface for managing donations.&quot;&quot;&quot;</span>
     <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;source_type&#39;</span><span class="p">,</span> <span class="s1">&#39;researcher&#39;</span><span class="p">,</span> <span class="s1">&#39;participant&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
     <span class="n">list_filter</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;source_type&#39;</span><span class="p">)</span>
-    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span></div>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;regenerate_token&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DonationAdmin.regenerate_token">
+<a class="viewcode-back" href="../../donations.admin.html#donations.admin.DonationAdmin.regenerate_token">[docs]</a>
+    <span class="nd">@admin</span><span class="o">.</span><span class="n">action</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Regenerate selected donation token (select only one)&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+        <span class="n">_regenerate_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">,</span> <span class="s1">&#39;donation&#39;</span><span class="p">)</span></div>
+</div>
 
 
 
@@ -128,9 +159,17 @@
 <span class="nd">@admin</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">GoogleDonation</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">GoogleDonationAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Admin interface for managing Google donations.&quot;&quot;&quot;</span>
-    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;researcher&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;processing_status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;researcher&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;processing_status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
     <span class="n">list_filter</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;processing_status&#39;</span><span class="p">)</span>
-    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span></div>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;regenerate_token&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="GoogleDonationAdmin.regenerate_token">
+<a class="viewcode-back" href="../../donations.admin.html#donations.admin.GoogleDonationAdmin.regenerate_token">[docs]</a>
+    <span class="nd">@admin</span><span class="o">.</span><span class="n">action</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Regenerate selected donation token (select only one)&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+        <span class="n">_regenerate_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">,</span> <span class="s1">&#39;donation&#39;</span><span class="p">)</span></div>
+</div>
 
 
 
@@ -139,9 +178,17 @@
 <span class="nd">@admin</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">TikTokDonation</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">TikTokDonationAdmin</span><span class="p">(</span><span class="n">admin</span><span class="o">.</span><span class="n">ModelAdmin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Admin interface for managing TikTok donations.&quot;&quot;&quot;</span>
-    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;researcher&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;processing_status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">list_display</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="s1">&#39;researcher&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;processing_status&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
     <span class="n">list_filter</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="s1">&#39;processing_status&#39;</span><span class="p">)</span>
-    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span></div>
+    <span class="n">readonly_fields</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">,</span> <span class="s1">&#39;created_at&#39;</span><span class="p">)</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;regenerate_token&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="TikTokDonationAdmin.regenerate_token">
+<a class="viewcode-back" href="../../donations.admin.html#donations.admin.TikTokDonationAdmin.regenerate_token">[docs]</a>
+    <span class="nd">@admin</span><span class="o">.</span><span class="n">action</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Regenerate selected donation token (select only one)&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">):</span>
+        <span class="n">_regenerate_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">queryset</span><span class="p">,</span> <span class="s1">&#39;donation&#39;</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
 

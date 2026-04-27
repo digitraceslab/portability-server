@@ -69,56 +69,241 @@
            <div itemprop="articleBody">
              
   <h1>Source code for donations.views</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Views for participant-facing donation flow.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Views for participant-facing donation flow.</span>
+
+<span class="sd">Donation and participant tokens are stored hashed in the database. The</span>
+<span class="sd">**raw** token (UUID) is what lives in the session — never the hash. Lookups</span>
+<span class="sd">hash on the fly. This means a DB read alone yields no usable session</span>
+<span class="sd">credential.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.paginator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Paginator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Http404</span><span class="p">,</span> <span class="n">HttpResponseNotAllowed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Http404</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.shortcuts</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_object_or_404</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.urls</span><span class="w"> </span><span class="kn">import</span> <span class="n">reverse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.views.decorators.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_http_methods</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">Participant</span>
+
+<span class="n">PARTICIPANT_TOKEN_MIN_LENGTH</span> <span class="o">=</span> <span class="mi">32</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">hash_token</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_donation</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the most specific donation subclass for a donation token.&quot;&quot;&quot;</span>
-    <span class="n">donation</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Donation</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span>
+<span class="n">SESSION_DONATION_PK_KEY</span> <span class="o">=</span> <span class="s1">&#39;donation_pk&#39;</span>        <span class="c1"># int — donation in scope</span>
+<span class="n">SESSION_DONATION_KEY</span> <span class="o">=</span> <span class="s1">&#39;donation_token&#39;</span>        <span class="c1"># raw UUID — auth via donation token</span>
+<span class="n">SESSION_PARTICIPANT_KEY</span> <span class="o">=</span> <span class="s1">&#39;participant_token&#39;</span>  <span class="c1"># raw UUID — auth via participant token</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the donation referenced by the session, or 404.</span>
+
+<span class="sd">    Donation in scope is identified by pk. Access is granted if either:</span>
+<span class="sd">    a participant token in session resolves to a participant that owns the</span>
+<span class="sd">    donation, or a donation token in session hashes to the donation&#39;s stored</span>
+<span class="sd">    hash.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pk</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pk</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;No donation in session.&quot;</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">Donation</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">donation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Donation not found.&quot;</span><span class="p">)</span>
+
+    <span class="n">participant_raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">participant_raw</span> <span class="ow">and</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span><span class="p">:</span>
+        <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">participant_raw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">participant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="n">participant</span><span class="o">.</span><span class="n">pk</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span>
+
+    <span class="n">donation_raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_DONATION_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">donation_raw</span> <span class="ow">and</span> <span class="n">hash_token</span><span class="p">(</span><span class="n">donation_raw</span><span class="p">)</span> <span class="o">==</span> <span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span>
+
+    <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Not authorized for this donation.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_session_participant</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">fallback_via_donation</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the participant referenced by the session, or 404.</span>
+
+<span class="sd">    If ``fallback_via_donation`` is true and no participant is in session,</span>
+<span class="sd">    fall back to the participant linked to the session&#39;s donation — but only</span>
+<span class="sd">    if that donation is itself authorized via a matching donation token.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">raw</span><span class="p">:</span>
+        <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">participant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">participant</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fallback_via_donation</span><span class="p">:</span>
+        <span class="n">pk</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">)</span>
+        <span class="n">donation_raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_DONATION_KEY</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">pk</span> <span class="ow">and</span> <span class="n">donation_raw</span><span class="p">:</span>
+            <span class="n">donation</span> <span class="o">=</span> <span class="n">Donation</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">pk</span><span class="o">=</span><span class="n">pk</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">donation</span> <span class="ow">and</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span> <span class="ow">and</span> <span class="n">hash_token</span><span class="p">(</span><span class="n">donation_raw</span><span class="p">)</span> <span class="o">==</span> <span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span>
+    <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;No participant in session.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_donation_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation</span><span class="p">,</span> <span class="n">raw_token</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Store the donation&#39;s pk in session. If ``raw_token`` is given, also</span>
+<span class="sd">    store it as a donation-token auth credential. Otherwise clear any stale</span>
+<span class="sd">    donation token so it can&#39;t be confused with the new donation.&quot;&quot;&quot;</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">pk</span>
+    <span class="k">if</span> <span class="n">raw_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw_token</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">raw_token</span><span class="p">):</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw_token</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="donation_entry">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.donation_entry">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">donation_entry</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Consume a donation token from the URL, store it in the session, redirect.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">Donation</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">donation</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Donation not found.&quot;</span><span class="p">)</span>
+    <span class="n">_set_donation_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation</span><span class="p">,</span> <span class="n">raw_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="participant_entry">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.participant_entry">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">participant_entry</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Consume a participant token from the URL, store it in the session, redirect.&quot;&quot;&quot;</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">participant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Participant not found.&quot;</span><span class="p">)</span>
+    <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;participant-home&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="select_donation">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.select_donation">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">select_donation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_pk</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Switch the active donation in session to one owned by the current participant.&quot;&quot;&quot;</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">_get_session_participant</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Donation</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="n">donation_pk</span><span class="p">,</span> <span class="n">participant</span><span class="o">=</span><span class="n">participant</span><span class="p">)</span>
+    <span class="n">_set_donation_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;next&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;data&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;data-preview&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="logout_participant">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.logout_participant">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">logout_participant</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear the participant token from session. Donation session is preserved.&quot;&quot;&quot;</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;terms-of-service&#39;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="switch_to_participant">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.switch_to_participant">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">switch_to_participant</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify the current donation has a participant, redirect to participant home.&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Donation has no linked participant.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;participant-home&#39;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_participant_link_url</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the absolute participant URL if the session has a valid raw token.</span>
+
+<span class="sd">    Returns ``None`` when no displayable raw token is available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">raw</span> <span class="ow">or</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">build_absolute_uri</span><span class="p">(</span>
+        <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;participant-entry&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="n">raw</span><span class="p">}))</span>
+
+
+<div class="viewcode-block" id="generate_participant_token">
+<a class="viewcode-back" href="../../donations.views.html#donations.views.generate_participant_token">[docs]</a>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_participant_token</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Link the current donation to the participant identified by the</span>
+<span class="sd">    donation&#39;s ``suggested_participant_token`` and stash the raw token in the</span>
+<span class="sd">    session for display. If the donation is already linked to a different</span>
+<span class="sd">    participant, this re-links it (the original participant is unaffected;</span>
+<span class="sd">    its other donations remain linked to it).&quot;&quot;&quot;</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span>
+    <span class="n">suggested_hash</span> <span class="o">=</span> <span class="n">hash_token</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="o">.</span><span class="n">token</span> <span class="o">!=</span> <span class="n">suggested_hash</span><span class="p">:</span>
+        <span class="n">participant</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">suggested_hash</span><span class="p">)</span>
+        <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
+        <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">suggested</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="donation_landing">
 <a class="viewcode-back" href="../../donations.views.html#donations.views.donation_landing">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">donation_landing</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">donation_landing</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Status overview page with participant token handling.&quot;&quot;&quot;</span>
-    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="n">token_error</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
-        <span class="n">token_input</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;participant_token_input&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">token_uuid</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">token_input</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
-            <span class="n">token_error</span> <span class="o">=</span> <span class="s1">&#39;Please enter a valid token.&#39;</span>
+        <span class="n">token_input</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">POST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;participant_token_input&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">token_input</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_input</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">PARTICIPANT_TOKEN_MIN_LENGTH</span><span class="p">:</span>
+            <span class="n">token_error</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;Token is too short. Use a UUID &#39;</span>
+                <span class="sa">f</span><span class="s1">&#39;(at least </span><span class="si">{</span><span class="n">PARTICIPANT_TOKEN_MIN_LENGTH</span><span class="si">}</span><span class="s1"> characters).&#39;</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">participant</span><span class="p">,</span> <span class="n">created</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">token_uuid</span><span class="p">)</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">token_uuid</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">token_input</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">AttributeError</span><span class="p">):</span>
+                <span class="n">token_error</span> <span class="o">=</span> <span class="s1">&#39;Please enter a valid token (UUID format).&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">token_uuid</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">participant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">hash_token</span><span class="p">(</span><span class="n">token_uuid</span><span class="p">))</span>
+                    <span class="n">participant</span><span class="o">.</span><span class="n">_raw_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">token_uuid</span><span class="p">)</span>
+                    <span class="n">participant</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
+                <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token_uuid</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Prepopulate with existing participant token or generate new one</span>
-    <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="p">:</span>
-        <span class="n">prepopulated_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">prepopulated_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span><span class="p">)</span>
+    <span class="n">suggested_participant_token</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">raw</span> <span class="ow">and</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">suggested_participant_token</span> <span class="o">=</span> <span class="n">raw</span>
 
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
-        <span class="s1">&#39;prepopulated_token&#39;</span><span class="p">:</span> <span class="n">prepopulated_token</span><span class="p">,</span>
+        <span class="s1">&#39;participant_link_url&#39;</span><span class="p">:</span> <span class="n">_participant_link_url</span><span class="p">(</span><span class="n">request</span><span class="p">),</span>
         <span class="s1">&#39;token_error&#39;</span><span class="p">:</span> <span class="n">token_error</span><span class="p">,</span>
+        <span class="s1">&#39;suggested_participant_token&#39;</span><span class="p">:</span> <span class="n">suggested_participant_token</span><span class="p">,</span>
     <span class="p">})</span></div>
 
 
@@ -126,27 +311,24 @@
 <div class="viewcode-block" id="accept_terms">
 <a class="viewcode-back" href="../../donations.views.html#donations.views.accept_terms">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">accept_terms</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">accept_terms</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Show terms and record acceptance.&quot;&quot;&quot;</span>
-    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
         <span class="n">donation</span><span class="o">.</span><span class="n">terms_accepted_at</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/terms.html&#39;</span><span class="p">,</span> <span class="p">{</span>
-        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
-    <span class="p">})</span></div>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/terms.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">})</span></div>
 
 
 
 <div class="viewcode-block" id="authorize">
 <a class="viewcode-back" href="../../donations.views.html#donations.views.authorize">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Redirect to OAuth URL. Requires terms accepted.&quot;&quot;&quot;</span>
-    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">donation</span><span class="o">.</span><span class="n">terms_accepted_at</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;accept-terms&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation_token</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;accept-terms&#39;</span><span class="p">)</span>
     <span class="n">auth_url</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_auth_url</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">auth_url</span><span class="p">)</span></div>
 
@@ -154,9 +336,9 @@
 
 <div class="viewcode-block" id="data_preview">
 <a class="viewcode-back" href="../../donations.views.html#donations.views.data_preview">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">data_preview</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">data_preview</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Paginated data preview with filtering.&quot;&quot;&quot;</span>
-    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="n">data_types</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">()</span>
     <span class="n">selected_type</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_type&#39;</span><span class="p">,</span> <span class="n">data_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">data_types</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">start_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">)</span>
@@ -181,7 +363,6 @@
 
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/data_preview.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
         <span class="s1">&#39;data_types&#39;</span><span class="p">:</span> <span class="n">data_types</span><span class="p">,</span>
         <span class="s1">&#39;selected_type&#39;</span><span class="p">:</span> <span class="n">selected_type</span><span class="p">,</span>
         <span class="s1">&#39;start_date&#39;</span><span class="p">:</span> <span class="n">start_date</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
@@ -197,25 +378,43 @@
 <div class="viewcode-block" id="revoke_donation">
 <a class="viewcode-back" href="../../donations.views.html#donations.views.revoke_donation">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">revoke_donation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">revoke_donation</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Confirm and revoke a donation.&quot;&quot;&quot;</span>
-    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_donation</span><span class="p">(</span><span class="n">donation_token</span><span class="p">)</span>
+    <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke&#39;</span><span class="p">):</span>
             <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">revoke</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span>
                     <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-                    <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
                     <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
                 <span class="p">})</span>
         <span class="n">donation</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoked.html&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span>
-        <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation_token</span><span class="p">,</span>
-    <span class="p">})</span></div>
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">})</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_ensure_participant_for_donation</span><span class="p">(</span><span class="n">donation</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;After OAuth, link a fresh participant if one isn&#39;t already attached.</span>
+
+<span class="sd">    Returns the raw participant token (UUID/string) for whichever participant</span>
+<span class="sd">    is now linked, so callers can use it to set the participant session.</span>
+<span class="sd">    Returns ``None`` if a participant was already linked and no raw is recoverable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">participant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">hash_token</span><span class="p">(</span><span class="n">suggested</span><span class="p">))</span>
+        <span class="n">participant</span><span class="o">.</span><span class="n">_raw_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
+        <span class="n">participant</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
+    <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;participant&#39;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="google_auth_callback">
@@ -229,17 +428,15 @@
     <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">handle_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">oauth_state</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;oauth_state&#39;</span><span class="p">])</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">pk</span>
     <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="p">:</span>
-            <span class="n">participant</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span>
-                <span class="n">token</span><span class="o">=</span><span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span><span class="p">)</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;participant&#39;</span><span class="p">])</span>
+        <span class="n">participant_raw</span> <span class="o">=</span> <span class="n">_ensure_participant_for_donation</span><span class="p">(</span><span class="n">donation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">participant_raw</span><span class="p">:</span>
+            <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">participant_raw</span><span class="p">)</span>
         <span class="n">process_donation</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">,</span>
         <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
     <span class="p">})</span></div>
 
@@ -256,17 +453,15 @@
     <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">handle_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">oauth_state</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;oauth_state&#39;</span><span class="p">])</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">pk</span>
     <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="p">:</span>
-            <span class="n">participant</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span>
-                <span class="n">token</span><span class="o">=</span><span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span><span class="p">)</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
-            <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;participant&#39;</span><span class="p">])</span>
+        <span class="n">participant_raw</span> <span class="o">=</span> <span class="n">_ensure_participant_for_donation</span><span class="p">(</span><span class="n">donation</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">participant_raw</span><span class="p">:</span>
+            <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">participant_raw</span><span class="p">)</span>
         <span class="n">process_donation</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">donation</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">donation_token</span><span class="o">=</span><span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="o">.</span><span class="n">token</span><span class="p">,</span>
         <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
     <span class="p">})</span></div>
 
@@ -274,14 +469,17 @@
 
 <div class="viewcode-block" id="participant_home">
 <a class="viewcode-back" href="../../donations.views.html#donations.views.participant_home">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">participant_home</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">participant_home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Show all donations for a participant.&quot;&quot;&quot;</span>
-    <span class="n">participant</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">Participant</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">_get_session_participant</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">raw</span> <span class="ow">and</span> <span class="n">hash_token</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="o">!=</span> <span class="n">participant</span><span class="o">.</span><span class="n">token</span><span class="p">:</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">donations</span> <span class="o">=</span> <span class="n">participant</span><span class="o">.</span><span class="n">donations</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="s1">&#39;-created_at&#39;</span><span class="p">)</span>
-    <span class="c1"># Resolve each donation to its most specific subclass</span>
     <span class="n">resolved_donations</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">get_subclass</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">donations</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/participant_home.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;participant&#39;</span><span class="p">:</span> <span class="n">participant</span><span class="p">,</span>
+        <span class="s1">&#39;raw_participant_token&#39;</span><span class="p">:</span> <span class="n">raw</span><span class="p">,</span>
         <span class="s1">&#39;donations&#39;</span><span class="p">:</span> <span class="n">resolved_donations</span><span class="p">,</span>
     <span class="p">})</span></div>
 

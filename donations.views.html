@@ -93,33 +93,77 @@
   <section id="module-donations.views">
 <span id="donations-views-module"></span><h1>donations.views module<a class="headerlink" href="#module-donations.views" title="Link to this heading"></a></h1>
 <p>Views for participant-facing donation flow.</p>
+<p>Donation and participant tokens are stored hashed in the database. The
+<strong>raw</strong> token (UUID) is what lives in the session — never the hash. Lookups
+hash on the fly. This means a DB read alone yields no usable session
+credential.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.views.donation_entry">
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">donation_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#donation_entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.donation_entry" title="Link to this definition"></a></dt>
+<dd><p>Consume a donation token from the URL, store it in the session, redirect.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.views.participant_entry">
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">participant_entry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#participant_entry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.participant_entry" title="Link to this definition"></a></dt>
+<dd><p>Consume a participant token from the URL, store it in the session, redirect.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.views.select_donation">
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">select_donation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_pk</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#select_donation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.select_donation" title="Link to this definition"></a></dt>
+<dd><p>Switch the active donation in session to one owned by the current participant.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.views.logout_participant">
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">logout_participant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#logout_participant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.logout_participant" title="Link to this definition"></a></dt>
+<dd><p>Clear the participant token from session. Donation session is preserved.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.views.switch_to_participant">
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">switch_to_participant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#switch_to_participant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.switch_to_participant" title="Link to this definition"></a></dt>
+<dd><p>Verify the current donation has a participant, redirect to participant home.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.views.generate_participant_token">
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">generate_participant_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#generate_participant_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.generate_participant_token" title="Link to this definition"></a></dt>
+<dd><p>Link the current donation to the participant identified by the
+donation’s <code class="docutils literal notranslate"><span class="pre">suggested_participant_token</span></code> and stash the raw token in the
+session for display. If the donation is already linked to a different
+participant, this re-links it (the original participant is unaffected;
+its other donations remain linked to it).</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.donation_landing">
-<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">donation_landing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#donation_landing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.donation_landing" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">donation_landing</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#donation_landing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.donation_landing" title="Link to this definition"></a></dt>
 <dd><p>Status overview page with participant token handling.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.accept_terms">
-<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">accept_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#accept_terms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.accept_terms" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">accept_terms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#accept_terms"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.accept_terms" title="Link to this definition"></a></dt>
 <dd><p>Show terms and record acceptance.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.authorize">
-<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">authorize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#authorize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.authorize" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">authorize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#authorize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.authorize" title="Link to this definition"></a></dt>
 <dd><p>Redirect to OAuth URL. Requires terms accepted.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.data_preview">
-<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">data_preview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#data_preview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.data_preview" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">data_preview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#data_preview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.data_preview" title="Link to this definition"></a></dt>
 <dd><p>Paginated data preview with filtering.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.revoke_donation">
-<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">revoke_donation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#revoke_donation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.revoke_donation" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">revoke_donation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#revoke_donation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.revoke_donation" title="Link to this definition"></a></dt>
 <dd><p>Confirm and revoke a donation.</p>
 </dd></dl>
 
@@ -137,7 +181,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.participant_home">
-<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">participant_home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#participant_home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.participant_home" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">participant_home</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/views.html#participant_home"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.participant_home" title="Link to this definition"></a></dt>
 <dd><p>Show all donations for a participant.</p>
 </dd></dl>
 

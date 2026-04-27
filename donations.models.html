@@ -189,6 +189,32 @@ object the first time, the query is executed.</p>
 object the first time, the query is executed.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Participant.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Participant.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Participant.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Participant.hash_token">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hash_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Participant.hash_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Participant.hash_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Participant.get_by_raw_token">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_by_raw_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Participant.get_by_raw_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Participant.get_by_raw_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Participant.regenerate_token">
+<span class="sig-name descname"><span class="pre">regenerate_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Participant.regenerate_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Participant.regenerate_token" title="Link to this definition"></a></dt>
+<dd><p>Generate a fresh token. Returns the raw UUID; cannot be recovered later.</p>
+</dd></dl>
+
 <dl class="py exception">
 <dt class="sig sig-object py" id="donations.models.Participant.DoesNotExist">
 <span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.Participant.DoesNotExist" title="Link to this definition"></a></dt>
@@ -358,6 +384,32 @@ object the first time, the query is executed.</p>
 <span class="sig-name descname"><span class="pre">terms_changed</span></span><a class="headerlink" href="#donations.models.Donation.terms_changed" title="Link to this definition"></a></dt>
 <dd><p>A wrapper for a deferred-loading field. When the value is read from this
 object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Donation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Donation.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.hash_token">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hash_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Donation.hash_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Donation.hash_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.get_by_raw_token">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_by_raw_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Donation.get_by_raw_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Donation.get_by_raw_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.Donation.regenerate_token">
+<span class="sig-name descname"><span class="pre">regenerate_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/donations/models.html#Donation.regenerate_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.Donation.regenerate_token" title="Link to this definition"></a></dt>
+<dd><p>Generate a fresh token. Returns the raw UUID; cannot be recovered later.</p>
 </dd></dl>
 
 <dl class="py method">

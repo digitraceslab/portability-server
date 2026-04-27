@@ -124,6 +124,7 @@
 <div class="viewcode-block" id="DonationSerializer">
 <a class="viewcode-back" href="../../donations.api.html#donations.api.DonationSerializer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DonationSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">ModelSerializer</span><span class="p">):</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">SerializerMethodField</span><span class="p">()</span>
     <span class="n">donation_url</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">SerializerMethodField</span><span class="p">()</span>
 
 <div class="viewcode-block" id="DonationSerializer.Meta">
@@ -134,11 +135,23 @@
         <span class="n">read_only_fields</span> <span class="o">=</span> <span class="n">fields</span></div>
 
 
+<div class="viewcode-block" id="DonationSerializer.get_token">
+<a class="viewcode-back" href="../../donations.api.html#donations.api.DonationSerializer.get_token">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_token</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="c1"># Tokens are stored hashed; the raw value is only available on the</span>
+        <span class="c1"># instance returned from create(). For list/retrieve responses the</span>
+        <span class="c1"># original token cannot be recovered.</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;_raw_token&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="DonationSerializer.get_donation_url">
 <a class="viewcode-back" href="../../donations.api.html#donations.api.DonationSerializer.get_donation_url">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_donation_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;_raw_token&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">raw</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
         <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;request&#39;</span><span class="p">)</span>
-        <span class="n">path</span> <span class="o">=</span> <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">token</span><span class="p">})</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;donation-entry&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;donation_token&#39;</span><span class="p">:</span> <span class="n">raw</span><span class="p">})</span>
         <span class="k">if</span> <span class="n">request</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">build_absolute_uri</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">path</span></div>
