@@ -23,26 +23,25 @@
 
 <hr>
 {% if participant_link_url %}
-<p>Your participant link: <a href="{{ participant_link_url }}"><code>{{ participant_link_url }}</code></a></p>
-<p class="help-text">Save this link to access all your donations in one place.</p>
+ <p>Your participant link: <a href="{{ participant_link_url }}"><code>{{ participant_link_url }}</code></a></p>
+ <p class="help-text">Save this link to access all your donations in one place.</p>
 {% elif donation.participant %}
-<p>Your participant token is saved. It is not stored in plaintext, so it cannot be shown here. Keep your original participant link safe — it is the only way to view it again.</p>
+ <p>Your participant token is saved. It is not stored in plaintext, so it cannot be shown here. Keep your original participant link safe — it is the only way to view it again.</p>
 {% else %}
-<p>If you have multiple donations, create a participant token to see them all in one place.</p>
-{% endif %}
+ <p>If you have multiple donations, create a participant token to see them all in one place.</p>
 
-{% if not donation.participant %}
-<form method="post" action="{% url 'generate-participant' %}">
+ {% if not donation.participant %}
+ <form method="post" action="{% url 'generate-participant' %}">
     {% csrf_token %}
     <button type="submit" class="btn">Generate Participant</button>
-</form>
+ </form>
+ {% endif %}
 {% endif %}
 
 <form method="post" style="margin-top: 1rem;">
     {% csrf_token %}
     <div class="form-group">
-        <label for="participant_token_input">Or paste an existing token:</label>
-        {% if suggested_participant_token %}<p class="help-text">Prefilled with your participant token from this session — submit to link it to this donation.</p>{% endif %}
+        <label for="participant_token_input">To switch to an existing participant, paste the token here and save:</label>
         <input type="text" name="participant_token_input" id="participant_token_input" value="{{ suggested_participant_token|default:'' }}" class="form-control">
         {% if token_error %}<p class="error">{{ token_error }}</p>{% endif %}
     </div>
