@@ -21,27 +21,46 @@ from donations.models import Donation, GoogleDonation, TikTokDonation, Participa
 from donations.tasks import process_donation
 
 
-SESSION_DONATION_KEY = 'donation_token'        # raw UUID
-SESSION_PARTICIPANT_KEY = 'participant_token'  # raw UUID
+SESSION_DONATION_PK_KEY = 'donation_pk'        # int — donation in scope
+SESSION_DONATION_KEY = 'donation_token'        # raw UUID — auth via donation token
+SESSION_PARTICIPANT_KEY = 'participant_token'  # raw UUID — auth via participant token
 
 
 def _get_session_donation(request):
-    """Return the donation referenced by the session (raw token), or 404."""
-    raw = request.session.get(SESSION_DONATION_KEY)
-    if not raw:
+    """Return the donation referenced by the session, or 404.
+
+    Donation in scope is identified by pk. Access is granted if either:
+    a participant token in session resolves to a participant that owns the
+    donation, or a donation token in session hashes to the donation's stored
+    hash.
+    """
+    pk = request.session.get(SESSION_DONATION_PK_KEY)
+    if not pk:
         raise Http404("No donation in session.")
-    donation = Donation.get_by_raw_token(raw)
+    donation = Donation.objects.filter(pk=pk).first()
     if donation is None:
-        request.session.pop(SESSION_DONATION_KEY, None)
+        request.session.pop(SESSION_DONATION_PK_KEY, None)
         raise Http404("Donation not found.")
-    return donation.get_subclass()
+
+    participant_raw = request.session.get(SESSION_PARTICIPANT_KEY)
+    if participant_raw and donation.participant_id:
+        participant = Participant.get_by_raw_token(participant_raw)
+        if participant is not None and donation.participant_id == participant.pk:
+            return donation.get_subclass()
+
+    donation_raw = request.session.get(SESSION_DONATION_KEY)
+    if donation_raw and hash_token(donation_raw) == donation.token:
+        return donation.get_subclass()
+
+    raise Http404("Not authorized for this donation.")
 
 
 def _get_session_participant(request, fallback_via_donation=True):
     """Return the participant referenced by the session, or 404.
 
     If ``fallback_via_donation`` is true and no participant is in session,
-    fall back to the participant linked to the session's donation.
+    fall back to the participant linked to the session's donation — but only
+    if that donation is itself authorized via a matching donation token.
     """
     raw = request.session.get(SESSION_PARTICIPANT_KEY)
     if raw:
@@ -50,34 +69,28 @@ def _get_session_participant(request, fallback_via_donation=True):
             return participant
         request.session.pop(SESSION_PARTICIPANT_KEY, None)
     if fallback_via_donation:
+        pk = request.session.get(SESSION_DONATION_PK_KEY)
         donation_raw = request.session.get(SESSION_DONATION_KEY)
-        if donation_raw:
-            donation = Donation.get_by_raw_token(donation_raw)
-            if donation and donation.participant_id:
+        if pk and donation_raw:
+            donation = Donation.objects.filter(pk=pk).first()
+            if donation and donation.participant_id and hash_token(donation_raw) == donation.token:
                 return donation.participant
     raise Http404("No participant in session.")
 
 
-def _set_donation_session(request, raw_token):
-    request.session[SESSION_DONATION_KEY] = str(raw_token)
+def _set_donation_session(request, donation, raw_token=None):
+    """Store the donation's pk in session. If ``raw_token`` is given, also
+    store it as a donation-token auth credential. Otherwise clear any stale
+    donation token so it can't be confused with the new donation."""
+    request.session[SESSION_DONATION_PK_KEY] = donation.pk
+    if raw_token is not None:
+        request.session[SESSION_DONATION_KEY] = str(raw_token)
+    else:
+        request.session.pop(SESSION_DONATION_KEY, None)
 
 
 def _set_participant_session(request, raw_token):
     request.session[SESSION_PARTICIPANT_KEY] = str(raw_token)
-
-
-def _ensure_donation_session(request, donation):
-    """Ensure the session's raw donation token resolves to ``donation``.
-
-    The session likely already has the right raw token (set at donation_entry).
-    If it doesn't match (lost session, different donation), rotate the token
-    so we have a raw form to store — the original raw is unrecoverable from
-    the DB hash.
-    """
-    raw = request.session.get(SESSION_DONATION_KEY)
-    if raw and hash_token(raw) == donation.token:
-        return
-    _set_donation_session(request, donation.regenerate_token())
 
 
 @require_http_methods(["GET"])
@@ -86,7 +99,7 @@ def donation_entry(request, donation_token):
     donation = Donation.get_by_raw_token(donation_token)
     if donation is None:
         raise Http404("Donation not found.")
-    _set_donation_session(request, donation_token)
+    _set_donation_session(request, donation, raw_token=donation_token)
     return redirect('donation-landing')
 
 
@@ -102,14 +115,10 @@ def participant_entry(request, token):
 
 @require_http_methods(["GET"])
 def select_donation(request, donation_pk):
-    """Switch the active donation in session to one owned by the current participant.
-
-    Rotates the donation token because the raw form is unrecoverable from the DB.
-    """
+    """Switch the active donation in session to one owned by the current participant."""
     participant = _get_session_participant(request)
     donation = get_object_or_404(Donation, pk=donation_pk, participant=participant)
-    raw = donation.regenerate_token()
-    _set_donation_session(request, raw)
+    _set_donation_session(request, donation)
     if request.GET.get('next') == 'data':
         return redirect('data-preview')
     return redirect('donation-landing')
@@ -270,14 +279,20 @@ def revoke_donation(request):
                 })
         donation.delete()
         request.session.pop(SESSION_DONATION_KEY, None)
+        request.session.pop(SESSION_DONATION_PK_KEY, None)
         return render(request, 'donations/revoked.html')
     return render(request, 'donations/revoke_confirm.html', {'donation': donation})
 
 
 def _ensure_participant_for_donation(donation):
-    """After OAuth, link a fresh participant if one isn't already attached."""
+    """After OAuth, link a fresh participant if one isn't already attached.
+
+    Returns the raw participant token (UUID/string) for whichever participant
+    is now linked, so callers can use it to set the participant session.
+    Returns ``None`` if a participant was already linked and no raw is recoverable.
+    """
     if donation.participant:
-        return
+        return None
     suggested = donation.suggested_participant_token
     participant = Participant.get_by_raw_token(suggested)
     if participant is None:
@@ -286,6 +301,7 @@ def _ensure_participant_for_donation(donation):
         participant.save()
     donation.participant = participant
     donation.save(update_fields=['participant'])
+    return str(suggested)
 
 
 def google_auth_callback(request):
@@ -297,9 +313,11 @@ def google_auth_callback(request):
     success, message = donation.handle_auth_callback(request)
     donation.oauth_state = None
     donation.save(update_fields=['oauth_state'])
-    _ensure_donation_session(request, donation)
+    request.session[SESSION_DONATION_PK_KEY] = donation.pk
     if success:
-        _ensure_participant_for_donation(donation)
+        participant_raw = _ensure_participant_for_donation(donation)
+        if participant_raw:
+            _set_participant_session(request, participant_raw)
         process_donation.delay(donation.pk)
         return redirect('donation-landing')
     return render(request, 'donations/landing.html', {
@@ -317,9 +335,11 @@ def tiktok_auth_callback(request):
     success, message = donation.handle_auth_callback(request)
     donation.oauth_state = None
     donation.save(update_fields=['oauth_state'])
-    _ensure_donation_session(request, donation)
+    request.session[SESSION_DONATION_PK_KEY] = donation.pk
     if success:
-        _ensure_participant_for_donation(donation)
+        participant_raw = _ensure_participant_for_donation(donation)
+        if participant_raw:
+            _set_participant_session(request, participant_raw)
         process_donation.delay(donation.pk)
         return redirect('donation-landing')
     return render(request, 'donations/landing.html', {

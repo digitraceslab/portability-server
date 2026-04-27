@@ -290,8 +290,10 @@ class TikTokDonationModelTests(TestCase):
 
 
 def _set_donation_session(client, raw_token):
-    """Mimic donation_entry: store the raw token in session."""
+    """Mimic donation_entry: store both the donation pk and raw token in session."""
     session = client.session
+    donation = Donation.get_by_raw_token(raw_token)
+    session['donation_pk'] = donation.pk
     session['donation_token'] = str(raw_token)
     session.save()
 
@@ -333,9 +335,9 @@ class DonationLandingViewTests(TestCase):
         response = client.get(f'/donate/{self.donation._raw_token}/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/donate/')
-        # Session stores the raw token; lookups hash on the fly.
+        # Session stores the donation pk and the raw token (lookups hash on the fly).
+        self.assertEqual(client.session.get('donation_pk'), self.donation.pk)
         self.assertEqual(client.session.get('donation_token'), self.donation._raw_token)
-        self.assertNotEqual(client.session.get('donation_token'), self.donation.token)
 
 
 class AcceptTermsViewTests(TestCase):
@@ -670,14 +672,16 @@ class ParticipantHomeViewTests(TestCase):
             client.session.get('participant_token'), self.participant._raw_token)
 
     def test_select_donation_switches_session_donation(self):
+        original_hash = self.donation1.token
         response = self.client.get(f'/participant/select/{self.donation1.pk}/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/donate/')
-        # Session holds the (post-rotation) raw token for this donation.
+        # Session holds the donation pk; donation_token is cleared.
+        self.assertEqual(self.client.session.get('donation_pk'), self.donation1.pk)
+        self.assertIsNone(self.client.session.get('donation_token'))
+        # Token is not rotated.
         self.donation1.refresh_from_db()
-        raw = self.client.session.get('donation_token')
-        self.assertIsNotNone(raw)
-        self.assertEqual(hash_token(raw), self.donation1.token)
+        self.assertEqual(self.donation1.token, original_hash)
 
     def test_select_donation_with_next_data(self):
         response = self.client.get(f'/participant/select/{self.donation1.pk}/?next=data')
