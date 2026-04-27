@@ -34,8 +34,9 @@ urlpatterns = [
     path('donate/data/', views.data_preview, name='data-preview'),
     path('donate/revoke/', views.revoke_donation, name='revoke-donation'),
     path('donate/switch-to-participant/', views.switch_to_participant, name='switch-to-participant'),
+    path('donate/generate-participant/', views.generate_participant_token, name='generate-participant'),
     path('participant/', views.participant_home, name='participant-home'),
-    path('participant/select/<uuid:donation_token>/', views.select_donation, name='select-donation'),
+    path('participant/select/<int:donation_pk>/', views.select_donation, name='select-donation'),
     # OAuth callbacks
     path('oauth/google/callback/', views.google_auth_callback, name='google-auth-callback'),
     path('oauth/tiktok/callback/', views.tiktok_auth_callback, name='tiktok-auth-callback'),

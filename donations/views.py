@@ -1,66 +1,103 @@
-"""Views for participant-facing donation flow."""
+"""Views for participant-facing donation flow.
+
+Donation and participant tokens are stored hashed in the database. Browsers
+arrive with the **raw** token in entry URLs; the entry view hashes the raw
+token, verifies it, and stores the **hash** in the session. All subsequent
+lookups in this module use the hash directly. The raw participant token is
+also kept in the session under ``participant_raw_token`` solely so the
+participant page can display it back to the user.
+"""
 import uuid
 
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from donations.models import Donation, GoogleDonation, TikTokDonation, Participant
+
+PARTICIPANT_TOKEN_MIN_LENGTH = 32
+
+from donations.models import Donation, GoogleDonation, TikTokDonation, Participant, hash_token
 from donations.tasks import process_donation
 
 
-SESSION_DONATION_KEY = 'donation_token'
-SESSION_PARTICIPANT_KEY = 'participant_token'
+SESSION_DONATION_KEY = 'donation_token'           # hash
+SESSION_PARTICIPANT_KEY = 'participant_token'     # hash
+SESSION_PARTICIPANT_RAW_KEY = 'participant_raw_token'  # raw UUID, for display only
 
 
 def _get_session_donation(request):
-    """Return the donation referenced by the session, or 404."""
-    token = request.session.get(SESSION_DONATION_KEY)
-    if not token:
+    """Return the donation referenced by the session (by hash), or 404."""
+    token_hash = request.session.get(SESSION_DONATION_KEY)
+    if not token_hash:
         raise Http404("No donation in session.")
-    donation = Donation.objects.filter(token=token).first()
+    donation = Donation.objects.filter(token=token_hash).first()
     if donation is None:
         request.session.pop(SESSION_DONATION_KEY, None)
         raise Http404("Donation not found.")
     return donation.get_subclass()
 
 
-def _get_session_participant(request):
-    """Return the participant referenced by the session, or 404."""
-    token = request.session.get(SESSION_PARTICIPANT_KEY)
-    if not token:
-        raise Http404("No participant in session.")
-    participant = Participant.objects.filter(token=token).first()
-    if participant is None:
+def _get_session_participant(request, fallback_via_donation=True):
+    """Return the participant referenced by the session, or 404.
+
+    If ``fallback_via_donation`` is true and no participant is in session,
+    fall back to the participant linked to the session's donation.
+    """
+    token_hash = request.session.get(SESSION_PARTICIPANT_KEY)
+    if token_hash:
+        participant = Participant.objects.filter(token=token_hash).first()
+        if participant is not None:
+            return participant
         request.session.pop(SESSION_PARTICIPANT_KEY, None)
-        raise Http404("Participant not found.")
-    return participant
+        request.session.pop(SESSION_PARTICIPANT_RAW_KEY, None)
+    if fallback_via_donation:
+        donation_hash = request.session.get(SESSION_DONATION_KEY)
+        if donation_hash:
+            donation = Donation.objects.filter(token=donation_hash).first()
+            if donation and donation.participant_id:
+                return donation.participant
+    raise Http404("No participant in session.")
+
+
+def _set_donation_session(request, donation):
+    request.session[SESSION_DONATION_KEY] = donation.token
+
+
+def _set_participant_session(request, participant, raw_token=None):
+    request.session[SESSION_PARTICIPANT_KEY] = participant.token
+    if raw_token is not None:
+        request.session[SESSION_PARTICIPANT_RAW_KEY] = str(raw_token)
 
 
 @require_http_methods(["GET"])
 def donation_entry(request, donation_token):
     """Consume a donation token from the URL, store it in the session, redirect."""
-    get_object_or_404(Donation, token=donation_token)
-    request.session[SESSION_DONATION_KEY] = str(donation_token)
+    donation = Donation.get_by_raw_token(donation_token)
+    if donation is None:
+        raise Http404("Donation not found.")
+    _set_donation_session(request, donation)
     return redirect('donation-landing')
 
 
 @require_http_methods(["GET"])
 def participant_entry(request, token):
     """Consume a participant token from the URL, store it in the session, redirect."""
-    get_object_or_404(Participant, token=token)
-    request.session[SESSION_PARTICIPANT_KEY] = str(token)
+    participant = Participant.get_by_raw_token(token)
+    if participant is None:
+        raise Http404("Participant not found.")
+    _set_participant_session(request, participant, raw_token=token)
     return redirect('participant-home')
 
 
 @require_http_methods(["GET"])
-def select_donation(request, donation_token):
+def select_donation(request, donation_pk):
     """Switch the active donation in session to one owned by the current participant."""
     participant = _get_session_participant(request)
-    donation = get_object_or_404(Donation, token=donation_token, participant=participant)
-    request.session[SESSION_DONATION_KEY] = str(donation.token)
+    donation = get_object_or_404(Donation, pk=donation_pk, participant=participant)
+    _set_donation_session(request, donation)
     if request.GET.get('next') == 'data':
         return redirect('data-preview')
     return redirect('donation-landing')
@@ -68,12 +105,41 @@ def select_donation(request, donation_token):
 
 @require_http_methods(["GET"])
 def switch_to_participant(request):
-    """Switch to the participant linked to the current donation."""
+    """Verify the current donation has a participant, redirect to participant home."""
     donation = _get_session_donation(request)
-    if not donation.participant:
+    if not donation.participant_id:
         raise Http404("Donation has no linked participant.")
-    request.session[SESSION_PARTICIPANT_KEY] = str(donation.participant.token)
     return redirect('participant-home')
+
+
+def _participant_link_url(request):
+    """Build the absolute participant URL if the session has a valid raw token.
+
+    Returns ``None`` when no displayable raw token is available.
+    """
+    raw = request.session.get(SESSION_PARTICIPANT_RAW_KEY)
+    if not raw or Participant.get_by_raw_token(raw) is None:
+        return None
+    return request.build_absolute_uri(
+        reverse('participant-entry', kwargs={'token': raw}))
+
+
+@require_http_methods(["POST"])
+def generate_participant_token(request):
+    """Link the current donation to the participant identified by the
+    donation's ``suggested_participant_token`` and stash the raw token in the
+    session for display. If the donation is already linked to a different
+    participant, this re-links it (the original participant is unaffected;
+    its other donations remain linked to it)."""
+    donation = _get_session_donation(request)
+    suggested = donation.suggested_participant_token
+    suggested_hash = hash_token(suggested)
+    if donation.participant_id is None or donation.participant.token != suggested_hash:
+        participant, _ = Participant.objects.get_or_create(token=suggested_hash)
+        donation.participant = participant
+        donation.save()
+    _set_participant_session(request, donation.participant, raw_token=suggested)
+    return redirect('donation-landing')
 
 
 @require_http_methods(["GET", "POST"])
@@ -83,25 +149,33 @@ def donation_landing(request):
     token_error = None
 
     if request.method == 'POST':
-        token_input = request.POST.get('participant_token_input', '')
-        try:
-            token_uuid = uuid.UUID(token_input)
-        except (ValueError, AttributeError):
-            token_error = 'Please enter a valid token.'
-        else:
-            participant, _ = Participant.objects.get_or_create(token=token_uuid)
-            donation.participant = participant
-            donation.save()
+        token_input = request.POST.get('participant_token_input', '').strip()
+        if not token_input:
             return redirect('donation-landing')
-
-    if donation.participant:
-        prepopulated_token = str(donation.participant.token)
-    else:
-        prepopulated_token = str(donation.suggested_participant_token)
+        if len(token_input) < PARTICIPANT_TOKEN_MIN_LENGTH:
+            token_error = (
+                f'Token is too short. Use a UUID '
+                f'(at least {PARTICIPANT_TOKEN_MIN_LENGTH} characters).'
+            )
+        else:
+            try:
+                token_uuid = uuid.UUID(token_input)
+            except (ValueError, AttributeError):
+                token_error = 'Please enter a valid token (UUID format).'
+            else:
+                participant = Participant.get_by_raw_token(token_uuid)
+                if participant is None:
+                    participant = Participant(token=hash_token(token_uuid))
+                    participant._raw_token = str(token_uuid)
+                    participant.save()
+                donation.participant = participant
+                donation.save()
+                _set_participant_session(request, participant, raw_token=token_uuid)
+                return redirect('donation-landing')
 
     return render(request, 'donations/landing.html', {
         'donation': donation,
-        'prepopulated_token': prepopulated_token,
+        'participant_link_url': _participant_link_url(request),
         'token_error': token_error,
     })
 
@@ -182,6 +256,20 @@ def revoke_donation(request):
     return render(request, 'donations/revoke_confirm.html', {'donation': donation})
 
 
+def _ensure_participant_for_donation(donation):
+    """After OAuth, link a fresh participant if one isn't already attached."""
+    if donation.participant:
+        return
+    suggested = donation.suggested_participant_token
+    participant = Participant.get_by_raw_token(suggested)
+    if participant is None:
+        participant = Participant(token=hash_token(suggested))
+        participant._raw_token = str(suggested)
+        participant.save()
+    donation.participant = participant
+    donation.save(update_fields=['participant'])
+
+
 def google_auth_callback(request):
     """Handle Google OAuth callback via oauth_state lookup."""
     state = request.GET.get('state')
@@ -191,13 +279,9 @@ def google_auth_callback(request):
     success, message = donation.handle_auth_callback(request)
     donation.oauth_state = None
     donation.save(update_fields=['oauth_state'])
-    request.session[SESSION_DONATION_KEY] = str(donation.token)
+    _set_donation_session(request, donation)
     if success:
-        if not donation.participant:
-            participant, _ = Participant.objects.get_or_create(
-                token=donation.suggested_participant_token)
-            donation.participant = participant
-            donation.save(update_fields=['participant'])
+        _ensure_participant_for_donation(donation)
         process_donation.delay(donation.pk)
         return redirect('donation-landing')
     return render(request, 'donations/landing.html', {
@@ -215,13 +299,9 @@ def tiktok_auth_callback(request):
     success, message = donation.handle_auth_callback(request)
     donation.oauth_state = None
     donation.save(update_fields=['oauth_state'])
-    request.session[SESSION_DONATION_KEY] = str(donation.token)
+    _set_donation_session(request, donation)
     if success:
-        if not donation.participant:
-            participant, _ = Participant.objects.get_or_create(
-                token=donation.suggested_participant_token)
-            donation.participant = participant
-            donation.save(update_fields=['participant'])
+        _ensure_participant_for_donation(donation)
         process_donation.delay(donation.pk)
         return redirect('donation-landing')
     return render(request, 'donations/landing.html', {
@@ -233,9 +313,13 @@ def tiktok_auth_callback(request):
 def participant_home(request):
     """Show all donations for a participant."""
     participant = _get_session_participant(request)
+    raw = request.session.get(SESSION_PARTICIPANT_RAW_KEY)
+    if raw and hash_token(raw) != participant.token:
+        raw = None
     donations = participant.donations.order_by('-created_at')
     resolved_donations = [d.get_subclass() for d in donations]
     return render(request, 'donations/participant_home.html', {
         'participant': participant,
+        'raw_participant_token': raw,
         'donations': resolved_donations,
     })

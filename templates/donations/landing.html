@@ -22,20 +22,29 @@
 {% endif %}
 
 <hr>
-<form method="post">
+{% if participant_link_url %}
+<p>Your participant link: <a href="{{ participant_link_url }}"><code>{{ participant_link_url }}</code></a></p>
+<p class="help-text">Save this link to access all your donations in one place.</p>
+{% elif donation.participant %}
+<p>Your participant token is saved. It is not stored in plaintext, so it cannot be shown here. Keep your original participant link safe — it is the only way to view it again.</p>
+{% endif %}
+
+<p>If you have multiple donations, create a participant token to see them all in one place.</p>
+
+<form method="post" action="{% url 'generate-participant' %}">
     {% csrf_token %}
-    <div class="form-group">
-        <label for="participant_token_input">Your participant token</label>
-        <p class="help-text">You can use this participant token to access multiple donations through one link. If you are a returning participant, enter your existing token.</p>
-        <input type="text" name="participant_token_input" id="participant_token_input" value="{{ prepopulated_token }}" class="form-control">
-        {% if token_error %}<p class="error">{{ token_error }}</p>{% endif %}
-    </div>
-    <button type="submit" class="btn">Save Participant Token</button>
+    <button type="submit" class="btn">Generate Token</button>
 </form>
 
-{% if donation.participant %}
-<p><a href="{% url 'switch-to-participant' %}">View all your donations</a></p>
-{% endif %}
+<form method="post" style="margin-top: 1rem;">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="participant_token_input">Or paste an existing token:</label>
+        <input type="text" name="participant_token_input" id="participant_token_input" value="" class="form-control">
+        {% if token_error %}<p class="error">{{ token_error }}</p>{% endif %}
+    </div>
+    <button type="submit" class="btn">Save Token</button>
+</form>
 
 <hr>
 <p><a href="{% url 'revoke-donation' %}" class="btn btn-danger">Revoke Donation</a></p>

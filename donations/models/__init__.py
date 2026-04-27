@@ -6,10 +6,41 @@ from django.db import models
 from django.utils.crypto import get_random_string
 
 
+def hash_token(raw):
+    """SHA-256 hash a raw UUID/string token for storage."""
+    return hashlib.sha256(str(raw).encode()).hexdigest()
+
+
 class Participant(models.Model):
     """Persistent participant identity across donations."""
-    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    token = models.CharField(max_length=64, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            raw = uuid.uuid4()
+            self._raw_token = str(raw)
+            self.token = hash_token(raw)
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def hash_token(raw):
+        return hash_token(raw)
+
+    @classmethod
+    def get_by_raw_token(cls, raw):
+        try:
+            return cls.objects.get(token=hash_token(raw))
+        except cls.DoesNotExist:
+            return None
+
+    def regenerate_token(self):
+        """Generate a fresh token. Returns the raw UUID; cannot be recovered later."""
+        raw = uuid.uuid4()
+        self._raw_token = str(raw)
+        self.token = hash_token(raw)
+        self.save()
+        return self._raw_token
 
     def __str__(self):
         return str(self.token)
@@ -17,7 +48,7 @@ class Participant(models.Model):
 
 class Donation(models.Model):
     """Track data donations with unique tokens."""
-    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    token = models.CharField(max_length=64, unique=True, editable=False)
     participant = models.ForeignKey('Participant', on_delete=models.SET_NULL, null=True, blank=True, related_name='donations')
     suggested_participant_token = models.UUIDField(default=uuid.uuid4)
     researcher = models.ForeignKey('ResearcherToken', on_delete=models.CASCADE, related_name='donations', null=True, blank=True)
@@ -46,6 +77,32 @@ class Donation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     terms_changed = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.token:
+            raw = uuid.uuid4()
+            self._raw_token = str(raw)
+            self.token = hash_token(raw)
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def hash_token(raw):
+        return hash_token(raw)
+
+    @classmethod
+    def get_by_raw_token(cls, raw):
+        try:
+            return cls.objects.get(token=hash_token(raw))
+        except cls.DoesNotExist:
+            return None
+
+    def regenerate_token(self):
+        """Generate a fresh token. Returns the raw UUID; cannot be recovered later."""
+        raw = uuid.uuid4()
+        self._raw_token = str(raw)
+        self.token = hash_token(raw)
+        self.save()
+        return self._raw_token
 
     def __str__(self):
         return f"Donation {self.pk} ({self.source_type}, {self.status})"

@@ -42,6 +42,7 @@ class DonationCreateSerializer(serializers.Serializer):
 
 
 class DonationSerializer(serializers.ModelSerializer):
+    token = serializers.SerializerMethodField()
     donation_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -49,9 +50,18 @@ class DonationSerializer(serializers.ModelSerializer):
         fields = ['id', 'token', 'source_type', 'status', 'created_at', 'data_start_date', 'data_end_date', 'requested_data_types', 'donation_url']
         read_only_fields = fields
 
+    def get_token(self, obj):
+        # Tokens are stored hashed; the raw value is only available on the
+        # instance returned from create(). For list/retrieve responses the
+        # original token cannot be recovered.
+        return getattr(obj, '_raw_token', None)
+
     def get_donation_url(self, obj):
+        raw = getattr(obj, '_raw_token', None)
+        if raw is None:
+            return None
         request = self.context.get('request')
-        path = reverse('donation-entry', kwargs={'donation_token': obj.token})
+        path = reverse('donation-entry', kwargs={'donation_token': raw})
         if request:
             return request.build_absolute_uri(path)
         return path

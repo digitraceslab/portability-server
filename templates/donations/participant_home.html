@@ -2,8 +2,12 @@
 {% block title %}Your Donations{% endblock %}
 {% block content %}
 <h1>Your Donations</h1>
-<p>Your participant token: <code>{{ participant.token }}</code></p>
+{% if raw_participant_token %}
+<p>Your participant token: <code>{{ raw_participant_token }}</code></p>
 <p class="help-text">Save this token to link future donations to your identity.</p>
+{% else %}
+<p class="help-text">Your participant token is saved. Keep your original participant link safe — it cannot be recovered. If you have lost it, ask the researcher to issue a new one.</p>
+{% endif %}
 
 {% if donations %}
 <table class="table">
@@ -22,9 +26,9 @@
             <td>{{ donation.status }}</td>
             <td>{{ donation.created_at }}</td>
             <td>
-                <a href="{% url 'select-donation' donation.token %}">View</a>
+                <a href="{% url 'select-donation' donation.pk %}">View</a>
                 {% if donation.status == 'processed' %}
-                    | <a href="{% url 'select-donation' donation.token %}?next=data">Data</a>
+                    | <a href="{% url 'select-donation' donation.pk %}?next=data">Data</a>
                 {% endif %}
             </td>
         </tr>
