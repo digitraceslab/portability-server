@@ -124,6 +124,15 @@ def select_donation(request, donation_pk):
     return redirect('donation-landing')
 
 
+@require_http_methods(["POST"])
+def logout_participant(request):
+    """Clear the participant token from session. Donation session is preserved."""
+    request.session.pop(SESSION_PARTICIPANT_KEY, None)
+    if request.session.get(SESSION_DONATION_PK_KEY):
+        return redirect('donation-landing')
+    return redirect('terms-of-service')
+
+
 @require_http_methods(["GET"])
 def switch_to_participant(request):
     """Verify the current donation has a participant, redirect to participant home."""

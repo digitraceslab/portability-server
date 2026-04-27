@@ -35,6 +35,7 @@ urlpatterns = [
     path('donate/revoke/', views.revoke_donation, name='revoke-donation'),
     path('donate/switch-to-participant/', views.switch_to_participant, name='switch-to-participant'),
     path('donate/generate-participant/', views.generate_participant_token, name='generate-participant'),
+    path('participant/logout/', views.logout_participant, name='logout-participant'),
     path('participant/', views.participant_home, name='participant-home'),
     path('participant/select/<int:donation_pk>/', views.select_donation, name='select-donation'),
     # OAuth callbacks
