@@ -22,9 +22,9 @@
             <td>{{ donation.status }}</td>
             <td>{{ donation.created_at }}</td>
             <td>
-                <a href="{% url 'donation-landing' donation.token %}">View</a>
+                <a href="{% url 'select-donation' donation.token %}">View</a>
                 {% if donation.status == 'processed' %}
-                    | <a href="{% url 'data-preview' donation.token %}">Data</a>
+                    | <a href="{% url 'select-donation' donation.token %}?next=data">Data</a>
                 {% endif %}
             </td>
         </tr>

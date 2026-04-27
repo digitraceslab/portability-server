@@ -1,0 +1,52 @@
+Hey, this is a demonstration of the Neaport service, which allows participants to donate
+data for academic research at Aldo University.
+It is run at portability.cs.alto.fi, which URL takes you to this front page.
+So it specifically allows participants to download data that researchers have requested
+from data portability APIs on third-party platforms, which they have access to under GDPR.
+So participants access the service through a link provided by the researcher.
+I will open one such link.
+The researcher uses this API mentioned in the For Research section to create the link
+and also to download any data.
+So here is what a participant sees when they open the link.
+First, they must review and accept terms of use for the service and the privacy notice.
+Here we go.
+And now they can authorize data access.
+One thing they can also do if they have multiple donations for the same research project or
+for different research projects, they can save a participant token, which they can then
+use to return to the service and view their donations.
+But also this single donation link works.
+All right, so let's authorize data access.
+This will authorize access to the specific data that the researchers are asking for.
+So we will soon see what data exactly the researchers asked.
+Verification is done.
+And yes, let's continue.
+So here is what the researchers have asked for.
+Donating once is sufficient.
+The intention is that the researchers get access to past data, so the service will
+not fetch any data in the future, only once.
+Okay, now I have multiple alerts about access on my phone, and the system has in fact gone
+through.
+So it says your data is being processed.
+Please check back later.
+It will take a decent amount of time for the data to in fact be processed on the server.
+First it needs to be processed on Google's side and then downloaded to the server.
+And then it will be processed and any extra data, including data that doesn't match the
+time range specified in the study, will be deleted.
+So only a subset of the data is kept and actually provided to the researchers.
+Here I have an older donation link.
+Here I have an older donation link.
+And this is already in the processed status, so I can go and view my data.
+I can select what type of data to view and select date range is the filter.
+And now if I so decide, I can revoke the donation, which will immediately delete the data.
+Now I in fact want to go to the original donation I just started, because in this case, well,
+I can here demonstrate revoking the donation without deleting that example data I just showed.
+So it asks if I want to actually permanently delete the donation data, and yes I do.
+And there it goes.
+Now trying to access the donation through this link, we'll just show that the donation
+no longer exists.
+And this data was never downloaded to the server, it will not be processed, it will
+not be downloaded, but even if it was, it would be deleted from the server when the
+revocation is requested.
+So the researchers in this case no longer have access to the data, and in fact it was
+never actually downloaded, so they never had any access to the data.
+Thank you very much for watching this video, and I'll see you in the next one.

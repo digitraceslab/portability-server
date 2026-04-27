@@ -51,7 +51,7 @@ class DonationSerializer(serializers.ModelSerializer):
 
     def get_donation_url(self, obj):
         request = self.context.get('request')
-        path = reverse('donation-landing', kwargs={'donation_token': obj.token})
+        path = reverse('donation-entry', kwargs={'donation_token': obj.token})
         if request:
             return request.build_absolute_uri(path)
         return path

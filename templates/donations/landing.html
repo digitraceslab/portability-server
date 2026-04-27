@@ -12,11 +12,11 @@
 <p>Status: {{ donation.get_status_display }}</p>
 
 {% if not donation.terms_accepted_at %}
-    <p><a href="{% url 'accept-terms' donation_token %}" class="btn">Review &amp; Accept Terms</a></p>
+    <p><a href="{% url 'accept-terms' %}" class="btn">Review &amp; Accept Terms</a></p>
 {% elif donation.status == 'pending' %}
-    <p>Terms accepted. <a href="{% url 'authorize' donation_token %}" class="btn">Authorize Data Access</a></p>
+    <p>Terms accepted. <a href="{% url 'authorize' %}" class="btn">Authorize Data Access</a></p>
 {% elif donation.status == 'processed' %}
-    <p><a href="{% url 'data-preview' donation_token %}" class="btn">View Your Data</a></p>
+    <p><a href="{% url 'data-preview' %}" class="btn">View Your Data</a></p>
 {% elif donation.status == 'processing' %}
     <p>Your data is being processed. Please check back later.</p>
 {% endif %}
@@ -34,9 +34,9 @@
 </form>
 
 {% if donation.participant %}
-<p><a href="{% url 'participant-home' donation.participant.token %}">View all your donations</a></p>
+<p><a href="{% url 'switch-to-participant' %}">View all your donations</a></p>
 {% endif %}
 
 <hr>
-<p><a href="{% url 'revoke-donation' donation_token %}" class="btn btn-danger">Revoke Donation</a></p>
+<p><a href="{% url 'revoke-donation' %}" class="btn btn-danger">Revoke Donation</a></p>
 {% endblock %}

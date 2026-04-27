@@ -14,5 +14,5 @@
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">Yes, Revoke My Donation</button>
 </form>
-<p><a href="{% url 'donation-landing' donation_token %}">Cancel</a></p>
+<p><a href="{% url 'donation-landing' %}">Cancel</a></p>
 {% endblock %}

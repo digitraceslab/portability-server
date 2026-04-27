@@ -15,5 +15,5 @@
     {% csrf_token %}
     <button type="submit" class="btn">I Accept the Terms</button>
 </form>
-<p><a href="{% url 'donation-landing' donation_token %}">Back</a></p>
+<p><a href="{% url 'donation-landing' %}">Back</a></p>
 {% endblock %}

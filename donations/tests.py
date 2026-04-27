@@ -289,11 +289,24 @@ class TikTokDonationModelTests(TestCase):
         self.assertEqual(td.get_data_types(), ['tiktok_portability'])
 
 
+def _set_donation_session(client, donation_token):
+    session = client.session
+    session['donation_token'] = str(donation_token)
+    session.save()
+
+
+def _set_participant_session(client, participant_token):
+    session = client.session
+    session['participant_token'] = str(participant_token)
+    session.save()
+
+
 class DonationLandingViewTests(TestCase):
     """Tests for the donation landing page view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.token}/'
+        self.url = '/donate/'
+        _set_donation_session(self.client, self.donation.token)
 
     def test_landing_page_loads(self):
         response = self.client.get(self.url)
@@ -308,12 +321,25 @@ class DonationLandingViewTests(TestCase):
         response = self.client.get(f'/donate/{uuid.uuid4()}/')
         self.assertEqual(response.status_code, 404)
 
+    def test_landing_404_without_session(self):
+        client = Client()
+        response = client.get('/donate/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_donation_entry_sets_session_and_redirects(self):
+        client = Client()
+        response = client.get(f'/donate/{self.donation.token}/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/donate/')
+        self.assertEqual(client.session.get('donation_token'), str(self.donation.token))
+
 
 class AcceptTermsViewTests(TestCase):
     """Tests for the terms acceptance view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.token}/terms/'
+        self.url = '/donate/terms/'
+        _set_donation_session(self.client, self.donation.token)
 
     def test_terms_page_loads(self):
         response = self.client.get(self.url)
@@ -331,7 +357,8 @@ class AuthorizeViewTests(TestCase):
     """Tests for the OAuth authorization redirect view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.token}/authorize/'
+        self.url = '/donate/authorize/'
+        _set_donation_session(self.client, self.donation.token)
 
     def test_authorize_redirects_to_terms_if_not_accepted(self):
         response = self.client.get(self.url)
@@ -351,7 +378,8 @@ class DataPreviewViewTests(TestCase):
     """Tests for the data preview view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.token}/data/'
+        self.url = '/donate/data/'
+        _set_donation_session(self.client, self.donation.token)
 
     def test_data_preview_loads(self):
         response = self.client.get(self.url)
@@ -363,7 +391,8 @@ class RevokeDonationViewTests(TestCase):
     """Tests for the donation revocation view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.token}/revoke/'
+        self.url = '/donate/revoke/'
+        _set_donation_session(self.client, self.donation.token)
 
     def test_revoke_confirm_page_loads(self):
         response = self.client.get(self.url)
@@ -436,7 +465,8 @@ class DonationLandingParticipantTests(TestCase):
     """Tests for participant token handling in the donation landing view."""
     def setUp(self):
         self.donation = GoogleDonation.objects.create()
-        self.url = f'/donate/{self.donation.token}/'
+        self.url = '/donate/'
+        _set_donation_session(self.client, self.donation.token)
 
     def test_landing_page_shows_prepopulated_token(self):
         response1 = self.client.get(self.url)
@@ -514,7 +544,8 @@ class ParticipantHomeViewTests(TestCase):
         self.participant = Participant.objects.create()
         self.donation1 = GoogleDonation.objects.create(participant=self.participant)
         self.donation2 = GoogleDonation.objects.create(participant=self.participant)
-        self.url = f'/participant/{self.participant.token}/'
+        self.url = '/participant/'
+        _set_participant_session(self.client, self.participant.token)
 
     def test_participant_home_loads(self):
         response = self.client.get(self.url)
@@ -535,6 +566,90 @@ class ParticipantHomeViewTests(TestCase):
     def test_404_for_invalid_token(self):
         response = self.client.get(f'/participant/{uuid.uuid4()}/')
         self.assertEqual(response.status_code, 404)
+
+    def test_404_without_session(self):
+        client = Client()
+        response = client.get('/participant/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_participant_entry_sets_session_and_redirects(self):
+        client = Client()
+        response = client.get(f'/participant/{self.participant.token}/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/participant/')
+        self.assertEqual(client.session.get('participant_token'), str(self.participant.token))
+
+    def test_select_donation_switches_session_donation(self):
+        response = self.client.get(f'/participant/select/{self.donation1.token}/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/donate/')
+        self.assertEqual(self.client.session.get('donation_token'), str(self.donation1.token))
+
+    def test_select_donation_with_next_data(self):
+        response = self.client.get(f'/participant/select/{self.donation1.token}/?next=data')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/donate/data/')
+
+    def test_select_donation_rejects_other_participants_donation(self):
+        other_participant = Participant.objects.create()
+        other_donation = GoogleDonation.objects.create(participant=other_participant)
+        response = self.client.get(f'/participant/select/{other_donation.token}/')
+        self.assertEqual(response.status_code, 404)
+
+
+class SwitchToParticipantTests(TestCase):
+    """Tests for the donation -> participant session switch view."""
+    def setUp(self):
+        self.participant = Participant.objects.create()
+        self.donation = GoogleDonation.objects.create(participant=self.participant)
+
+    def test_switch_sets_participant_session(self):
+        _set_donation_session(self.client, self.donation.token)
+        response = self.client.get('/donate/switch-to-participant/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/participant/')
+        self.assertEqual(
+            self.client.session.get('participant_token'), str(self.participant.token))
+
+    def test_switch_404_when_donation_has_no_participant(self):
+        unlinked = GoogleDonation.objects.create()
+        _set_donation_session(self.client, unlinked.token)
+        response = self.client.get('/donate/switch-to-participant/')
+        self.assertEqual(response.status_code, 404)
+
+    def test_switch_404_without_donation_session(self):
+        response = self.client.get('/donate/switch-to-participant/')
+        self.assertEqual(response.status_code, 404)
+
+
+class TokenNotInUrlTests(TestCase):
+    """Tokens must not appear in URLs of pages rendered after entry."""
+    def setUp(self):
+        self.donation = GoogleDonation.objects.create()
+        self.participant = Participant.objects.create()
+        self.donation.participant = self.participant
+        self.donation.save()
+
+    def test_donation_pages_do_not_leak_token_in_links(self):
+        _set_donation_session(self.client, self.donation.token)
+        response = self.client.get('/donate/')
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        self.assertNotIn(str(self.donation.token), body)
+
+    def test_participant_page_does_not_leak_donation_token(self):
+        # Participant page intentionally exposes the *participant* token (it's
+        # the session key the user is supposed to keep). It must not show
+        # individual donation tokens in any link href.
+        _set_participant_session(self.client, self.participant.token)
+        response = self.client.get('/participant/')
+        self.assertEqual(response.status_code, 200)
+        body = response.content.decode()
+        # The donation token appears only inside select-donation links, which
+        # is the intended single-use entry-point — but the donation-landing /
+        # data-preview links must not include it.
+        self.assertNotIn(f'/donate/{self.donation.token}/', body)
+        self.assertNotIn(f'/donate/{self.donation.token}/data/', body)
 
 
 class TestScopeFiltering(TestCase):

@@ -1,0 +1,37 @@
+Hi, this is a demonstration of the NIMPORT service.
+It's a service that enables participants to donate their personal data from third-party platforms for academic research at Aldo University.
+So this is run at Aldo at portability.cs.alto.fi, and well, that address takes you to this front page.
+So using this service, participants can authorize the service to download their data and the researchers to download the data from the service.
+They can review the data and they can also revoke access and delete the data from this service.
+Okay, so a participant would get started by receiving a link from a researcher.
+They sign up for a study and go through the consent forms and whichever other parts in the study there are,
+and at some point they receive a link to this service from the researcher.
+So I will open one such link, so it takes to donate and then a token.
+The participant can also save a participant token if they have multiple donations that they want to access,
+they don't want to save all the separate links.
+But normally if you have only one donation or if you go through the process only once,
+then you can simply go to review and accept terms.
+So I will show that now.
+There's links to the terms of service and privacy notice and a brief description.
+We'll accept the terms and now I can authorize access.
+So currently we are requesting access to this login kit and the user data from there.
+This is only essentially to provide access to the portability API.
+We are not actually storing any user account information from TikTok or from any other service.
+But this is required of course to actually download the user data from the portability API.
+You do need to sign in to provide the access.
+Okay, so now we see the authorization system called back and the data is being processed.
+We didn't in fact ask for any data because as I mentioned the portability API is not yet available.
+First we need access to the login kit.
+So we'll wait for a short moment and the process should be done very quickly.
+Let's see, okay.
+And now the user can view their own data.
+I can view my data here.
+This will now show test data since there is no actual data that we can download.
+But you can see what types of data exist and you can filter by time.
+The final thing you can do if you actually decide you don't want to provide that data to the researchers is revoke the donation.
+This will prevent the researchers from downloading the data and it will in fact delete it from the service.
+Okay.
+And now if I try to access this same link, nothing will be found, the entire donation has been removed.
+All right, so that is how the system works.
+While the data existed, of course researchers can download it using the download API.
+Thanks for your attention.

@@ -1,0 +1,3 @@
+Niimport uses the user.info.basic scope in the Login Kit to authenticate participants who have consented to donate their data for academic research. Participants access the service using a link provided by the researcher. After the authentication, Niimport requests a data export using TikTok's Data Portability API. Participants review donated data through a preview interface and can revoke access at any time. Once access is revoked, researchers cannot download the data and it is automatically deleted. All data is encrypted for storage and transfer.
+
+Donate your data for academic studies at Aalto University through TikTok's Data Portability API.
