@@ -290,17 +290,16 @@ class TikTokDonationModelTests(TestCase):
 
 
 def _set_donation_session(client, raw_token):
-    """Mimic donation_entry: store the hash in session."""
+    """Mimic donation_entry: store the raw token in session."""
     session = client.session
-    session['donation_token'] = hash_token(raw_token)
+    session['donation_token'] = str(raw_token)
     session.save()
 
 
 def _set_participant_session(client, raw_token):
-    """Mimic participant_entry: store the hash and the raw for display."""
+    """Mimic participant_entry: store the raw token in session."""
     session = client.session
-    session['participant_token'] = hash_token(raw_token)
-    session['participant_raw_token'] = str(raw_token)
+    session['participant_token'] = str(raw_token)
     session.save()
 
 
@@ -334,9 +333,9 @@ class DonationLandingViewTests(TestCase):
         response = client.get(f'/donate/{self.donation._raw_token}/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/donate/')
-        # Session stores the hash, never the raw UUID.
-        self.assertEqual(client.session.get('donation_token'), self.donation.token)
-        self.assertNotEqual(client.session.get('donation_token'), self.donation._raw_token)
+        # Session stores the raw token; lookups hash on the fly.
+        self.assertEqual(client.session.get('donation_token'), self.donation._raw_token)
+        self.assertNotEqual(client.session.get('donation_token'), self.donation.token)
 
 
 class AcceptTermsViewTests(TestCase):
@@ -488,7 +487,7 @@ class DonationLandingParticipantTests(TestCase):
         self.assertEqual(self.donation.participant.token, hash_token(new_token))
         self.assertIsNotNone(Participant.get_by_raw_token(new_token))
         # Raw token is stashed in session for display.
-        self.assertEqual(self.client.session.get('participant_raw_token'), new_token)
+        self.assertEqual(self.client.session.get('participant_token'), new_token)
 
     def test_post_with_existing_participant_token(self):
         existing_participant = Participant.objects.create()
@@ -552,7 +551,7 @@ class DonationLandingParticipantTests(TestCase):
         self.donation.refresh_from_db()
         self.assertIsNotNone(self.donation.participant)
         # Raw token in session, ready to render the link on next GET.
-        raw = self.client.session.get('participant_raw_token')
+        raw = self.client.session.get('participant_token')
         self.assertIsNotNone(raw)
         self.assertEqual(hash_token(raw), self.donation.participant.token)
         # Following GET shows the link in the rendered page.
@@ -666,16 +665,19 @@ class ParticipantHomeViewTests(TestCase):
         response = client.get(f'/participant/{self.participant._raw_token}/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/participant/')
-        # Session stores the hash for auth, the raw separately for display.
-        self.assertEqual(client.session.get('participant_token'), self.participant.token)
+        # Session stores the raw token; lookups hash on the fly.
         self.assertEqual(
-            client.session.get('participant_raw_token'), self.participant._raw_token)
+            client.session.get('participant_token'), self.participant._raw_token)
 
     def test_select_donation_switches_session_donation(self):
         response = self.client.get(f'/participant/select/{self.donation1.pk}/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, '/donate/')
-        self.assertEqual(self.client.session.get('donation_token'), self.donation1.token)
+        # Session holds the (post-rotation) raw token for this donation.
+        self.donation1.refresh_from_db()
+        raw = self.client.session.get('donation_token')
+        self.assertIsNotNone(raw)
+        self.assertEqual(hash_token(raw), self.donation1.token)
 
     def test_select_donation_with_next_data(self):
         response = self.client.get(f'/participant/select/{self.donation1.pk}/?next=data')
