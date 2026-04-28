@@ -27,15 +27,17 @@
  <p class="help-text">Save this link to access all your donations in one place.</p>
 {% elif donation.participant %}
  <p>Your participant token is saved. It is not stored in plaintext, so it cannot be shown here. Keep your original participant link safe — it is the only way to view it again.</p>
-{% else %}
- <p>If you have multiple donations, create a participant token to see them all in one place.</p>
-
- {% if not donation.participant %}
+ <p>To generate a new participant to replace a lost one, click here:</p>
  <form method="post" action="{% url 'generate-participant' %}">
     {% csrf_token %}
     <button type="submit" class="btn">Generate Participant</button>
  </form>
- {% endif %}
+{% else %}
+ <p>If you have multiple donations, create a participant token to see them all in one place.</p>
+ <form method="post" action="{% url 'generate-participant' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn">Generate Participant</button>
+ </form>
 {% endif %}
 
 <form method="post" style="margin-top: 1rem;">

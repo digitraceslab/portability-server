@@ -19,6 +19,13 @@
 </head>
 <body>
     {% block content %}{% endblock %}
+    {% if request.session.participant_token %}
+    <hr>
+    <form method="post" action="{% url 'logout-participant' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn">Log out participant</button>
+    </form>
+    {% endif %}
     <hr>
     <footer style="font-size: 0.85rem; color: #666;">
         <a href="{% url 'terms-of-service' %}">Terms of Service</a> ·
