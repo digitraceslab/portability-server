@@ -329,7 +329,7 @@
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">donation</span><span class="o">.</span><span class="n">terms_accepted_at</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;accept-terms&#39;</span><span class="p">)</span>
-    <span class="n">auth_url</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_auth_url</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="n">auth_url</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_auth_url</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="n">auth_url</span><span class="p">)</span></div>
 
 

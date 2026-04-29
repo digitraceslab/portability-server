@@ -210,21 +210,17 @@
 
 <div class="viewcode-block" id="TikTokDonation.get_auth_url">
 <a class="viewcode-back" href="../../../donations.models.tiktok_portability.html#donations.models.TikTokDonation.get_auth_url">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_auth_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_auth_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">code_verifier</span><span class="p">,</span> <span class="n">code_challenge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_pkce_pair</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">code_verifier</span> <span class="o">=</span> <span class="n">code_verifier</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">oauth_state</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 
-        <span class="n">redirect_url</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">build_absolute_uri</span><span class="p">(</span>
-            <span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;tiktok-auth-callback&#39;</span><span class="p">)</span>
-        <span class="p">)</span>
-
         <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;client_key&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_CLIENT_KEY</span><span class="p">,</span>
             <span class="s1">&#39;response_type&#39;</span><span class="p">:</span> <span class="s1">&#39;code&#39;</span><span class="p">,</span>
             <span class="s1">&#39;scope&#39;</span><span class="p">:</span> <span class="s1">&#39;user.info.basic&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;redirect_uri&#39;</span><span class="p">:</span> <span class="n">redirect_url</span><span class="p">,</span>
+            <span class="s1">&#39;redirect_uri&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_REDIRECT_URI</span><span class="p">,</span>
             <span class="s1">&#39;state&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">oauth_state</span><span class="p">,</span>
             <span class="s1">&#39;code_challenge&#39;</span><span class="p">:</span> <span class="n">code_challenge</span><span class="p">,</span>
             <span class="s1">&#39;code_challenge_method&#39;</span><span class="p">:</span> <span class="s1">&#39;S256&#39;</span><span class="p">,</span>
@@ -248,7 +244,7 @@
             <span class="s1">&#39;code&#39;</span><span class="p">:</span> <span class="n">code</span><span class="p">,</span>
             <span class="s1">&#39;client_key&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_CLIENT_KEY</span><span class="p">,</span>
             <span class="s1">&#39;client_secret&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_CLIENT_SECRET</span><span class="p">,</span>
-            <span class="s1">&#39;redirect_uri&#39;</span><span class="p">:</span> <span class="n">request</span><span class="o">.</span><span class="n">build_absolute_uri</span><span class="p">(</span><span class="n">reverse</span><span class="p">(</span><span class="s1">&#39;tiktok-auth-callback&#39;</span><span class="p">)),</span>
+            <span class="s1">&#39;redirect_uri&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_REDIRECT_URI</span><span class="p">,</span>
             <span class="s1">&#39;grant_type&#39;</span><span class="p">:</span> <span class="s1">&#39;authorization_code&#39;</span><span class="p">,</span>
             <span class="s1">&#39;code_verifier&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">code_verifier</span><span class="p">,</span>
         <span class="p">}</span>
