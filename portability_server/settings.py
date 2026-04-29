@@ -84,6 +84,10 @@ TIKTOK_CLIENT_KEY = env('TIKTOK_CLIENT_KEY', default='')
 TIKTOK_CLIENT_SECRET = env('TIKTOK_CLIENT_SECRET', default='')
 TIKTOK_SANDBOX_MODE = env('TIKTOK_SANDBOX_MODE', default=False)
 
+# Per-donation-type base URLs.
+GOOGLE_BASE_URL = env('GOOGLE_BASE_URL', default='')
+TIKTOK_BASE_URL = env('TIKTOK_BASE_URL', default='')
+
 # Logging
 LOGGING = {
     'version': 1,

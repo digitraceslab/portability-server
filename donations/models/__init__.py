@@ -2,7 +2,9 @@
 import hashlib
 import uuid
 
+from django.conf import settings
 from django.db import models
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 
 
@@ -103,6 +105,21 @@ class Donation(models.Model):
         self.token = hash_token(raw)
         self.save()
         return self._raw_token
+
+    # Subclasses override to pin URL building to a configured base URL
+    # (so OAuth redirect_uri and the API-returned donation URL stay on
+    # the domain registered with the OAuth provider, regardless of
+    # which domain the request came in on).
+    BASE_URL_SETTING = None
+
+    def absolute_url(self, request, view_name, **kwargs):
+        """Build an absolute URL for ``view_name``. Uses the subclass's
+        configured base URL if set; otherwise falls back to ``request``."""
+        path = reverse(view_name, kwargs=kwargs)
+        base = getattr(settings, self.BASE_URL_SETTING, '') if self.BASE_URL_SETTING else ''
+        if base:
+            return base.rstrip('/') + path
+        return request.build_absolute_uri(path)
 
     def __str__(self):
         return f"Donation {self.pk} ({self.source_type}, {self.status})"

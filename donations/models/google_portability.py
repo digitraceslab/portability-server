@@ -27,6 +27,7 @@ import donations.utils.crypto as crypto
 
 class GoogleDonation(Donation):
     source_type_display = 'Google'
+    BASE_URL_SETTING = 'GOOGLE_BASE_URL'
 
     PROCESSING_STATUS_CHOICES = (
         ('authorized', 'Authorized, waiting for download'),
@@ -341,9 +342,7 @@ class GoogleDonation(Donation):
         self.oauth_state = state_token
         self.save()
 
-        redirect_url = request.build_absolute_uri(
-            reverse('google-auth-callback')
-        )
+        redirect_url = self.absolute_url(request, 'google-auth-callback')
 
         scopes, _ = self._get_scopes_and_resources()
         params = {
@@ -399,7 +398,7 @@ class GoogleDonation(Donation):
             'code': code,
             'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
             'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
-            'redirect_uri': request.build_absolute_uri(reverse('google-auth-callback')),
+            'redirect_uri': self.absolute_url(request, 'google-auth-callback'),
             'grant_type': 'authorization_code',
         }
 

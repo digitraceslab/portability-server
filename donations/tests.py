@@ -61,6 +61,39 @@ class DonationModelTests(TestCase):
         self.assertEqual(donation.researcher, researcher)
 
 
+class DonationBaseUrlTests(TestCase):
+    """Per-donation-type base URL pins donation_url and OAuth redirect_uri."""
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_default_uses_request_host(self):
+        donation = GoogleDonation.objects.create()
+        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
+        url = donation.absolute_url(request, 'google-auth-callback')
+        self.assertEqual(url, 'https://testserver/oauth/google/callback/')
+
+    @override_settings(GOOGLE_BASE_URL='https://google-domain.example.com')
+    def test_google_base_url_overrides_request_host(self):
+        donation = GoogleDonation.objects.create()
+        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
+        url = donation.absolute_url(request, 'google-auth-callback')
+        self.assertEqual(url, 'https://google-domain.example.com/oauth/google/callback/')
+
+    @override_settings(TIKTOK_BASE_URL='https://niimport.digitraceslab.com')
+    def test_tiktok_base_url_overrides_request_host(self):
+        donation = TikTokDonation.objects.create()
+        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
+        url = donation.absolute_url(request, 'tiktok-auth-callback')
+        self.assertEqual(url, 'https://niimport.digitraceslab.com/oauth/tiktok/callback/')
+
+    @override_settings(GOOGLE_BASE_URL='https://google-domain.example.com')
+    def test_base_url_does_not_leak_across_types(self):
+        donation = TikTokDonation.objects.create()
+        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
+        url = donation.absolute_url(request, 'tiktok-auth-callback')
+        self.assertEqual(url, 'https://testserver/oauth/tiktok/callback/')
+
+
 class ResearcherTokenModelTests(TestCase):
     """Tests for ResearcherToken model behavior."""
     def test_auto_generates_key(self):

@@ -61,10 +61,10 @@ class DonationSerializer(serializers.ModelSerializer):
         if raw is None:
             return None
         request = self.context.get('request')
-        path = reverse('donation-entry', kwargs={'donation_token': raw})
+        donation = obj.get_subclass()
         if request:
-            return request.build_absolute_uri(path)
-        return path
+            return donation.absolute_url(request, 'donation-entry', donation_token=raw)
+        return reverse('donation-entry', kwargs={'donation_token': raw})
 
 
 class DataQuerySerializer(serializers.Serializer):
