@@ -7,7 +7,7 @@ from unittest.mock import patch, MagicMock
 import requests
 
 from cryptography.fernet import Fernet
-from django.test import TestCase, Client, RequestFactory, override_settings
+from django.test import TestCase, Client, override_settings
 from rest_framework.test import APIRequestFactory
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant, hash_token
@@ -61,37 +61,22 @@ class DonationModelTests(TestCase):
         self.assertEqual(donation.researcher, researcher)
 
 
-class DonationBaseUrlTests(TestCase):
-    """Per-donation-type base URL pins donation_url and OAuth redirect_uri."""
-    def setUp(self):
-        self.factory = RequestFactory()
+class OAuthRedirectUriTests(TestCase):
+    """OAuth flows use the configured redirect URI from settings."""
 
-    def test_default_uses_request_host(self):
+    @override_settings(GOOGLE_REDIRECT_URI='https://google-domain.example.com/oauth/google/callback/',
+                      GOOGLE_OAUTH_CLIENT_ID='test-client-id')
+    def test_google_auth_url_uses_configured_redirect_uri(self):
         donation = GoogleDonation.objects.create()
-        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
-        url = donation.absolute_url(request, 'google-auth-callback')
-        self.assertEqual(url, 'https://testserver/oauth/google/callback/')
+        auth_url = donation.get_auth_url()
+        self.assertIn('redirect_uri=https%3A%2F%2Fgoogle-domain.example.com%2Foauth%2Fgoogle%2Fcallback%2F', auth_url)
 
-    @override_settings(GOOGLE_BASE_URL='https://google-domain.example.com')
-    def test_google_base_url_overrides_request_host(self):
-        donation = GoogleDonation.objects.create()
-        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
-        url = donation.absolute_url(request, 'google-auth-callback')
-        self.assertEqual(url, 'https://google-domain.example.com/oauth/google/callback/')
-
-    @override_settings(TIKTOK_BASE_URL='https://niimport.digitraceslab.com')
-    def test_tiktok_base_url_overrides_request_host(self):
+    @override_settings(TIKTOK_REDIRECT_URI='https://niimport.digitraceslab.com/oauth/tiktok/callback/',
+                      TIKTOK_CLIENT_KEY='test-client-key')
+    def test_tiktok_auth_url_uses_configured_redirect_uri(self):
         donation = TikTokDonation.objects.create()
-        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
-        url = donation.absolute_url(request, 'tiktok-auth-callback')
-        self.assertEqual(url, 'https://niimport.digitraceslab.com/oauth/tiktok/callback/')
-
-    @override_settings(GOOGLE_BASE_URL='https://google-domain.example.com')
-    def test_base_url_does_not_leak_across_types(self):
-        donation = TikTokDonation.objects.create()
-        request = self.factory.get('/', HTTP_HOST='testserver', secure=True)
-        url = donation.absolute_url(request, 'tiktok-auth-callback')
-        self.assertEqual(url, 'https://testserver/oauth/tiktok/callback/')
+        auth_url = donation.get_auth_url()
+        self.assertIn('redirect_uri=https%3A%2F%2Fniimport.digitraceslab.com%2Foauth%2Ftiktok%2Fcallback%2F', auth_url)
 
 
 class ResearcherTokenModelTests(TestCase):

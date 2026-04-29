@@ -84,9 +84,9 @@ TIKTOK_CLIENT_KEY = env('TIKTOK_CLIENT_KEY', default='')
 TIKTOK_CLIENT_SECRET = env('TIKTOK_CLIENT_SECRET', default='')
 TIKTOK_SANDBOX_MODE = env('TIKTOK_SANDBOX_MODE', default=False)
 
-# Per-donation-type base URLs.
-GOOGLE_BASE_URL = env('GOOGLE_BASE_URL', default='')
-TIKTOK_BASE_URL = env('TIKTOK_BASE_URL', default='')
+# OAuth callback URLs registered with each provider.
+GOOGLE_REDIRECT_URI = env('GOOGLE_REDIRECT_URI', default='')
+TIKTOK_REDIRECT_URI = env('TIKTOK_REDIRECT_URI', default='')
 
 # Logging
 LOGGING = {

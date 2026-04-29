@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 class TikTokDonation(Donation):
     source_type_display = 'TikTok'
-    BASE_URL_SETTING = 'TIKTOK_BASE_URL'
 
     DEFAULT_REQUEST_TIMEOUT = 10
 
@@ -120,19 +119,17 @@ class TikTokDonation(Donation):
         self.processing_status = 'authorized'
         self.code_verifier = ''
 
-    def get_auth_url(self, request):
+    def get_auth_url(self):
         code_verifier, code_challenge = self.generate_pkce_pair()
         self.code_verifier = code_verifier
         self.oauth_state = secrets.token_urlsafe(16)
         self.save()
 
-        redirect_url = self.absolute_url(request, 'tiktok-auth-callback')
-
         params = {
             'client_key': settings.TIKTOK_CLIENT_KEY,
             'response_type': 'code',
             'scope': 'user.info.basic',
-            'redirect_uri': redirect_url,
+            'redirect_uri': settings.TIKTOK_REDIRECT_URI,
             'state': self.oauth_state,
             'code_challenge': code_challenge,
             'code_challenge_method': 'S256',
@@ -153,7 +150,7 @@ class TikTokDonation(Donation):
             'code': code,
             'client_key': settings.TIKTOK_CLIENT_KEY,
             'client_secret': settings.TIKTOK_CLIENT_SECRET,
-            'redirect_uri': self.absolute_url(request, 'tiktok-auth-callback'),
+            'redirect_uri': settings.TIKTOK_REDIRECT_URI,
             'grant_type': 'authorization_code',
             'code_verifier': self.code_verifier,
         }

@@ -232,7 +232,7 @@ def authorize(request):
     donation = _get_session_donation(request)
     if not donation.terms_accepted_at:
         return redirect('accept-terms')
-    auth_url = donation.get_auth_url(request)
+    auth_url = donation.get_auth_url()
     return redirect(auth_url)
 
 
