@@ -962,7 +962,8 @@ narwhals==2.20.0 \
     --hash=sha256:16e750ea5507d4ba6e8d03455b5f93a535e0405976561baea235bca5dc9f475d \
     --hash=sha256:c10994975fa7dc5a68c2cffcddbd5908fc8ebb2d463c5bab085309c0ee1f551e
     # via plotly
-niimpy @ git+https://github.com/digitraceslab/niimpy.git@e49bdd22dc4b5b0f1a46c099b45f9777cdb92985
+niimpy @ https://github.com/digitraceslab/niimpy/archive/52d46fa614c8088a5c4dc86fbaba0b65067c0c41.tar.gz \
+    --hash=sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 \
     # via -r requirements.in
 numpy==2.4.4 \
     --hash=sha256:07077278157d02f65c43b1b26a3886bce886f95d20aabd11f87932750dfb14ed \
