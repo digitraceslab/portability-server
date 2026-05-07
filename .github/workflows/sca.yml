@@ -1,0 +1,14 @@
+name: SCA
+on:
+  push:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: fluidattacks/sca-action@1.2.0
+        id: scan
