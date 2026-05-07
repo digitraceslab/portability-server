@@ -10,5 +10,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: fluidattacks/sca-action@<version>
+      - uses: fluidattacks/sca-action@1.2.0
         id: scan
