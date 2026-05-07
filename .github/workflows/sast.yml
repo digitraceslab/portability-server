@@ -16,5 +16,5 @@ jobs:
           # Can be omitted if scanner_mode: full is set.
           fetch-depth: 0
 
-      - uses: fluidattacks/sast-action@<version>
+      - uses: fluidattacks/sast-action@1.3.0
         id: scan
