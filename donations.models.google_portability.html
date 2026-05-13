@@ -18,9 +18,7 @@
       <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="donations.models.tiktok_portability module" href="donations.models.tiktok_portability.html" />
-    <link rel="prev" title="donations.models package" href="donations.models.html" /> 
+    <link rel="search" title="Search" href="search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,27 +40,49 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="reference internal" href="modules.html">portability-server</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="accounts.html">accounts package</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="donations.html">donations package</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="donations.html#subpackages">Subpackages</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="donations.management.html">donations.management package</a></li>
-<li class="toctree-l4 current"><a class="reference internal" href="donations.models.html">donations.models package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="donations.templatetags.html">donations.templatetags package</a></li>
-<li class="toctree-l4"><a class="reference internal" href="donations.utils.html">donations.utils package</a></li>
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">donations.models.google_portability module</a><ul>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a><ul>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.source_type_display</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.PROCESSING_STATUS_CHOICES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.PROCESSING_STATUS_CHOICES</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.access_token</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.refresh_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_token</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.token_expiry"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.token_expiry</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.google_user_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.google_user_id</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.oauth_state"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.oauth_state</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.processing_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.processing_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.downloaded_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.downloaded_files</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.data_job_ids"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.data_job_ids</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.job_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.job_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.file_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.file_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.data_type_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.EXPECTED_DATA_TYPES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.EXPECTED_DATA_TYPES</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DATA_TYPE_READERS</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.DATA_TYPE_SCOPE_MAP"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DATA_TYPE_SCOPE_MAP</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.save"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.save()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_data_types()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.fetch_data()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.count_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_auth_url()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.create_archive_job"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.create_archive_job()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.handle_auth_callback()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_access_token()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.revoke"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.revoke()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.download_data_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.download_data_files()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.extract_and_process()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.cleanup_files()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DoesNotExist</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.MultipleObjectsReturned</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr_id</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_processing_status_display()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="donations.html#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="donations.html#module-donations">Module contents</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="portability_server.html">portability_server package</a></li>
 </ul>
 </li>
 </ul>
-
+</div>
         </div>
       </div>
     </nav>
@@ -77,9 +97,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="modules.html">portability-server</a></li>
-          <li class="breadcrumb-item"><a href="donations.html">donations package</a></li>
-          <li class="breadcrumb-item"><a href="donations.models.html">donations.models package</a></li>
       <li class="breadcrumb-item active">donations.models.google_portability module</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/donations.models.google_portability.rst.txt" rel="nofollow"> View page source</a>
@@ -305,10 +322,7 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="donations.models.html" class="btn btn-neutral float-left" title="donations.models package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="donations.models.tiktok_portability.html" class="btn btn-neutral float-right" title="donations.models.tiktok_portability module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 
