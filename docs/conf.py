@@ -45,7 +45,7 @@ APIDOC_EXCLUDE = [
 def run_apidoc(_):
     from sphinx.ext.apidoc import main as apidoc_main
     root = str(Path(__file__).resolve().parent.parent)
-    out = str(Path(__file__).resolve().parent)
+    out = str(Path(__file__).resolve().parent / 'api')
     args = ['-o', out, root, '--separate', '-f'] + [
         os.path.join(root, p) for p in APIDOC_EXCLUDE
     ]

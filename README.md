@@ -53,8 +53,6 @@ All API requests require a researcher token in the header:
 Authorization: Token <researcher_token>
 ```
 
-Machine-readable endpoint documentation is also available at `/api/docs/` (no authentication required).
-
 The researcher token is created by an administrator using the management command:
 
 ```bash
@@ -155,6 +153,18 @@ Example
 ``` bash
 curl -X DELETE http://localhost:8000/api/donations/<id>/ \
    -H "Authorization: Token <researcher_token>"
+```
+
+
+# Generating documentation
+
+API documentation and some additional information can be found in `docs/` and built using sphinx.
+To build the documentation, install the dependenciesn and run sphinx:
+
+```bash
+pip install -r docs/requirements.txt
+cd docs
+make html
 ```
 
 
