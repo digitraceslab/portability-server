@@ -1,0 +1,350 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>donations.models.google_portability module &mdash; portability-server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            portability-server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">donations.models.google_portability module</a><ul>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a><ul>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.source_type_display</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.PROCESSING_STATUS_CHOICES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.PROCESSING_STATUS_CHOICES</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.access_token</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.refresh_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_token</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.token_expiry"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.token_expiry</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.google_user_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.google_user_id</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.oauth_state"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.oauth_state</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.processing_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.processing_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.downloaded_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.downloaded_files</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.data_job_ids"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.data_job_ids</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.job_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.job_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.file_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.file_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.data_type_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.EXPECTED_DATA_TYPES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.EXPECTED_DATA_TYPES</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DATA_TYPE_READERS</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.DATA_TYPE_SCOPE_MAP"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DATA_TYPE_SCOPE_MAP</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.save"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.save()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_data_types()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.fetch_data()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.count_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_auth_url()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.create_archive_job"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.create_archive_job()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.handle_auth_callback()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_access_token()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.revoke"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.revoke()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.download_data_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.download_data_files()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.extract_and_process()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.cleanup_files()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DoesNotExist</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.MultipleObjectsReturned</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr_id</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.google_portability.GoogleDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_processing_status_display()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">portability-server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">donations.models.google_portability module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/donations.models.google_portability.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-donations.models.google_portability">
+<span id="donations-models-google-portability-module"></span><h1>donations.models.google_portability module<a class="headerlink" href="#module-donations.models.google_portability" title="Link to this heading"></a></h1>
+<p>Google Portability data source model and processing logic.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.google_portability.</span></span><span class="sig-name descname"><span class="pre">GoogleDonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">participant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suggested_participant_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">researcher</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_end_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_data_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_accepted_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_changed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_ptr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">access_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">refresh_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_expiry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">google_user_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oauth_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">downloaded_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_job_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">job_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type_status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="donations.models.html#donations.models.Donation" title="donations.models.Donation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Donation</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.source_type_display">
+<span class="sig-name descname"><span class="pre">source_type_display</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Google'</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.source_type_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.PROCESSING_STATUS_CHOICES">
+<span class="sig-name descname"><span class="pre">PROCESSING_STATUS_CHOICES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('authorized',</span> <span class="pre">'Authorized,</span> <span class="pre">waiting</span> <span class="pre">for</span> <span class="pre">download'),</span> <span class="pre">('processing',</span> <span class="pre">'Processing'),</span> <span class="pre">('processed',</span> <span class="pre">'Processed</span> <span class="pre">successfully'),</span> <span class="pre">('error',</span> <span class="pre">'Error</span> <span class="pre">during</span> <span class="pre">processing'))</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.PROCESSING_STATUS_CHOICES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.access_token">
+<span class="sig-name descname"><span class="pre">access_token</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.access_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.refresh_token">
+<span class="sig-name descname"><span class="pre">refresh_token</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.refresh_token" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.token_expiry">
+<span class="sig-name descname"><span class="pre">token_expiry</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.token_expiry" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.google_user_id">
+<span class="sig-name descname"><span class="pre">google_user_id</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.google_user_id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.oauth_state">
+<span class="sig-name descname"><span class="pre">oauth_state</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.oauth_state" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.processing_status">
+<span class="sig-name descname"><span class="pre">processing_status</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.processing_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.downloaded_files">
+<span class="sig-name descname"><span class="pre">downloaded_files</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.downloaded_files" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.data_job_ids">
+<span class="sig-name descname"><span class="pre">data_job_ids</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.data_job_ids" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.job_status">
+<span class="sig-name descname"><span class="pre">job_status</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.job_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.file_status">
+<span class="sig-name descname"><span class="pre">file_status</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.file_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.data_type_status">
+<span class="sig-name descname"><span class="pre">data_type_status</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.data_type_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.EXPECTED_DATA_TYPES">
+<span class="sig-name descname"><span class="pre">EXPECTED_DATA_TYPES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['youtube_history',</span> <span class="pre">'discover',</span> <span class="pre">'google_lens',</span> <span class="pre">'google_play_games',</span> <span class="pre">'google_play_store',</span> <span class="pre">'image_search',</span> <span class="pre">'search',</span> <span class="pre">'video_search']</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.EXPECTED_DATA_TYPES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.DATA_TYPE_READERS">
+<span class="sig-name descname"><span class="pre">DATA_TYPE_READERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'discover':</span> <span class="pre">&lt;function</span> <span class="pre">discover&gt;,</span> <span class="pre">'google_lens':</span> <span class="pre">&lt;function</span> <span class="pre">google_lens_history&gt;,</span> <span class="pre">'google_play_games':</span> <span class="pre">&lt;function</span> <span class="pre">google_play_games_history&gt;,</span> <span class="pre">'google_play_store':</span> <span class="pre">&lt;function</span> <span class="pre">google_play_store_history&gt;,</span> <span class="pre">'image_search':</span> <span class="pre">&lt;function</span> <span class="pre">image_search_history&gt;,</span> <span class="pre">'search':</span> <span class="pre">&lt;function</span> <span class="pre">search_history&gt;,</span> <span class="pre">'video_search':</span> <span class="pre">&lt;function</span> <span class="pre">video_search_history&gt;,</span> <span class="pre">'youtube_history':</span> <span class="pre">&lt;function</span> <span class="pre">youtube_history&gt;}</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.DATA_TYPE_READERS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.DATA_TYPE_SCOPE_MAP">
+<span class="sig-name descname"><span class="pre">DATA_TYPE_SCOPE_MAP</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'alerts_subscriptions':</span> <span class="pre">{'resources':</span> <span class="pre">['alerts.subscriptions'],</span> <span class="pre">'scopes':</span> <span class="pre">['alerts.subscriptions']},</span> <span class="pre">'chrome':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.autofill',</span> <span class="pre">'chrome.bookmarks',</span> <span class="pre">'chrome.dictionary',</span> <span class="pre">'chrome.extensions',</span> <span class="pre">'chrome.reading_list',</span> <span class="pre">'chrome.settings'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.autofill',</span> <span class="pre">'chrome.bookmarks',</span> <span class="pre">'chrome.dictionary',</span> <span class="pre">'chrome.extensions',</span> <span class="pre">'chrome.reading_list',</span> <span class="pre">'chrome.settings']},</span> <span class="pre">'chrome_autofill':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.autofill'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.autofill']},</span> <span class="pre">'chrome_bookmarks':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.bookmarks'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.bookmarks']},</span> <span class="pre">'chrome_dictionary':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.dictionary'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.dictionary']},</span> <span class="pre">'chrome_extensions':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.extensions'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.extensions']},</span> <span class="pre">'chrome_history':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.history'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.history']},</span> <span class="pre">'chrome_reading_list':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.reading_list'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.reading_list']},</span> <span class="pre">'chrome_settings':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.settings'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.settings']},</span> <span class="pre">'discover':</span> <span class="pre">{'resources':</span> <span class="pre">['discover.likes',</span> <span class="pre">'discover.follows',</span> <span class="pre">'discover.not_interested'],</span> <span class="pre">'scopes':</span> <span class="pre">['discover.likes',</span> <span class="pre">'discover.follows',</span> <span class="pre">'discover.not_interested']},</span> <span class="pre">'discover_follows':</span> <span class="pre">{'resources':</span> <span class="pre">['discover.follows'],</span> <span class="pre">'scopes':</span> <span class="pre">['discover.follows']},</span> <span class="pre">'discover_likes':</span> <span class="pre">{'resources':</span> <span class="pre">['discover.likes'],</span> <span class="pre">'scopes':</span> <span class="pre">['discover.likes']},</span> <span class="pre">'discover_not_interested':</span> <span class="pre">{'resources':</span> <span class="pre">['discover.not_interested'],</span> <span class="pre">'scopes':</span> <span class="pre">['discover.not_interested']},</span> <span class="pre">'google_lens':</span> <span class="pre">{'resources':</span> <span class="pre">['chrome.history'],</span> <span class="pre">'scopes':</span> <span class="pre">['chrome.history']},</span> <span class="pre">'google_play_games':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.play'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.play']},</span> <span class="pre">'google_play_store':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.play'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.play']},</span> <span class="pre">'image_search':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.search'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.search']},</span> <span class="pre">'maps':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.aliased_places',</span> <span class="pre">'maps.commute_routes',</span> <span class="pre">'maps.commute_settings',</span> <span class="pre">'maps.ev_profile',</span> <span class="pre">'maps.factual_contributions',</span> <span class="pre">'maps.offering_contributions',</span> <span class="pre">'maps.photos_videos',</span> <span class="pre">'maps.questions_answers',</span> <span class="pre">'maps.reviews',</span> <span class="pre">'maps.starred_places',</span> <span class="pre">'maps.vehicle_profile'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.aliased_places',</span> <span class="pre">'maps.commute_routes',</span> <span class="pre">'maps.commute_settings',</span> <span class="pre">'maps.ev_profile',</span> <span class="pre">'maps.factual_contributions',</span> <span class="pre">'maps.offering_contributions',</span> <span class="pre">'maps.photos_videos',</span> <span class="pre">'maps.questions_answers',</span> <span class="pre">'maps.reviews',</span> <span class="pre">'maps.starred_places',</span> <span class="pre">'maps.vehicle_profile']},</span> <span class="pre">'maps_aliased_places':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.aliased_places'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.aliased_places']},</span> <span class="pre">'maps_commute_routes':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.commute_routes'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.commute_routes']},</span> <span class="pre">'maps_commute_settings':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.commute_settings'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.commute_settings']},</span> <span class="pre">'maps_ev_profile':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.ev_profile'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.ev_profile']},</span> <span class="pre">'maps_factual_contributions':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.factual_contributions'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.factual_contributions']},</span> <span class="pre">'maps_offering_contributions':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.offering_contributions'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.offering_contributions']},</span> <span class="pre">'maps_photos_videos':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.photos_videos'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.photos_videos']},</span> <span class="pre">'maps_questions_answers':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.questions_answers'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.questions_answers']},</span> <span class="pre">'maps_reviews':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.reviews'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.reviews']},</span> <span class="pre">'maps_starred_places':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.starred_places'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.starred_places']},</span> <span class="pre">'maps_vehicle_profile':</span> <span class="pre">{'resources':</span> <span class="pre">['maps.vehicle_profile'],</span> <span class="pre">'scopes':</span> <span class="pre">['maps.vehicle_profile']},</span> <span class="pre">'myactivity_maps':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.maps'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.maps']},</span> <span class="pre">'myactivity_myadcenter':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.myadcenter'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.myadcenter']},</span> <span class="pre">'myactivity_play':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.play'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.play']},</span> <span class="pre">'myactivity_search':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.search'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.search']},</span> <span class="pre">'myactivity_shopping':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.shopping'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.shopping']},</span> <span class="pre">'myactivity_youtube':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.youtube'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.youtube']},</span> <span class="pre">'mymaps_maps':</span> <span class="pre">{'resources':</span> <span class="pre">['mymaps.maps'],</span> <span class="pre">'scopes':</span> <span class="pre">['mymaps.maps']},</span> <span class="pre">'nest':</span> <span class="pre">{'resources':</span> <span class="pre">['nest.camera_event',</span> <span class="pre">'nest.camera_feature',</span> <span class="pre">'nest.camera_video',</span> <span class="pre">'nest.store',</span> <span class="pre">'nest.user'],</span> <span class="pre">'scopes':</span> <span class="pre">['nest.camera_event',</span> <span class="pre">'nest.camera_feature',</span> <span class="pre">'nest.camera_video',</span> <span class="pre">'nest.store',</span> <span class="pre">'nest.user']},</span> <span class="pre">'nest_camera_event':</span> <span class="pre">{'resources':</span> <span class="pre">['nest.camera_event'],</span> <span class="pre">'scopes':</span> <span class="pre">['nest.camera_event']},</span> <span class="pre">'nest_camera_feature':</span> <span class="pre">{'resources':</span> <span class="pre">['nest.camera_feature'],</span> <span class="pre">'scopes':</span> <span class="pre">['nest.camera_feature']},</span> <span class="pre">'nest_camera_video':</span> <span class="pre">{'resources':</span> <span class="pre">['nest.camera_video'],</span> <span class="pre">'scopes':</span> <span class="pre">['nest.camera_video']},</span> <span class="pre">'nest_store':</span> <span class="pre">{'resources':</span> <span class="pre">['nest.store'],</span> <span class="pre">'scopes':</span> <span class="pre">['nest.store']},</span> <span class="pre">'nest_user':</span> <span class="pre">{'resources':</span> <span class="pre">['nest.user'],</span> <span class="pre">'scopes':</span> <span class="pre">['nest.user']},</span> <span class="pre">'order_reserve_purchases_reservations':</span> <span class="pre">{'resources':</span> <span class="pre">['order_reserve.purchases_reservations'],</span> <span class="pre">'scopes':</span> <span class="pre">['order_reserve.purchases_reservations']},</span> <span class="pre">'play':</span> <span class="pre">{'resources':</span> <span class="pre">['play.devices',</span> <span class="pre">'play.grouping',</span> <span class="pre">'play.installs',</span> <span class="pre">'play.library',</span> <span class="pre">'play.playpoints',</span> <span class="pre">'play.promotions',</span> <span class="pre">'play.purchases',</span> <span class="pre">'play.redemptions',</span> <span class="pre">'play.subscriptions',</span> <span class="pre">'play.usersettings'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.devices',</span> <span class="pre">'play.grouping',</span> <span class="pre">'play.installs',</span> <span class="pre">'play.library',</span> <span class="pre">'play.playpoints',</span> <span class="pre">'play.promotions',</span> <span class="pre">'play.purchases',</span> <span class="pre">'play.redemptions',</span> <span class="pre">'play.subscriptions',</span> <span class="pre">'play.usersettings']},</span> <span class="pre">'play_devices':</span> <span class="pre">{'resources':</span> <span class="pre">['play.devices'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.devices']},</span> <span class="pre">'play_grouping':</span> <span class="pre">{'resources':</span> <span class="pre">['play.grouping'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.grouping']},</span> <span class="pre">'play_installs':</span> <span class="pre">{'resources':</span> <span class="pre">['play.installs'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.installs']},</span> <span class="pre">'play_library':</span> <span class="pre">{'resources':</span> <span class="pre">['play.library'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.library']},</span> <span class="pre">'play_playpoints':</span> <span class="pre">{'resources':</span> <span class="pre">['play.playpoints'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.playpoints']},</span> <span class="pre">'play_promotions':</span> <span class="pre">{'resources':</span> <span class="pre">['play.promotions'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.promotions']},</span> <span class="pre">'play_purchases':</span> <span class="pre">{'resources':</span> <span class="pre">['play.purchases'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.purchases']},</span> <span class="pre">'play_redemptions':</span> <span class="pre">{'resources':</span> <span class="pre">['play.redemptions'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.redemptions']},</span> <span class="pre">'play_subscriptions':</span> <span class="pre">{'resources':</span> <span class="pre">['play.subscriptions'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.subscriptions']},</span> <span class="pre">'play_usersettings':</span> <span class="pre">{'resources':</span> <span class="pre">['play.usersettings'],</span> <span class="pre">'scopes':</span> <span class="pre">['play.usersettings']},</span> <span class="pre">'saved_collections':</span> <span class="pre">{'resources':</span> <span class="pre">['saved.collections'],</span> <span class="pre">'scopes':</span> <span class="pre">['saved.collections']},</span> <span class="pre">'search':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.search'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.search']},</span> <span class="pre">'search_notifications':</span> <span class="pre">{'resources':</span> <span class="pre">['searchnotifications.settings',</span> <span class="pre">'searchnotifications.subscriptions'],</span> <span class="pre">'scopes':</span> <span class="pre">['searchnotifications.settings',</span> <span class="pre">'searchnotifications.subscriptions']},</span> <span class="pre">'search_ugc':</span> <span class="pre">{'resources':</span> <span class="pre">['search_ugc.comments',</span> <span class="pre">'search_ugc.media.reviews_and_stars',</span> <span class="pre">'search_ugc.media.streaming_video_providers',</span> <span class="pre">'search_ugc.media.thumbs',</span> <span class="pre">'search_ugc.media.watched'],</span> <span class="pre">'scopes':</span> <span class="pre">['search_ugc.comments',</span> <span class="pre">'search_ugc.media.reviews_and_stars',</span> <span class="pre">'search_ugc.media.streaming_video_providers',</span> <span class="pre">'search_ugc.media.thumbs',</span> <span class="pre">'search_ugc.media.watched']},</span> <span class="pre">'search_ugc_comments':</span> <span class="pre">{'resources':</span> <span class="pre">['search_ugc.comments'],</span> <span class="pre">'scopes':</span> <span class="pre">['search_ugc.comments']},</span> <span class="pre">'search_ugc_media_reviews_and_stars':</span> <span class="pre">{'resources':</span> <span class="pre">['search_ugc.media.reviews_and_stars'],</span> <span class="pre">'scopes':</span> <span class="pre">['search_ugc.media.reviews_and_stars']},</span> <span class="pre">'search_ugc_media_streaming_video_providers':</span> <span class="pre">{'resources':</span> <span class="pre">['search_ugc.media.streaming_video_providers'],</span> <span class="pre">'scopes':</span> <span class="pre">['search_ugc.media.streaming_video_providers']},</span> <span class="pre">'search_ugc_media_thumbs':</span> <span class="pre">{'resources':</span> <span class="pre">['search_ugc.media.thumbs'],</span> <span class="pre">'scopes':</span> <span class="pre">['search_ugc.media.thumbs']},</span> <span class="pre">'search_ugc_media_watched':</span> <span class="pre">{'resources':</span> <span class="pre">['search_ugc.media.watched'],</span> <span class="pre">'scopes':</span> <span class="pre">['search_ugc.media.watched']},</span> <span class="pre">'searchnotifications_settings':</span> <span class="pre">{'resources':</span> <span class="pre">['searchnotifications.settings'],</span> <span class="pre">'scopes':</span> <span class="pre">['searchnotifications.settings']},</span> <span class="pre">'searchnotifications_subscriptions':</span> <span class="pre">{'resources':</span> <span class="pre">['searchnotifications.subscriptions'],</span> <span class="pre">'scopes':</span> <span class="pre">['searchnotifications.subscriptions']},</span> <span class="pre">'shopping':</span> <span class="pre">{'resources':</span> <span class="pre">['shopping.addresses',</span> <span class="pre">'shopping.reviews'],</span> <span class="pre">'scopes':</span> <span class="pre">['shopping.addresses',</span> <span class="pre">'shopping.reviews']},</span> <span class="pre">'shopping_addresses':</span> <span class="pre">{'resources':</span> <span class="pre">['shopping.addresses'],</span> <span class="pre">'scopes':</span> <span class="pre">['shopping.addresses']},</span> <span class="pre">'shopping_reviews':</span> <span class="pre">{'resources':</span> <span class="pre">['shopping.reviews'],</span> <span class="pre">'scopes':</span> <span class="pre">['shopping.reviews']},</span> <span class="pre">'streetview_imagery':</span> <span class="pre">{'resources':</span> <span class="pre">['streetview.imagery'],</span> <span class="pre">'scopes':</span> <span class="pre">['streetview.imagery']},</span> <span class="pre">'video_search':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.search'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.search']},</span> <span class="pre">'youtube':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.channel',</span> <span class="pre">'youtube.clips',</span> <span class="pre">'youtube.comments',</span> <span class="pre">'youtube.conversations',</span> <span class="pre">'youtube.live_chat',</span> <span class="pre">'youtube.music',</span> <span class="pre">'youtube.playable',</span> <span class="pre">'youtube.posts',</span> <span class="pre">'youtube.private_playlists',</span> <span class="pre">'youtube.private_videos',</span> <span class="pre">'youtube.public_playlists',</span> <span class="pre">'youtube.public_videos',</span> <span class="pre">'youtube.shopping',</span> <span class="pre">'youtube.subscriptions',</span> <span class="pre">'youtube.unlisted_playlists',</span> <span class="pre">'youtube.unlisted_videos'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.channel',</span> <span class="pre">'youtube.clips',</span> <span class="pre">'youtube.comments',</span> <span class="pre">'youtube.conversations',</span> <span class="pre">'youtube.live_chat',</span> <span class="pre">'youtube.music',</span> <span class="pre">'youtube.playable',</span> <span class="pre">'youtube.posts',</span> <span class="pre">'youtube.private_playlists',</span> <span class="pre">'youtube.private_videos',</span> <span class="pre">'youtube.public_playlists',</span> <span class="pre">'youtube.public_videos',</span> <span class="pre">'youtube.shopping',</span> <span class="pre">'youtube.subscriptions',</span> <span class="pre">'youtube.unlisted_playlists',</span> <span class="pre">'youtube.unlisted_videos']},</span> <span class="pre">'youtube_channel':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.channel'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.channel']},</span> <span class="pre">'youtube_clips':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.clips'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.clips']},</span> <span class="pre">'youtube_comments':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.comments'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.comments']},</span> <span class="pre">'youtube_conversations':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.conversations'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.conversations']},</span> <span class="pre">'youtube_history':</span> <span class="pre">{'resources':</span> <span class="pre">['myactivity.youtube'],</span> <span class="pre">'scopes':</span> <span class="pre">['myactivity.youtube']},</span> <span class="pre">'youtube_live_chat':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.live_chat'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.live_chat']},</span> <span class="pre">'youtube_music':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.music'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.music']},</span> <span class="pre">'youtube_playable':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.playable'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.playable']},</span> <span class="pre">'youtube_posts':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.posts'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.posts']},</span> <span class="pre">'youtube_private_playlists':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.private_playlists'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.private_playlists']},</span> <span class="pre">'youtube_private_videos':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.private_videos'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.private_videos']},</span> <span class="pre">'youtube_public_playlists':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.public_playlists'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.public_playlists']},</span> <span class="pre">'youtube_public_videos':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.public_videos'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.public_videos']},</span> <span class="pre">'youtube_shopping':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.shopping'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.shopping']},</span> <span class="pre">'youtube_subscriptions':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.subscriptions'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.subscriptions']},</span> <span class="pre">'youtube_unlisted_playlists':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.unlisted_playlists'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.unlisted_playlists']},</span> <span class="pre">'youtube_unlisted_videos':</span> <span class="pre">{'resources':</span> <span class="pre">['youtube.unlisted_videos'],</span> <span class="pre">'scopes':</span> <span class="pre">['youtube.unlisted_videos']}}</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.DATA_TYPE_SCOPE_MAP" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.get_data_types">
+<span class="sig-name descname"><span class="pre">get_data_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.get_data_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.get_data_types" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.fetch_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.count_rows">
+<span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.count_rows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.get_auth_url">
+<span class="sig-name descname"><span class="pre">get_auth_url</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.get_auth_url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.get_auth_url" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.create_archive_job">
+<span class="sig-name descname"><span class="pre">create_archive_job</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.create_archive_job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.create_archive_job" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.handle_auth_callback">
+<span class="sig-name descname"><span class="pre">handle_auth_callback</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.handle_auth_callback"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.handle_auth_callback" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.refresh_access_token">
+<span class="sig-name descname"><span class="pre">refresh_access_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.refresh_access_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.refresh_access_token" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.revoke">
+<span class="sig-name descname"><span class="pre">revoke</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.revoke"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.revoke" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.download_data_files">
+<span class="sig-name descname"><span class="pre">download_data_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.download_data_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.download_data_files" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.extract_and_process">
+<span class="sig-name descname"><span class="pre">extract_and_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.extract_and_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.extract_and_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.cleanup_files">
+<span class="sig-name descname"><span class="pre">cleanup_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/google_portability.html#GoogleDonation.cleanup_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.cleanup_files" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="donations.models.html#donations.models.Donation.DoesNotExist" title="donations.models.Donation.DoesNotExist"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoesNotExist</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="donations.models.html#donations.models.Donation.MultipleObjectsReturned" title="donations.models.Donation.MultipleObjectsReturned"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.donation_ptr">
+<span class="sig-name descname"><span class="pre">donation_ptr</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.donation_ptr" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a one-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Restaurant.place</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.donation_ptr_id">
+<span class="sig-name descname"><span class="pre">donation_ptr_id</span></span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.donation_ptr_id" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.google_portability.GoogleDonation.get_processing_status_display">
+<span class="sig-name descname"><span class="pre">get_processing_status_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.CharField:</span> <span class="pre">processing_status&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.google_portability.GoogleDonation.get_processing_status_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2026, Aalto RSE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -95,7 +95,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">GoogleDonation</span><span class="p">(</span><span class="n">Donation</span><span class="p">):</span>
     <span class="n">source_type_display</span> <span class="o">=</span> <span class="s1">&#39;Google&#39;</span>
 
@@ -339,7 +339,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="GoogleDonation.save">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.save">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.save">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span> <span class="o">=</span> <span class="s1">&#39;google_portability&#39;</span>
@@ -347,7 +347,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.get_data_types">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.get_data_types">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.get_data_types">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_data_types</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;processed&#39;</span><span class="p">,</span> <span class="s1">&#39;processing&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="p">[]</span>
@@ -361,7 +361,7 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s1">&#39;data/</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s1">/google_portability/</span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s1">_processed.csv&#39;</span>
 
 <div class="viewcode-block" id="GoogleDonation.fetch_data">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.fetch_data">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.fetch_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">():</span>
             <span class="k">return</span> <span class="p">[]</span>
@@ -392,7 +392,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.count_rows">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.count_rows">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.count_rows">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">count_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">():</span>
             <span class="k">return</span> <span class="mi">0</span>
@@ -420,7 +420,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.get_auth_url">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.get_auth_url">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.get_auth_url">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_auth_url</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">state_token</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_urlsafe</span><span class="p">(</span><span class="mi">16</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">oauth_state</span> <span class="o">=</span> <span class="n">state_token</span>
@@ -440,7 +440,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.create_archive_job">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.create_archive_job">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.create_archive_job">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">create_archive_job</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">api_url</span> <span class="o">=</span> <span class="s1">&#39;https://dataportability.googleapis.com/v1/portabilityArchive:initiate&#39;</span>
         <span class="n">access_token</span> <span class="o">=</span> <span class="kc">None</span>
@@ -475,7 +475,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.handle_auth_callback">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.handle_auth_callback">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.handle_auth_callback">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle_auth_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="n">code</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;code&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">code</span><span class="p">:</span>
@@ -532,7 +532,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.refresh_access_token">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.refresh_access_token">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.refresh_access_token">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">refresh_access_token</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_token</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;No refresh token available.&quot;</span>
@@ -568,7 +568,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.revoke">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.revoke">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.revoke">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">revoke</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_access_token</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
@@ -595,7 +595,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.download_data_files">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.download_data_files">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.download_data_files">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">download_data_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">refresh_access_token</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span><span class="p">:</span>
@@ -660,7 +660,7 @@
 
 
 <div class="viewcode-block" id="GoogleDonation.extract_and_process">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.extract_and_process">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.extract_and_process">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extract_and_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;processing&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">):</span>
             <span class="k">return</span>
@@ -771,7 +771,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">extract_and_process</span><span class="p">()</span>
 
 <div class="viewcode-block" id="GoogleDonation.cleanup_files">
-<a class="viewcode-back" href="../../../donations.models.google_portability.html#donations.models.GoogleDonation.cleanup_files">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.cleanup_files">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">cleanup_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaded_files</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>

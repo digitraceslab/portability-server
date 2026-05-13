@@ -72,12 +72,12 @@
 
 
 <div class="viewcode-block" id="Command">
-<a class="viewcode-back" href="../../../../donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command">[docs]</a>
+<a class="viewcode-back" href="../../../../api/donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Command</span><span class="p">(</span><span class="n">BaseCommand</span><span class="p">):</span>
     <span class="n">help</span> <span class="o">=</span> <span class="s1">&#39;Create a researcher API token&#39;</span>
 
 <div class="viewcode-block" id="Command.add_arguments">
-<a class="viewcode-back" href="../../../../donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command.add_arguments">[docs]</a>
+<a class="viewcode-back" href="../../../../api/donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command.add_arguments">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
             <span class="s1">&#39;--name&#39;</span><span class="p">,</span>
@@ -88,7 +88,7 @@
 
 
 <div class="viewcode-block" id="Command.handle">
-<a class="viewcode-back" href="../../../../donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command.handle">[docs]</a>
+<a class="viewcode-back" href="../../../../api/donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command.handle">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
         <span class="n">token</span> <span class="o">=</span> <span class="n">ResearcherToken</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
             <span class="n">name</span><span class="o">=</span><span class="n">options</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>

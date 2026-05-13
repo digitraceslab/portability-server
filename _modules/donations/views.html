@@ -162,7 +162,7 @@
 
 
 <div class="viewcode-block" id="donation_entry">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.donation_entry">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.donation_entry">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">donation_entry</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_token</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Consume a donation token from the URL, store it in the session, redirect.&quot;&quot;&quot;</span>
@@ -175,7 +175,7 @@
 
 
 <div class="viewcode-block" id="participant_entry">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.participant_entry">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.participant_entry">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">participant_entry</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Consume a participant token from the URL, store it in the session, redirect.&quot;&quot;&quot;</span>
@@ -188,7 +188,7 @@
 
 
 <div class="viewcode-block" id="select_donation">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.select_donation">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.select_donation">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">select_donation</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">donation_pk</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Switch the active donation in session to one owned by the current participant.&quot;&quot;&quot;</span>
@@ -202,7 +202,7 @@
 
 
 <div class="viewcode-block" id="logout_participant">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.logout_participant">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.logout_participant">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">logout_participant</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear the participant token from session. Donation session is preserved.&quot;&quot;&quot;</span>
@@ -214,7 +214,7 @@
 
 
 <div class="viewcode-block" id="switch_to_participant">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.switch_to_participant">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.switch_to_participant">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">switch_to_participant</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify the current donation has a participant, redirect to participant home.&quot;&quot;&quot;</span>
@@ -238,7 +238,7 @@
 
 
 <div class="viewcode-block" id="generate_participant_token">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.generate_participant_token">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.generate_participant_token">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_participant_token</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Link the current donation to the participant identified by the</span>
@@ -259,7 +259,7 @@
 
 
 <div class="viewcode-block" id="donation_landing">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.donation_landing">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.donation_landing">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">donation_landing</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Status overview page with participant token handling.&quot;&quot;&quot;</span>
@@ -306,7 +306,7 @@
 
 
 <div class="viewcode-block" id="accept_terms">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.accept_terms">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.accept_terms">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">accept_terms</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Show terms and record acceptance.&quot;&quot;&quot;</span>
@@ -320,7 +320,7 @@
 
 
 <div class="viewcode-block" id="authorize">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.authorize">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.authorize">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Redirect to OAuth URL. Requires terms accepted.&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -332,7 +332,7 @@
 
 
 <div class="viewcode-block" id="data_preview">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.data_preview">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.data_preview">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">data_preview</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Paginated data preview with filtering.&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -373,7 +373,7 @@
 
 
 <div class="viewcode-block" id="revoke_donation">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.revoke_donation">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.revoke_donation">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">revoke_donation</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Confirm and revoke a donation.&quot;&quot;&quot;</span>
@@ -415,7 +415,7 @@
 
 
 <div class="viewcode-block" id="google_auth_callback">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.google_auth_callback">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.google_auth_callback">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">google_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle Google OAuth callback via oauth_state lookup.&quot;&quot;&quot;</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
@@ -440,7 +440,7 @@
 
 
 <div class="viewcode-block" id="tiktok_auth_callback">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.tiktok_auth_callback">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.tiktok_auth_callback">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">tiktok_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle TikTok OAuth callback via oauth_state lookup.&quot;&quot;&quot;</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
@@ -465,7 +465,7 @@
 
 
 <div class="viewcode-block" id="participant_home">
-<a class="viewcode-back" href="../../donations.views.html#donations.views.participant_home">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.views.html#donations.views.participant_home">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">participant_home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Show all donations for a participant.&quot;&quot;&quot;</span>
     <span class="n">participant</span> <span class="o">=</span> <span class="n">_get_session_participant</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>

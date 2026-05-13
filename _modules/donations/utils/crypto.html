@@ -90,7 +90,7 @@
 
 
 <div class="viewcode-block" id="encrypt_bytes">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.encrypt_bytes">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.encrypt_bytes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">encrypt_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
     <span class="n">f</span> <span class="o">=</span> <span class="n">_get_fernet</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
@@ -98,7 +98,7 @@
 
 
 <div class="viewcode-block" id="decrypt_bytes">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.decrypt_bytes">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.decrypt_bytes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">decrypt_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
     <span class="n">f</span> <span class="o">=</span> <span class="n">_get_fernet</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
@@ -106,7 +106,7 @@
 
 
 <div class="viewcode-block" id="encrypt_file_inplace">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.encrypt_file_inplace">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.encrypt_file_inplace">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">encrypt_file_inplace</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
         <span class="n">plaintext</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -117,7 +117,7 @@
 
 
 <div class="viewcode-block" id="write_encrypted_bytes">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.write_encrypted_bytes">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.write_encrypted_bytes">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">write_encrypted_bytes</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">):</span>
     <span class="n">encrypted</span> <span class="o">=</span> <span class="n">encrypt_bytes</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
@@ -129,7 +129,7 @@
 
 
 <div class="viewcode-block" id="decrypt_file_to_temp">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.decrypt_file_to_temp">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.decrypt_file_to_temp">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">decrypt_file_to_temp</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fh</span><span class="p">:</span>
         <span class="n">encrypted</span> <span class="o">=</span> <span class="n">fh</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -143,14 +143,14 @@
 
 
 <div class="viewcode-block" id="encrypt_text">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.encrypt_text">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.encrypt_text">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">encrypt_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">encrypt_bytes</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span></div>
 
 
 
 <div class="viewcode-block" id="decrypt_text">
-<a class="viewcode-back" href="../../../donations.utils.crypto.html#donations.utils.crypto.decrypt_text">[docs]</a>
+<a class="viewcode-back" href="../../../api/donations.utils.crypto.html#donations.utils.crypto.decrypt_text">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">decrypt_text</span><span class="p">(</span><span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">decrypt_bytes</span><span class="p">(</span><span class="n">text</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span></div>
 

@@ -72,12 +72,12 @@
 
 
 <div class="viewcode-block" id="ResearcherTokenAuthentication">
-<a class="viewcode-back" href="../../donations.authentication.html#donations.authentication.ResearcherTokenAuthentication">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.authentication.html#donations.authentication.ResearcherTokenAuthentication">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ResearcherTokenAuthentication</span><span class="p">(</span><span class="n">authentication</span><span class="o">.</span><span class="n">BaseAuthentication</span><span class="p">):</span>
     <span class="n">keyword</span> <span class="o">=</span> <span class="s1">&#39;Token&#39;</span>
 
 <div class="viewcode-block" id="ResearcherTokenAuthentication.authenticate">
-<a class="viewcode-back" href="../../donations.authentication.html#donations.authentication.ResearcherTokenAuthentication.authenticate">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.authentication.html#donations.authentication.ResearcherTokenAuthentication.authenticate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">authenticate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
         <span class="n">auth_header</span> <span class="o">=</span> <span class="n">authentication</span><span class="o">.</span><span class="n">get_authorization_header</span><span class="p">(</span><span class="n">request</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">auth_header</span> <span class="ow">or</span> <span class="n">auth_header</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyword</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">():</span>
@@ -92,7 +92,7 @@
 
 
 <div class="viewcode-block" id="ResearcherTokenAuthentication.authenticate_credentials">
-<a class="viewcode-back" href="../../donations.authentication.html#donations.authentication.ResearcherTokenAuthentication.authenticate_credentials">[docs]</a>
+<a class="viewcode-back" href="../../api/donations.authentication.html#donations.authentication.ResearcherTokenAuthentication.authenticate_credentials">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">authenticate_credentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="n">key_hash</span> <span class="o">=</span> <span class="n">ResearcherToken</span><span class="o">.</span><span class="n">hash_key</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
