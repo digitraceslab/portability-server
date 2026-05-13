@@ -1,5 +1,8 @@
-portability-server
-==================
+Niimport
+========
+
+A service that allows participants in studies to donate their data from third party services
+securely and easily.
 
 .. toctree::
    :maxdepth: 2
@@ -8,22 +11,562 @@ portability-server
    apimodules
 
 
+Overview
+--------
 
-Data Format
+Niimport allows participants in research studies to donate their data securely and easily using
+data portability APIs from third party services. Participants authorize the donation once and
+Niimport automates the rest. It handles data retrieval, removes unnecessary data and allows
+participants to view and delete their data. Researchers download the data using an API once
+it's processed.
+
+Niimport is not a data storage service. Data is encrypted at rest and deleted as soon as the
+researcher confirms it has been downloaded. Niimport handles authorization, data transfer and
+minimization.
+
+
+How it works
 ------------
 
-Downloaded data is stored in the `data/` directory. The initial data format depends
+1. A researcher creates a donation request through the API, specifying the data types and date
+   range they require. Niimport generates a unique donation URL for the participant.
+2. The researcher sends the donation URL to the participant. The participant clicks on the link,
+   which takes them to Niimport's donation page.
+3. The participant approves Niimport's Terms of Service and Privacy Notice, and then authorizes
+   the transfer using the third party service's OAuth flow.
+4. Once authorized, Niimport requests a data export. Once the export is ready, Niimport
+   downloads the data.
+5. Niimport removes any data outside the date range specified by the researcher and any data
+   types that are not requested. Once processed, the participant can review the data. They can
+   choose to delete the data at any point.
+6. The researcher uses the API to download processed data. Once the researcher confirms they
+   have downloaded the data, Niimport deletes it permanently.
+
+
+Features
+--------
+
+Data types we currently support:
+
+- Google Portability data
+
+  - YouTube history
+  - Google Search history
+  - Google Discover history
+  - Google Lens history
+  - Google Play Games activity
+  - Google Play Store activity
+  - Google Image Search history
+  - Google Video Search history
+
+
+Data Format
+-----------
+
+Downloaded data is stored in the ``data/`` directory. The initial data format depends
 on the source. For example, Google Portability exports are ZIP files containing data
-files in multiple formats. All stored data is encrypted, includign these initial
+files in multiple formats. All stored data is encrypted, including these initial
 files.
 
-The celery service run data processing periodically. During processing data files are
+The celery service runs data processing periodically. During processing data files are
 extracted and processed data is stored in csv format. Each requested data type is
 stored in a separate csv file and may contain multiple columns with different data types.
 Each row contains a timestamp column, which is converted to unix time in seconds.
 
 
+Researcher API
+--------------
+
+All API requests require a researcher token in the header::
+
+   Authorization: Token <researcher_token>
+
+The researcher token is created by an administrator using the management command:
+
+.. code-block:: bash
+
+   python manage.py create_researcher_token
 
 
+Create a donation
+~~~~~~~~~~~~~~~~~
+
+::
+
+   POST /api/donations/
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 10 10 60
+
+   * - Parameter
+     - Type
+     - Required
+     - Description
+   * - ``source_type``
+     - string
+     - yes
+     - ``google_portability`` or ``tiktok_portability``
+   * - ``data_start_date``
+     - date
+     - no
+     - Only include data from this date onward (YYYY-MM-DD)
+   * - ``data_end_date``
+     - date
+     - no
+     - Only include data up to this date (YYYY-MM-DD)
+   * - ``requested_data_types``
+     - list
+     - no
+     - Data types to collect. Empty means all available
+
+Available Google data types: ``youtube_history``, ``discover``, ``google_lens``,
+``google_play_games``, ``google_play_store``, ``image_search``, ``search``, ``video_search``.
+
+Returns a donation object including a ``donation_url`` — an absolute URL to send directly to
+the participant to begin the OAuth flow.
+
+Example:
+
+.. code-block:: bash
+
+   curl -X POST http://localhost:8000/api/donations/ \
+     -H "Authorization: Token <researcher_token>" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "source_type": "google_portability",
+       "data_start_date": "2023-01-01",
+       "data_end_date": "2023-12-31",
+       "requested_data_types": ["youtube_history", "search"]
+     }'
 
 
+List donations
+~~~~~~~~~~~~~~
+
+::
+
+   GET /api/donations/
+
+Returns all donations created by the researcher.
+
+Example:
+
+.. code-block:: bash
+
+   curl -X GET http://localhost:8000/api/donations/ \
+     -H "Authorization: Token <researcher_token>"
+
+
+Get donation status
+~~~~~~~~~~~~~~~~~~~
+
+::
+
+   GET /api/donations/<id>/
+
+Returns donation details including ``status``: ``pending``, ``authorized``, ``processing``,
+``processed``, or ``error``.
+
+Example:
+
+.. code-block:: bash
+
+   curl -X GET http://localhost:8000/api/donations/<id>/ \
+     -H "Authorization: Token <researcher_token>"
+
+
+Query donation data
+~~~~~~~~~~~~~~~~~~~
+
+::
+
+   GET /api/donations/<id>/data/
+
+Without parameters, returns available ``data_types``. With a ``data_type``, returns the data:
+
+.. list-table::
+   :header-rows: 1
+   :widths: 20 10 10 60
+
+   * - Parameter
+     - Type
+     - Required
+     - Description
+   * - ``data_type``
+     - string
+     - no
+     - Which data type to retrieve
+   * - ``start_date``
+     - date
+     - no
+     - Filter rows from this date (YYYY-MM-DD)
+   * - ``end_date``
+     - date
+     - no
+     - Filter rows up to this date (YYYY-MM-DD)
+   * - ``limit``
+     - integer
+     - no
+     - Max rows to return (default: 1000)
+   * - ``offset``
+     - integer
+     - no
+     - Skip this many rows (default: 0)
+
+Example:
+
+.. code-block:: bash
+
+   curl -X GET "http://localhost:8000/api/donations/<id>/data/?data_type=youtube_history&start_date=2023-01-01&end_date=2023-12-31&limit=100&offset=0" \
+     -H "Authorization: Token <researcher_token>"
+
+
+Delete a donation
+~~~~~~~~~~~~~~~~~
+
+::
+
+   DELETE /api/donations/<id>/
+
+Revokes OAuth access and deletes the donation and its data.
+
+Example:
+
+.. code-block:: bash
+
+   curl -X DELETE http://localhost:8000/api/donations/<id>/ \
+     -H "Authorization: Token <researcher_token>"
+
+
+Generating documentation
+========================
+
+API documentation and some additional information can be found in ``docs/`` and built using
+Sphinx. To build the documentation, install the dependencies and run sphinx:
+
+.. code-block:: bash
+
+   pip install -r docs/requirements.txt
+   cd docs
+   make html
+
+
+Deployment
+==========
+
+Before deploying
+----------------
+
+Before deploying to production, you must:
+
+1. **Update Terms of Service and Privacy Notice** — review
+   ``templates/donations/terms_of_service.html`` and
+   ``templates/donations/privacy_notice.html``. Update contact information, and any
+   institution-specific details.
+
+2. **Request Google Data Portability API access** — apply through the
+   `Google API Console <https://console.cloud.google.com/>`_. You will need:
+
+   - Deployed application with the intended URL.
+
+     - Reviewers will check privacy notice and terms of service.
+     - They will test the OAuth flow on the website.
+
+   - OAuth consent screen configured with the correct scopes on the
+     `Google Cloud Console <https://console.cloud.google.com/>`_.
+   - **A Cloud Application Security Assessment (CASA)** may be required for restricted scopes.
+
+     - If this is required, you will receive a request at the end of the API review. The
+       assessment must be done by a third party vendor and can take 4-6 weeks and typically
+       cost between $500 and $3000.
+
+3. **Request TikTok Data Portability API access** — apply through the
+   `TikTok Developer Portal <https://developers.tiktok.com/>`_. You will need:
+
+   - Deployed application with the intended URL. The URL must contain the name of the service
+     (e.g. ``myportability.labname.com``).
+
+     - A privacy policy and terms of service accessible at the URL.
+     - They will test the OAuth flow, which requires sandbox mode set up at the
+       `TikTok Developer Portal <https://developers.tiktok.com/>`_.
+
+   - Web application set up on the `TikTok Developer Portal <https://developers.tiktok.com/>`_.
+
+4. **Set up OAuth credentials** — add the client IDs and secrets to your ``.env`` file.
+
+
+Prerequisites
+-------------
+
+- Python 3.12+
+- PostgreSQL
+- Redis
+
+
+Installation
+------------
+
+1. **Clone the repository**
+
+   .. code-block:: bash
+
+      git clone https://github.com/digitraceslab/portability-server.git
+      cd portability-server
+
+2. **Create a virtual environment**
+
+   .. code-block:: bash
+
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install -r requirements.txt
+
+   Or with mamba:
+
+   .. code-block:: bash
+
+      mamba create -n portability-server python=3.12 pip -y
+      mamba activate portability-server
+      pip install -r requirements.txt
+
+3. **Set up PostgreSQL**
+
+   .. code-block:: bash
+
+      sudo -u postgres createuser portability_user -P
+      sudo -u postgres createdb portability_db -O portability_user
+
+4. **Configure environment variables**
+
+   .. code-block:: bash
+
+      cp .env.example .env
+      # Edit .env with your database credentials, OAuth keys, etc.
+
+5. **Run migrations**
+
+   .. code-block:: bash
+
+      python manage.py migrate
+
+6. **Create a researcher API token**
+
+   .. code-block:: bash
+
+      python manage.py create_researcher_token
+
+
+Running
+-------
+
+Start all three processes for local development:
+
+.. code-block:: bash
+
+   # Django development server
+   python manage.py runserver
+
+   # Celery worker (in a separate terminal)
+   celery -A portability_server worker -l info
+
+   # Celery beat scheduler (in a separate terminal)
+   celery -A portability_server beat -l info
+
+
+Deployment
+----------
+
+System packages
+~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   sudo apt update
+   sudo apt install python3 python3.12-venv postgresql nginx redis-server
+
+
+Application setup
+~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   git clone https://github.com/digitraceslab/portability-server.git /opt/portability-server
+   cd /opt/portability-server
+
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+
+   cp .env.example .env
+   # Edit .env with production values: DEBUG=False, proper SECRET_KEY, ALLOWED_HOSTS, etc.
+
+   python manage.py migrate
+   python manage.py collectstatic --noinput
+   python manage.py create_researcher_token
+
+
+Gunicorn service
+~~~~~~~~~~~~~~~~
+
+Create ``/etc/systemd/system/portability-gunicorn.service``:
+
+.. code-block:: ini
+
+   [Unit]
+   Description=portability-server gunicorn
+   After=network.target
+
+   [Service]
+   User=USERNAME
+   Group=USERNAME
+   WorkingDirectory=/opt/portability-server
+   ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application
+   RuntimeDirectory=portability-server
+
+   [Install]
+   WantedBy=multi-user.target
+
+
+Celery worker service
+~~~~~~~~~~~~~~~~~~~~~
+
+Create ``/etc/systemd/system/portability-celery-worker.service``:
+
+.. code-block:: ini
+
+   [Unit]
+   Description=portability-server celery worker
+   After=network.target redis-server.service
+
+   [Service]
+   User=USERNAME
+   Group=USERNAME
+   WorkingDirectory=/opt/portability-server
+   ExecStart=/opt/portability-server/venv/bin/celery -A portability_server worker -l info
+   Restart=always
+
+   [Install]
+   WantedBy=multi-user.target
+
+
+Celery beat service
+~~~~~~~~~~~~~~~~~~~
+
+Create ``/etc/systemd/system/portability-celery-beat.service``:
+
+.. code-block:: ini
+
+   [Unit]
+   Description=portability-server celery beat
+   After=network.target redis-server.service
+
+   [Service]
+   User=USERNAME
+   Group=USERNAME
+   WorkingDirectory=/opt/portability-server
+   ExecStart=/opt/portability-server/venv/bin/celery -A portability_server beat -l info --schedule=/opt/portability-server/celerybeat-schedule
+   Restart=always
+
+   [Install]
+   WantedBy=multi-user.target
+
+
+Enable and start services
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   sudo systemctl enable --now portability-gunicorn portability-celery-worker portability-celery-beat
+
+
+Nginx
+~~~~~
+
+Create ``/etc/nginx/sites-available/portability-server``:
+
+.. code-block:: nginx
+
+   server {
+       listen 80;
+       server_name DOMAIN;
+       return 301 https://$server_name$request_uri;
+   }
+
+   server {
+       listen 443 ssl;
+       server_name DOMAIN;
+
+       ssl_certificate /PATH_TO/fullchain.pem;
+       ssl_certificate_key /PATH_TO/privkey.pem;
+
+       location = /favicon.ico { access_log off; log_not_found off; }
+       location /static/ {
+           alias /opt/portability-server/staticfiles/;
+       }
+
+       location / {
+           include proxy_params;
+           proxy_pass http://unix:/run/portability-server/portability-server.sock;
+       }
+   }
+
+.. code-block:: bash
+
+   sudo ln -s /etc/nginx/sites-available/portability-server /etc/nginx/sites-enabled
+   sudo nginx -t && sudo systemctl restart nginx
+
+
+Environment Variables
+---------------------
+
+All configuration is done via ``.env`` (copy from ``.env.example``):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 50 20
+
+   * - Variable
+     - Description
+     - Example
+   * - ``SECRET_KEY``
+     - Django secret key
+     - ``change-me-to-a-random-secret-key``
+   * - ``DEBUG``
+     - Enable debug mode
+     - ``True`` / ``False``
+   * - ``ALLOWED_HOSTS``
+     - Comma-separated allowed hostnames
+     - ``localhost,127.0.0.1``
+   * - ``DATABASE_URL``
+     - PostgreSQL connection string
+     - ``postgres://portability_user:password@localhost:5432/portability_db``
+   * - ``GOOGLE_OAUTH_CLIENT_ID``
+     - Google OAuth 2.0 client ID
+     -
+   * - ``GOOGLE_OAUTH_CLIENT_SECRET``
+     - Google OAuth 2.0 client secret
+     -
+   * - ``TIKTOK_CLIENT_KEY``
+     - TikTok API client key
+     -
+   * - ``TIKTOK_CLIENT_SECRET``
+     - TikTok API client secret
+     -
+   * - ``ENCRYPTION_KEY``
+     - Base64 urlsafe Fernet key for data at rest; falls back to ``SECRET_KEY`` if empty
+     -
+   * - ``CELERY_BROKER_URL``
+     - Redis URL for Celery task broker
+     - ``redis://localhost:6379/1``
+   * - ``CELERY_RESULT_BACKEND``
+     - Redis URL for Celery result storage
+     - ``redis://localhost:6379/1``
+
+
+Testing
+-------
+
+.. code-block:: bash
+
+   python manage.py test
