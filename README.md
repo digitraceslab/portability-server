@@ -1,27 +1,48 @@
-# Portability Server
+# Niimport
 
-Service that manages and stores donated research data from third party platforms.
+A service that allows participants in studies to donate their data from third party services
+securely and easily.
 
 ## Overview
 
-The service allows a user to securely donate data from third party services to research projects.
-Participants receive a link with an authentication token. The link takes them to a donation page where
-they can authenticate with the third party service and give access to download their data.
+Niimport allows participants in research studies to donate their data securely and easily using
+data portability APIS from third party services. Participants authorize the donation once and Niimport
+automates the rest. It handles data retrieval, removes an unnecessary data and allows participants
+to view and delete their data. Reserchers download the data using an API once it's processed.
 
-The service processes the data and removes data the study does not need. For example, data from before
-the specified study period and data types not require for the study are removed. The participant can
-use their token to later see their data and ask for deletion.
+Niimport is not a data storage service. Data is encrypted at rest and deleted as soon as the
+researcher confirms it has been downloaded. Niimport handles authorization, data transfer and minimization.
 
-Note that the researcher may have downloaded any data deleted from the server.
 
-Researchers use an API to generate participant tokens to send to each participant. They can check
-the processing status of each donation and download data once processed.
+## How it works
+
+1. A researcher creates a donation request through the API, specifying the data types and date range
+   they require. Niimport generates a unique donation URL for the participant.
+2. The researcher sends the donation URL to the participant. The participant clicks on the link, which
+   takes them to Niimport's donation page.
+3. The participant approves Niimport's Terms of Service and Privacy Notice, and then authorizes the 
+   transfer using the third party service's OAuth flow.
+4. Once authorized, Niimport requests a data export. Once the export is ready, Niimport downloads the data.
+5. Niimport removes any data outside the date range specified by the researcher and any data types that
+   are not requested. Once processed, the participant can review the data. They can choose to delete
+   the data at any point.
+6. The researcher uses the API to dowload processed data. Once the researcher confirms they have
+   downloaded the data, Niimport deletes it permanently.
 
 
 ## Features
 
 Data types we currently support
  - Google Portability data
+   - YouTube history
+   - Google Search history
+   - Google Discover history
+   - Google Lens history
+   - Google Play Games activity
+   - Google Play Store activity
+   - Google Image Search history
+   - Google Video Search history
+
 
 
 ## Researcher API
@@ -33,6 +54,13 @@ Authorization: Token <researcher_token>
 ```
 
 Machine-readable endpoint documentation is also available at `/api/docs/` (no authentication required).
+
+The researcher token is created by an administrator using the management command:
+
+```bash
+python manage.py create_researcher_token
+```
+
 
 ### Create a donation
 
@@ -70,7 +98,7 @@ curl -X POST http://localhost:8000/api/donations/ \
 GET /api/donations/
 ```
 
-Returns all donations created by the authenticated researcher.
+Returns all donations created by the researcher.
 
 Example
 ``` bash
@@ -137,22 +165,27 @@ curl -X DELETE http://localhost:8000/api/donations/<id>/ \
 Before deploying to production, you must:
 
 1. **Update Terms of Service and Privacy Notice** — review `templates/donations/terms_of_service.html`
-   and `templates/donations/privacy_notice.html`. Update contact information, age of consent, and any
+   and `templates/donations/privacy_notice.html`. Update contact information, and any
    institution-specific details.
 
 2. **Request Google Data Portability API access** — apply through the
    [Google API Console](https://console.cloud.google.com/). You will need:
-   - A published privacy policy (served at `/privacy/`)
-   - OAuth consent screen configured with the correct scopes
-   - A Cloud Application Security Assessment (CASA) may be required for restricted scopes
+   - Deployed application with the intended URL.
+        - Reviewers will check privacy notice and terms of service.
+        - They will test the OAuth flow on the website.
+   - OAuth consent screen configured with the correct scopes on the [Google Cloud Console](https://console.cloud.google.com/).
+   - **A Cloud Application Security Assessment (CASA)** may be required for restricted scopes
+      - If this is required, you will receive a request at the end of the API review. The assesment must
+        be done by a third party vendor and can take 4-6 weeks and typically cost between $500 and $3000.
 
 3. **Request TikTok Data Portability API access** — apply through the
    [TikTok Developer Portal](https://developers.tiktok.com/). You will need:
-   - UX mockups showing the data donation flow
-   - A description of your data protection policies
-   - Documentation of how users can make data subject requests
+   - Deployed application with the intended URL. The URL must contain the name of the service (e.g. `myportability.labname.com`).
+      - A privacy policy and terms of service accessible at the URL.
+      - They will test the OAuth flow, which requires sandbox mode set up at [TikTok Developer Portal](https://developers.tiktok.com/).
+   - Web application set up on the [TikTok Developer Portal](https://developers.tiktok.com/).
 
-4. **Set up OAuth credentials** — once approved, add the client IDs and secrets to your `.env` file.
+4. **Set up OAuth credentials** — add the client IDs and secrets to your `.env` file.
 
 ## Prerequisites
 
