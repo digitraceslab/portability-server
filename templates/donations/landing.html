@@ -8,6 +8,11 @@
     <p>Donate your {{ donation.source_type_display }} data for academic research.</p>
 </div>
 {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+{% if return_url %}
+    <p><a href="{{ return_url }}" class="btn">Return to Study Page</a></p>
+{% endif %}
+
 <p>Source: {{ donation.source_type_display }}</p>
 <p>Status: {{ donation.get_status_display }}</p>
 

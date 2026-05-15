@@ -93,6 +93,11 @@ def _set_participant_session(request, raw_token):
     request.session[SESSION_PARTICIPANT_KEY] = str(raw_token)
 
 
+def _set_return_url(request, url):
+    """Store a return URL in session to display on donation page."""
+    request.session['return_url'] = url
+
+
 @require_http_methods(["GET"])
 def donation_entry(request, donation_token):
     """Consume a donation token from the URL, store it in the session, redirect."""
@@ -100,6 +105,10 @@ def donation_entry(request, donation_token):
     if donation is None:
         raise Http404("Donation not found.")
     _set_donation_session(request, donation, raw_token=donation_token)
+
+    if 'return_to' in request.GET:
+        _set_return_url(request, request.GET['return_to'])
+        
     return redirect('donation-landing')
 
 
@@ -178,6 +187,11 @@ def donation_landing(request):
     donation = _get_session_donation(request)
     token_error = None
 
+    if "return_to" in request.session:
+        return_url = request.session.pop("return_to")
+    else:
+        return_url = None
+
     if request.method == 'POST':
         token_input = request.POST.get('participant_token_input', '').strip()
         if not token_input:
@@ -213,6 +227,7 @@ def donation_landing(request):
         'participant_link_url': _participant_link_url(request),
         'token_error': token_error,
         'suggested_participant_token': suggested_participant_token,
+        'return_url': return_url,
     })
 
 
