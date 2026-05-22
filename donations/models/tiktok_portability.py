@@ -5,6 +5,7 @@ import logging
 import secrets
 from datetime import timedelta
 from urllib.parse import urlencode
+from donations.utils.logging_utils import log_api_response
 
 import requests
 from django.conf import settings
@@ -161,12 +162,25 @@ class TikTokDonation(Donation):
             response.raise_for_status()
             token_info = response.json()
 
+            # Persist token exchange payload for production diagnostics, but
+            # never write raw tokens to disk.
+            log_token_info = dict(token_info)
+            if isinstance(log_token_info.get('data'), dict):
+                redacted_data = dict(log_token_info['data'])
+                if 'access_token' in redacted_data:
+                    redacted_data['access_token'] = 'REDACTED'
+                if 'refresh_token' in redacted_data:
+                    redacted_data['refresh_token'] = 'REDACTED'
+                log_token_info['data'] = redacted_data
+            log_api_response('tiktok', self.pk, '/v2/oauth/token/', log_token_info)
+
             logger.info("TikTok token exchange response: %s", token_info)
             
             # Store token info for both sandbox and production
             try:
                 self._store_token_info(token_info)
-            except KeyError:
+            except KeyError as e:
+                log_api_response('tiktok', self.pk, '/v2/oauth/token/', log_token_info, error=f"Missing key in token response: {e}")
                 return False, "Invalid response from TikTok during token exchange."
 
             # Fetch user info immediately after successful token exchange (both sandbox and production)
@@ -180,6 +194,10 @@ class TikTokDonation(Donation):
             return True, "Authorization successful."
 
         except requests.RequestException as e:
+            response_text = None
+            if e.response is not None:
+                response_text = e.response.text
+            log_api_response('tiktok', self.pk, '/v2/oauth/token/', {'response_text': response_text}, error=str(e))
             return False, f"Error during token exchange: {e}"
         except KeyError:
             return False, "Invalid response from TikTok during token exchange."
