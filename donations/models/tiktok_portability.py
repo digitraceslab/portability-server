@@ -35,7 +35,7 @@ class TikTokDonation(Donation):
     access_token = models.CharField(max_length=500, blank=True, null=True)
     refresh_token = models.CharField(max_length=500, blank=True, null=True)
     token_expiry = models.DateTimeField(null=True, blank=True)
-    tiktok_user_id = models.CharField(max_length=255, blank=True, unique=True, null=True)
+    tiktok_user_id = models.CharField(max_length=255, blank=True, null=True)
     user_info = models.JSONField(default=dict, blank=True, help_text="User info from TikTok API (display_name, user_name, etc.)")
     code_verifier = models.CharField(max_length=200, blank=True)
     oauth_state = models.CharField(max_length=100, blank=True, null=True)

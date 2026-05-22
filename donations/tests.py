@@ -292,6 +292,13 @@ class TikTokDonationModelTests(TestCase):
         self.assertEqual(td.processing_status, 'authorized')
         self.assertEqual(td.code_verifier, '')
 
+    def test_multiple_donations_can_share_tiktok_user_id(self):
+        first = TikTokDonation.objects.create(tiktok_user_id='shared-user')
+        second = TikTokDonation.objects.create(tiktok_user_id='shared-user')
+
+        self.assertEqual(first.tiktok_user_id, 'shared-user')
+        self.assertEqual(second.tiktok_user_id, 'shared-user')
+
     def test_store_token_info_missing_access_token(self):
         td = TikTokDonation.objects.create()
         with self.assertRaises(KeyError):

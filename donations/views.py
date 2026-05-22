@@ -384,33 +384,29 @@ def google_auth_callback(request):
 
 def tiktok_auth_callback(request):
     """Handle TikTok OAuth callback via oauth_state lookup."""
-    try: 
-        state = request.GET.get('state')
-        if not state:
-            raise Http404("Missing state parameter")
-        donation = get_object_or_404(TikTokDonation, oauth_state=state)
-        success, message = donation.handle_auth_callback(request)
-        donation.oauth_state = None
-        donation.save(update_fields=['oauth_state'])
-        request.session[SESSION_DONATION_PK_KEY] = donation.pk
-        if success:
-            participant_raw = _ensure_participant_for_donation(donation)
-            if participant_raw:
-                _set_participant_session(request, participant_raw)
-            queue_error = _queue_processing_after_callback(donation)
-            if queue_error:
-                return render(request, 'donations/landing.html', {
-                    'donation': donation,
-                    'error': queue_error,
-                })
-            return redirect('donation-landing')
-        return render(request, 'donations/landing.html', {
-            'donation': donation,
-            'error': message,
-        })
-    except Exception as exc:
-        logger.exception("Error handling TikTok OAuth callback: %s", exc)
-        raise Http404(f"Error processing OAuth callback: {exc}")
+    state = request.GET.get('state')
+    if not state:
+        raise Http404("Missing state parameter")
+    donation = get_object_or_404(TikTokDonation, oauth_state=state)
+    success, message = donation.handle_auth_callback(request)
+    donation.oauth_state = None
+    donation.save(update_fields=['oauth_state'])
+    request.session[SESSION_DONATION_PK_KEY] = donation.pk
+    if success:
+        participant_raw = _ensure_participant_for_donation(donation)
+        if participant_raw:
+            _set_participant_session(request, participant_raw)
+        queue_error = _queue_processing_after_callback(donation)
+        if queue_error:
+            return render(request, 'donations/landing.html', {
+                'donation': donation,
+                'error': queue_error,
+            })
+        return redirect('donation-landing')
+    return render(request, 'donations/landing.html', {
+        'donation': donation,
+        'error': message,
+    })
 
 
 def participant_home(request):
