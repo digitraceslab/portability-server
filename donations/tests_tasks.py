@@ -169,3 +169,43 @@ class TestOAuthCallbackQueuesTask(TestCase):
         )
         self.assertEqual(response.status_code, 302)
         mock_task.delay.assert_called_once_with(donation.pk)
+
+    @patch('donations.views.process_donation')
+    @patch.object(GoogleDonation, 'handle_auth_callback', return_value=(True, ''))
+    def test_google_callback_handles_queue_failure(self, mock_handle, mock_task):
+        donation = GoogleDonation.objects.create(
+            status='pending', oauth_state='test-state',
+        )
+        mock_task.delay.side_effect = RuntimeError('broker unavailable')
+
+        response = self.client.get(
+            '/oauth/google/callback/?state=test-state&code=testcode'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Authorization succeeded, but background processing could not be started.',
+        )
+        donation.refresh_from_db()
+        self.assertIn('broker unavailable', donation.processing_log)
+
+    @patch('donations.views.process_donation')
+    @patch.object(TikTokDonation, 'handle_auth_callback', return_value=(True, ''))
+    def test_tiktok_callback_handles_queue_failure(self, mock_handle, mock_task):
+        donation = TikTokDonation.objects.create(
+            status='pending', oauth_state='test-state',
+        )
+        mock_task.delay.side_effect = RuntimeError('broker unavailable')
+
+        response = self.client.get(
+            '/oauth/tiktok/callback/?state=test-state&code=testcode'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            'Authorization succeeded, but background processing could not be started.',
+        )
+        donation.refresh_from_db()
+        self.assertIn('broker unavailable', donation.processing_log)

@@ -5,6 +5,7 @@ Donation and participant tokens are stored hashed in the database. The
 hash on the fly. This means a DB read alone yields no usable session
 credential.
 """
+import logging
 import uuid
 
 from django.core.paginator import Paginator
@@ -19,6 +20,9 @@ PARTICIPANT_TOKEN_MIN_LENGTH = 32
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, Participant, hash_token
 from donations.tasks import process_donation
+
+
+logger = logging.getLogger(__name__)
 
 
 SESSION_DONATION_PK_KEY = 'donation_pk'        # int — donation in scope
@@ -337,6 +341,20 @@ def _ensure_participant_for_donation(donation):
     return str(suggested)
 
 
+def _queue_processing_after_callback(donation):
+    """Queue background processing without letting broker failures break OAuth."""
+    try:
+        process_donation.delay(donation.pk)
+        return None
+    except Exception as exc:
+        donation.processing_log = (donation.processing_log or '') + (
+            f"Background processing could not be queued after OAuth callback: {exc}\n"
+        )
+        donation.save(update_fields=['processing_log'])
+        logger.exception("Failed to queue donation %s for background processing", donation.pk)
+        return "Authorization succeeded, but background processing could not be started. Please try again later."
+
+
 def google_auth_callback(request):
     """Handle Google OAuth callback via oauth_state lookup."""
     state = request.GET.get('state')
@@ -351,7 +369,12 @@ def google_auth_callback(request):
         participant_raw = _ensure_participant_for_donation(donation)
         if participant_raw:
             _set_participant_session(request, participant_raw)
-        process_donation.delay(donation.pk)
+        queue_error = _queue_processing_after_callback(donation)
+        if queue_error:
+            return render(request, 'donations/landing.html', {
+                'donation': donation,
+                'error': queue_error,
+            })
         return redirect('donation-landing')
     return render(request, 'donations/landing.html', {
         'donation': donation,
@@ -361,24 +384,33 @@ def google_auth_callback(request):
 
 def tiktok_auth_callback(request):
     """Handle TikTok OAuth callback via oauth_state lookup."""
-    state = request.GET.get('state')
-    if not state:
-        raise Http404("Missing state parameter")
-    donation = get_object_or_404(TikTokDonation, oauth_state=state)
-    success, message = donation.handle_auth_callback(request)
-    donation.oauth_state = None
-    donation.save(update_fields=['oauth_state'])
-    request.session[SESSION_DONATION_PK_KEY] = donation.pk
-    if success:
-        participant_raw = _ensure_participant_for_donation(donation)
-        if participant_raw:
-            _set_participant_session(request, participant_raw)
-        process_donation.delay(donation.pk)
-        return redirect('donation-landing')
-    return render(request, 'donations/landing.html', {
-        'donation': donation,
-        'error': message,
-    })
+    try: 
+        state = request.GET.get('state')
+        if not state:
+            raise Http404("Missing state parameter")
+        donation = get_object_or_404(TikTokDonation, oauth_state=state)
+        success, message = donation.handle_auth_callback(request)
+        donation.oauth_state = None
+        donation.save(update_fields=['oauth_state'])
+        request.session[SESSION_DONATION_PK_KEY] = donation.pk
+        if success:
+            participant_raw = _ensure_participant_for_donation(donation)
+            if participant_raw:
+                _set_participant_session(request, participant_raw)
+            queue_error = _queue_processing_after_callback(donation)
+            if queue_error:
+                return render(request, 'donations/landing.html', {
+                    'donation': donation,
+                    'error': queue_error,
+                })
+            return redirect('donation-landing')
+        return render(request, 'donations/landing.html', {
+            'donation': donation,
+            'error': message,
+        })
+    except Exception as exc:
+        logger.exception("Error handling TikTok OAuth callback: %s", exc)
+        raise Http404(f"Error processing OAuth callback: {exc}")
 
 
 def participant_home(request):
