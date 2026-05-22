@@ -273,10 +273,14 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">donation_landing</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Status overview page with participant token handling.&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-    <span class="n">donation_username</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">donation_account_name</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">user_info</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;user_info&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">user_info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="n">donation_username</span> <span class="o">=</span> <span class="n">user_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;user_name&#39;</span><span class="p">)</span>
+        <span class="n">donation_account_name</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">user_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;user_name&#39;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">user_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;username&#39;</span><span class="p">)</span>
+            <span class="ow">or</span> <span class="n">user_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;display_name&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
     <span class="n">token_error</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">if</span> <span class="s2">&quot;return_to&quot;</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">:</span>
@@ -316,7 +320,7 @@
 
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-        <span class="s1">&#39;donation_username&#39;</span><span class="p">:</span> <span class="n">donation_username</span><span class="p">,</span>
+        <span class="s1">&#39;donation_account_name&#39;</span><span class="p">:</span> <span class="n">donation_account_name</span><span class="p">,</span>
         <span class="s1">&#39;participant_link_url&#39;</span><span class="p">:</span> <span class="n">_participant_link_url</span><span class="p">(</span><span class="n">request</span><span class="p">),</span>
         <span class="s1">&#39;token_error&#39;</span><span class="p">:</span> <span class="n">token_error</span><span class="p">,</span>
         <span class="s1">&#39;suggested_participant_token&#39;</span><span class="p">:</span> <span class="n">suggested_participant_token</span><span class="p">,</span>
