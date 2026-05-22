@@ -81,6 +81,10 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_file_logging_enabled</span><span class="p">():</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">settings</span><span class="p">,</span> <span class="s1">&#39;TIKTOK_FILE_LOGGING_ENABLED&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="get_debug_log_path">
 <a class="viewcode-back" href="../../../api/donations.utils.logging_utils.html#donations.utils.logging_utils.get_debug_log_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_debug_log_path</span><span class="p">():</span>
@@ -103,6 +107,9 @@
 <span class="sd">        response_data (dict): Response data or None</span>
 <span class="sd">        error (str): Error message if applicable</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_file_logging_enabled</span><span class="p">():</span>
+        <span class="k">return</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">logs_dir</span> <span class="o">=</span> <span class="n">get_debug_log_path</span><span class="p">()</span>
         <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
@@ -140,6 +147,9 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        list: List of log entries (dicts)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_file_logging_enabled</span><span class="p">():</span>
+        <span class="k">return</span> <span class="p">[]</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">logs_dir</span> <span class="o">=</span> <span class="n">get_debug_log_path</span><span class="p">()</span>
         <span class="n">log_file</span> <span class="o">=</span> <span class="n">logs_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2">_donation_</span><span class="si">{</span><span class="n">donation_id</span><span class="si">}</span><span class="s2">.jsonl&quot;</span>
