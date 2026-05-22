@@ -10,6 +10,7 @@ Submodules
    portability_server.celery
    portability_server.settings
    portability_server.urls
+   portability_server.views
 
 Module contents
 ---------------

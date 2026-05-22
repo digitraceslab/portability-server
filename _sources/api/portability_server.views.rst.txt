@@ -1,0 +1,7 @@
+portability\_server.views module
+================================
+
+.. automodule:: portability_server.views
+   :members:
+   :show-inheritance:
+   :undoc-members:
