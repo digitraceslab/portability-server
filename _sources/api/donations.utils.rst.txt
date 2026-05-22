@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    donations.utils.crypto
+   donations.utils.logging_utils
 
 Module contents
 ---------------
