@@ -16,7 +16,16 @@ Niimport
 <p>Niimport enables participants to donate their personal data for academic research with minimal hassle. It connects directly with data portability APIs, which are available under the GDPR right of data access. Niimport allows participants to authorize, review, and revoke their data donation in a few clicks.</p>
 
 <h2>For Participants</h2>
-<p>If you received a donation link from a researcher, use that link to get started.</p>
+<p>Login with your donation token or participant token.</p>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="token_input">Donation or Participant Token:</label>
+        <input type="text" name="token_input" id="token_input" value="" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+</form>
 
 <h2>For Researchers</h2>
 <p>Use the <a href="{% url 'api-docs' %}">API</a> to create and manage data donations.</p>

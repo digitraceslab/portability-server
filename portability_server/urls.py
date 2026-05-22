@@ -8,6 +8,7 @@ from rest_framework.routers import DefaultRouter
 
 from donations import views
 from donations.api import DonationViewSet, api_docs
+from portability_server.views import home
 
 router = DefaultRouter()
 router.register(r'donations', DonationViewSet, basename='api-donation')
@@ -19,7 +20,7 @@ def health_check(request):
 
 
 urlpatterns = [
-    path('', lambda r: render(r, 'home.html'), name='home'),
+    path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health-check'),
     path('terms/', lambda r: render(r, 'donations/terms_of_service.html'), name='terms-of-service'),

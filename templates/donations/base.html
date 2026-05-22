@@ -18,7 +18,16 @@
     </style>
 </head>
 <body>
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
     {% block content %}{% endblock %}
+
     {% if request.session.participant_token %}
     <hr>
     <form method="post" action="{% url 'logout-participant' %}">
