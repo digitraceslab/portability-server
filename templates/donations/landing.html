@@ -17,6 +17,7 @@
 <p>Status: {{ donation.get_status_display }}</p>
 {% if donation_account_name %}
     <p>Connected account: {{ donation_account_name }}</p>
+    <p>account information is not shared with researchers. It is shown here for verification.</p>
 {% endif %}
 
 {% if not donation.terms_accepted_at %}
