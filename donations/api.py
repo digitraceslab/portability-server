@@ -76,6 +76,7 @@ class DataQuerySerializer(serializers.Serializer):
 class DonationViewSet(viewsets.GenericViewSet):
     permission_classes = [IsResearcherAuthenticated]
     serializer_class = DonationSerializer
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return DonationCreateSerializer

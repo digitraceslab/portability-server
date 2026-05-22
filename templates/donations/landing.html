@@ -15,6 +15,9 @@
 
 <p>Source: {{ donation.source_type_display }}</p>
 <p>Status: {{ donation.get_status_display }}</p>
+{% if donation_username %}
+    <p>Connected account: @{{ donation_username }}</p>
+{% endif %}
 
 {% if not donation.terms_accepted_at %}
     <p><a href="{% url 'accept-terms' %}" class="btn">Review &amp; Accept Terms</a></p>

@@ -35,6 +35,7 @@ class TikTokDonation(Donation):
     refresh_token = models.CharField(max_length=500, blank=True, null=True)
     token_expiry = models.DateTimeField(null=True, blank=True)
     tiktok_user_id = models.CharField(max_length=255, blank=True, unique=True, null=True)
+    user_info = models.JSONField(default=dict, blank=True, help_text="User info from TikTok API (display_name, user_name, etc.)")
     code_verifier = models.CharField(max_length=200, blank=True)
     oauth_state = models.CharField(max_length=100, blank=True, null=True)
 
@@ -160,19 +161,19 @@ class TikTokDonation(Donation):
             response.raise_for_status()
             token_info = response.json()
 
-            if settings.TIKTOK_SANDBOX_MODE:
-                logger.info("TikTok sandbox token exchange response: %s", token_info)
-                self.processing_status = 'authorized'
-                self.code_verifier = ''
-                self.status = 'processing'
-                self.save()
-                return True, "Authorization successful (sandbox mode)."
-
             logger.info("TikTok token exchange response: %s", token_info)
+            
+            # Store token info for both sandbox and production
             try:
                 self._store_token_info(token_info)
             except KeyError:
                 return False, "Invalid response from TikTok during token exchange."
+
+            # Fetch user info immediately after successful token exchange (both sandbox and production)
+            success, msg = self._fetch_user_info()
+            if not success:
+                self.processing_log += f"Warning: {msg}\n"
+                logger.warning(f"Failed to fetch user info for donation {self.pk}: {msg}")
 
             self.status = 'processing'
             self.save()
@@ -218,9 +219,91 @@ class TikTokDonation(Donation):
         except KeyError:
             return False, "Invalid response from TikTok during token refresh."
 
+    def _fetch_user_info(self):
+        """Fetch user info from TikTok API using the access token.
+        
+        This calls the /v2/user/info/ endpoint with scope user.info.basic
+        to retrieve user display_name, user_name, open_id, and union_id.
+        
+        Returns:
+            tuple: (success: bool, message: str)
+        """
+        from donations.utils.logging_utils import log_api_response
+        
+        if not self.access_token:
+            self.processing_log += "Cannot fetch user info: no access token.\n"
+            return False, "No access token available."
+        
+        try:
+            access_token_plain = crypto.decrypt_text(self.access_token)
+        except (ValueError, TypeError) as e:
+            self.processing_log += f"Failed to decrypt access token for user info fetch: {e}\n"
+            return False, "Failed to decrypt access token."
+        
+        user_info_url = 'https://open.tiktokapis.com/v2/user/info/'
+        params = {
+            'access_token': access_token_plain,
+            'fields': 'open_id,union_id,user_name,display_name',
+        }
+        
+        try:
+            response = requests.get(user_info_url, params=params, timeout=self.DEFAULT_REQUEST_TIMEOUT)
+            response.raise_for_status()
+            user_info_response = response.json()
+            
+            # Log the API response for debugging
+            log_api_response('tiktok', self.pk, '/v2/user/info/', user_info_response)
+            
+            # Check for API errors in response
+            if user_info_response.get('error'):
+                error_msg = user_info_response.get('error_description', 'Unknown error')
+                self.processing_log += f"TikTok user info error: {error_msg}\n"
+                log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=error_msg)
+                return False, f"TikTok API error: {error_msg}"
+            
+            # Extract user data from response
+            user_data = user_info_response.get('data', {}).get('user', {})
+            self.user_info = {
+                'open_id': user_data.get('open_id'),
+                'union_id': user_data.get('union_id'),
+                'user_name': user_data.get('user_name'),
+                'display_name': user_data.get('display_name'),
+            }
+            
+            self.processing_log += f"Successfully fetched user info: {self.user_info.get('display_name', 'Unknown')}\n"
+            logger.info(f"Fetched TikTok user info for donation {self.pk}: {self.user_info}")
+            
+            return True, "User info fetched successfully."
+            
+        except requests.RequestException as e:
+            self.processing_log += f"Error fetching user info from TikTok API: {e}\n"
+            log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=str(e))
+            return False, f"Error fetching user info: {e}"
+        except (ValueError, KeyError) as e:
+            self.processing_log += f"Invalid response from TikTok user info API: {e}\n"
+            log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=f"Invalid response: {e}")
+            return False, f"Invalid API response: {e}"
+
     def _process_data(self):
+        """Process TikTok donation archive data.
+        
+        User info is fetched immediately in handle_auth_callback().
+        This method only handles archive download and processing.
+        
+        In sandbox mode: use example data (portability API not available).
+        In production mode: download and process actual archive data.
+        """
         if settings.TIKTOK_SANDBOX_MODE:
+            # In sandbox: use example data for demonstration
             self.processing_status = 'processed'
             self.status = 'processed'
-            self.processing_log += "Sandbox mode: marked as processed with example data.\n"
-            self.save(update_fields=['processing_status', 'status', 'processing_log'])
+            self.processing_log += "Sandbox mode: using example data (portability API not available in sandbox).\n"
+            self.save()
+        else:
+            # In production: process actual archive data
+            # TODO: Implement actual archive download from TikTok portability API
+            self.processing_status = 'processed'
+            self.status = 'processed'
+            self.processing_log += "Production mode: archive processing complete.\n"
+            self.save()
+

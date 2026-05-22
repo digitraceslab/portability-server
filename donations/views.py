@@ -185,6 +185,10 @@ def generate_participant_token(request):
 def donation_landing(request):
     """Status overview page with participant token handling."""
     donation = _get_session_donation(request)
+    donation_username = None
+    user_info = getattr(donation, 'user_info', None)
+    if isinstance(user_info, dict):
+        donation_username = user_info.get('user_name')
     token_error = None
 
     if "return_to" in request.session:
@@ -224,6 +228,7 @@ def donation_landing(request):
 
     return render(request, 'donations/landing.html', {
         'donation': donation,
+        'donation_username': donation_username,
         'participant_link_url': _participant_link_url(request),
         'token_error': token_error,
         'suggested_participant_token': suggested_participant_token,
