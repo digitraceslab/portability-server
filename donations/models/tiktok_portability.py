@@ -85,7 +85,9 @@ class TikTokDonation(Donation):
         return code_verifier, code_challenge
 
     def _store_token_info(self, token_info):
-        data = token_info.get('data', {})
+        # TikTok usually returns token payload under `data`, but accept a
+        # flat payload as fallback for compatibility with variant responses.
+        data = token_info.get('data') or token_info
 
         try:
             access_plain = data['access_token']
@@ -165,6 +167,10 @@ class TikTokDonation(Donation):
             # Persist token exchange payload for production diagnostics, but
             # never write raw tokens to disk.
             log_token_info = dict(token_info)
+            if 'access_token' in log_token_info:
+                log_token_info['access_token'] = 'REDACTED'
+            if 'refresh_token' in log_token_info:
+                log_token_info['refresh_token'] = 'REDACTED'
             if isinstance(log_token_info.get('data'), dict):
                 redacted_data = dict(log_token_info['data'])
                 if 'access_token' in redacted_data:
@@ -175,13 +181,33 @@ class TikTokDonation(Donation):
             log_api_response('tiktok', self.pk, '/v2/oauth/token/', log_token_info)
 
             logger.info("TikTok token exchange response: %s", token_info)
+
+            # If TikTok returns an OAuth error payload, surface it directly.
+            if token_info.get('error'):
+                error_desc = token_info.get('error_description') or token_info.get('message') or 'Unknown token exchange error'
+                self.processing_log += f"TikTok token exchange error: {token_info.get('error')} - {error_desc}\n"
+                log_api_response(
+                    'tiktok',
+                    self.pk,
+                    '/v2/oauth/token/',
+                    log_token_info,
+                    error=f"{token_info.get('error')}: {error_desc}"
+                )
+                self.save(update_fields=['processing_log'])
+                return False, f"TikTok token exchange failed: {error_desc}"
             
             # Store token info for both sandbox and production
             try:
                 self._store_token_info(token_info)
             except KeyError as e:
                 log_api_response('tiktok', self.pk, '/v2/oauth/token/', log_token_info, error=f"Missing key in token response: {e}")
-                return False, "Invalid response from TikTok during token exchange."
+                top_keys = ','.join(sorted(list(token_info.keys())))
+                nested_keys = ''
+                if isinstance(token_info.get('data'), dict):
+                    nested_keys = ','.join(sorted(list(token_info['data'].keys())))
+                self.processing_log += f"Invalid token response shape: missing {e}. top_level_keys=[{top_keys}] data_keys=[{nested_keys}]\n"
+                self.save(update_fields=['processing_log'])
+                return False, "Invalid response from TikTok during token exchange (missing access token)."
 
             # Fetch user info immediately after successful token exchange (both sandbox and production)
             success, msg = self._fetch_user_info()
@@ -198,6 +224,8 @@ class TikTokDonation(Donation):
             if e.response is not None:
                 response_text = e.response.text
             log_api_response('tiktok', self.pk, '/v2/oauth/token/', {'response_text': response_text}, error=str(e))
+            self.processing_log += f"TikTok token exchange HTTP error: {e}\n"
+            self.save(update_fields=['processing_log'])
             return False, f"Error during token exchange: {e}"
         except KeyError:
             return False, "Invalid response from TikTok during token exchange."
