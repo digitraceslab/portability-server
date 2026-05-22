@@ -83,6 +83,7 @@ GOOGLE_OAUTH_CLIENT_SECRET = env('GOOGLE_OAUTH_CLIENT_SECRET', default='')
 TIKTOK_CLIENT_KEY = env('TIKTOK_CLIENT_KEY', default='')
 TIKTOK_CLIENT_SECRET = env('TIKTOK_CLIENT_SECRET', default='')
 TIKTOK_SANDBOX_MODE = env('TIKTOK_SANDBOX_MODE', default=False)
+TIKTOK_FILE_LOGGING_ENABLED = env.bool('TIKTOK_FILE_LOGGING_ENABLED', default=False)
 
 # OAuth callback URLs registered with each provider.
 GOOGLE_REDIRECT_URI = env('GOOGLE_REDIRECT_URI', default='')

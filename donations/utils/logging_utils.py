@@ -13,6 +13,10 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 
+def _file_logging_enabled():
+    return getattr(settings, 'TIKTOK_FILE_LOGGING_ENABLED', True)
+
+
 def get_debug_log_path():
     """Get the debug logs directory path."""
     logs_dir = Path(settings.BASE_DIR) / 'logs' / 'debug'
@@ -30,6 +34,9 @@ def log_api_response(source, donation_id, endpoint, response_data, error=None):
         response_data (dict): Response data or None
         error (str): Error message if applicable
     """
+    if not _file_logging_enabled():
+        return
+
     try:
         logs_dir = get_debug_log_path()
         timestamp = datetime.now().isoformat()
@@ -64,6 +71,9 @@ def read_debug_logs(source, donation_id):
     Returns:
         list: List of log entries (dicts)
     """
+    if not _file_logging_enabled():
+        return []
+
     try:
         logs_dir = get_debug_log_path()
         log_file = logs_dir / f"{source}_donation_{donation_id}.jsonl"
