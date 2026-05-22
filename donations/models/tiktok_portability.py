@@ -288,12 +288,19 @@ class TikTokDonation(Donation):
         
         user_info_url = 'https://open.tiktokapis.com/v2/user/info/'
         params = {
-            'access_token': access_token_plain,
-            'fields': 'open_id,union_id,user_name,display_name',
+            'fields': 'open_id,union_id,display_name,avatar_url',
+        }
+        headers = {
+            'Authorization': f'Bearer {access_token_plain}',
         }
         
         try:
-            response = requests.get(user_info_url, params=params, timeout=self.DEFAULT_REQUEST_TIMEOUT)
+            response = requests.get(
+                user_info_url,
+                params=params,
+                headers=headers,
+                timeout=self.DEFAULT_REQUEST_TIMEOUT,
+            )
             response.raise_for_status()
             user_info_response = response.json()
             
@@ -301,8 +308,10 @@ class TikTokDonation(Donation):
             log_api_response('tiktok', self.pk, '/v2/user/info/', user_info_response)
             
             # Check for API errors in response
-            if user_info_response.get('error'):
-                error_msg = user_info_response.get('error_description', 'Unknown error')
+            error_obj = user_info_response.get('error') or {}
+            error_code = error_obj.get('code')
+            if error_code and error_code != 'ok':
+                error_msg = error_obj.get('message') or 'Unknown error'
                 self.processing_log += f"TikTok user info error: {error_msg}\n"
                 log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=error_msg)
                 return False, f"TikTok API error: {error_msg}"
@@ -312,8 +321,9 @@ class TikTokDonation(Donation):
             self.user_info = {
                 'open_id': user_data.get('open_id'),
                 'union_id': user_data.get('union_id'),
-                'user_name': user_data.get('user_name'),
+                'user_name': user_data.get('username') or user_data.get('user_name'),
                 'display_name': user_data.get('display_name'),
+                'avatar_url': user_data.get('avatar_url'),
             }
             
             self.processing_log += f"Successfully fetched user info: {self.user_info.get('display_name', 'Unknown')}\n"
