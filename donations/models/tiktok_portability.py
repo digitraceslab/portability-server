@@ -219,4 +219,8 @@ class TikTokDonation(Donation):
             return False, "Invalid response from TikTok during token refresh."
 
     def _process_data(self):
-        pass
+        if settings.TIKTOK_SANDBOX_MODE:
+            self.processing_status = 'processed'
+            self.status = 'processed'
+            self.processing_log += "Sandbox mode: marked as processed with example data.\n"
+            self.save(update_fields=['processing_status', 'status', 'processing_log'])
