@@ -162,7 +162,19 @@ class TikTokDonation(Donation):
         try:
             response = requests.post(token_url, data=token_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
             response.raise_for_status()
-            token_info = response.json()
+            try:
+                token_info = response.json()
+            except ValueError as e:
+                log_api_response(
+                    'tiktok',
+                    self.pk,
+                    '/v2/oauth/token/',
+                    {'response_text': response.text},
+                    error=f"Invalid JSON response: {e}",
+                )
+                self.processing_log += f"TikTok token exchange returned invalid JSON: {e}\n"
+                self.save(update_fields=['processing_log'])
+                return False, "Invalid response from TikTok during token exchange."
 
             # Persist token exchange payload for production diagnostics, but
             # never write raw tokens to disk.
@@ -250,7 +262,11 @@ class TikTokDonation(Donation):
         try:
             response = requests.post(token_url, data=token_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
             response.raise_for_status()
-            token_info = response.json()
+            try:
+                token_info = response.json()
+            except ValueError as e:
+                self.processing_log += f"TikTok token refresh returned invalid JSON: {e}\n"
+                return False, "Invalid response from TikTok during token refresh."
 
             try:
                 self._store_token_info(token_info)

@@ -467,6 +467,56 @@ class OAuthCallbackViewTests(TestCase):
         response = self.client.get('/oauth/tiktok/callback/?state=invalid')
         self.assertEqual(response.status_code, 404)
 
+    @override_settings(
+        GOOGLE_OAUTH_CLIENT_ID='test-client-id',
+        GOOGLE_OAUTH_CLIENT_SECRET='test-client-secret',
+        GOOGLE_REDIRECT_URI='https://example.com/oauth/google/callback/',
+    )
+    @patch('donations.models.google_portability.requests.post')
+    def test_google_callback_handles_invalid_json_token_response(self, mock_post):
+        donation = GoogleDonation.objects.create(oauth_state='google-invalid-json')
+        response = MagicMock()
+        response.raise_for_status.return_value = None
+        response.json.side_effect = ValueError('not json')
+        mock_post.return_value = response
+
+        callback_response = self.client.get(
+            '/oauth/google/callback/?state=google-invalid-json&code=testcode'
+        )
+
+        self.assertEqual(callback_response.status_code, 200)
+        self.assertContains(callback_response, 'Invalid response from Google during token exchange.')
+        donation.refresh_from_db()
+        self.assertIsNone(donation.oauth_state)
+        self.assertIn('invalid JSON', donation.processing_log)
+
+    @override_settings(
+        TIKTOK_CLIENT_KEY='test-client-key',
+        TIKTOK_CLIENT_SECRET='test-client-secret',
+        TIKTOK_REDIRECT_URI='https://example.com/oauth/tiktok/callback/',
+    )
+    @patch('donations.models.tiktok_portability.requests.post')
+    def test_tiktok_callback_handles_invalid_json_token_response(self, mock_post):
+        donation = TikTokDonation.objects.create(
+            oauth_state='tiktok-invalid-json',
+            code_verifier='test-code-verifier',
+        )
+        response = MagicMock()
+        response.raise_for_status.return_value = None
+        response.text = 'not json'
+        response.json.side_effect = ValueError('not json')
+        mock_post.return_value = response
+
+        callback_response = self.client.get(
+            '/oauth/tiktok/callback/?state=tiktok-invalid-json&code=testcode'
+        )
+
+        self.assertEqual(callback_response.status_code, 200)
+        self.assertContains(callback_response, 'Invalid response from TikTok during token exchange.')
+        donation.refresh_from_db()
+        self.assertIsNone(donation.oauth_state)
+        self.assertIn('invalid JSON', donation.processing_log)
+
 
 class ParticipantModelTests(TestCase):
     """Tests for Participant model behavior."""

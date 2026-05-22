@@ -402,7 +402,12 @@ class GoogleDonation(Donation):
         try:
             response = requests.post(token_url, data=token_data)
             response.raise_for_status()
-            tokens = response.json()
+            try:
+                tokens = response.json()
+            except ValueError as e:
+                self.processing_log += f"Google token exchange returned invalid JSON: {e}\n"
+                self.save(update_fields=['processing_log'])
+                return False, "Invalid response from Google during token exchange."
 
             try:
                 self.access_token = crypto.encrypt_text(tokens['access_token'])
@@ -455,7 +460,12 @@ class GoogleDonation(Donation):
         try:
             response = requests.post(token_url, data=token_data)
             response.raise_for_status()
-            tokens = response.json()
+            try:
+                tokens = response.json()
+            except ValueError as e:
+                self.processing_log += f"Google token refresh returned invalid JSON: {e}\n"
+                self.save(update_fields=['processing_log'])
+                return False, "Invalid response from Google during token refresh."
 
             try:
                 self.access_token = crypto.encrypt_text(tokens['access_token'])
