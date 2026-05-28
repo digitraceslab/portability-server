@@ -96,7 +96,7 @@ CONTENT_SECURITY_POLICY = {
     "DIRECTIVES": {
         "default-src": ["'self'"],
         "script-src": ["'self'"],
-        "style-src": ["'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
         "img-src": ["'self'", "data:"],
         # Google OAuth redirects through accounts.google.com
         "connect-src": ["'self'", "https://accounts.google.com"],
