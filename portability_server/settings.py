@@ -28,12 +28,15 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'csp.middleware.CSPMiddleware',
+    'django_permissions_policy.PermissionsPolicyMiddleware',
 ]
 
 ROOT_URLCONF = 'portability_server.urls'
@@ -76,6 +79,50 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+SECURE_HSTS_SECONDS = 31536000
+SECURE_SSL_REDIRECT = True
+SECURE_REFERRER_POLICY = 'same-origin'
+
+
+CORS_ALLOWED_ORIGINS = [
+    "https://portability.cs.aalto.fi",
+    "https://niimport.digitraceslab.com",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CONTENT_SECURITY_POLICY = {
+    "DIRECTIVES": {
+        "default-src": ["'self'"],
+        "script-src": ["'self'"],
+        "style-src": ["'self'"],
+        "img-src": ["'self'", "data:"],
+        # Google OAuth redirects through accounts.google.com
+        "connect-src": ["'self'", "https://accounts.google.com"],
+        "frame-ancestors": ["'none'"],
+        "form-action": [
+            "'self'",
+            "https://accounts.google.com",
+            "https://www.tiktok.com",
+        ],
+    }
+}
+
+
+PERMISSIONS_POLICY = {
+    "accelerometer": [],
+    "camera": [],
+    "geolocation": [],
+    "gyroscope": [],
+    "magnetometer": [],
+    "microphone": [],
+    "payment": [],
+    "usb": [],
+}
+
+
+
 
 # OAuth credentials
 GOOGLE_OAUTH_CLIENT_ID = env('GOOGLE_OAUTH_CLIENT_ID', default='')
