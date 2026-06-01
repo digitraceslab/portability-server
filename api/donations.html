@@ -98,6 +98,11 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html">donations.models.tiktok_export module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.watch_history_dummy_reader"><code class="docutils literal notranslate"><span class="pre">watch_history_dummy_reader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html">donations.models.tiktok_portability module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation"><code class="docutils literal notranslate"><span class="pre">TikTokDonation</span></code></a></li>
 </ul>
@@ -153,6 +158,7 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.Donation.participant_id"><code class="docutils literal notranslate"><span class="pre">Donation.participant_id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.Donation.researcher_id"><code class="docutils literal notranslate"><span class="pre">Donation.researcher_id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.Donation.tiktokdonation"><code class="docutils literal notranslate"><span class="pre">Donation.tiktokdonation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.Donation.tiktokexportdonation"><code class="docutils literal notranslate"><span class="pre">Donation.tiktokexportdonation</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken"><code class="docutils literal notranslate"><span class="pre">ResearcherToken</span></code></a><ul>
@@ -233,6 +239,26 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.donation_ptr</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.donation_ptr_id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_processing_status_display()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.source_type_display</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.uploaded_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.uploaded_files</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.file_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.file_status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.data_type_status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.EXPECTED_DATA_TYPES"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.EXPECTED_DATA_TYPES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DATA_TYPE_READERS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.get_data_types()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.fetch_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.count_rows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.extract_and_process()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.handle_file_upload"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.handle_file_upload()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.cleanup_files()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DoesNotExist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.MultipleObjectsReturned</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.donation_ptr</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.donation_ptr_id</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -342,6 +368,7 @@
 <li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.donation_landing"><code class="docutils literal notranslate"><span class="pre">donation_landing()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.accept_terms"><code class="docutils literal notranslate"><span class="pre">accept_terms()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.authorize"><code class="docutils literal notranslate"><span class="pre">authorize()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.upload_data"><code class="docutils literal notranslate"><span class="pre">upload_data()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.data_preview"><code class="docutils literal notranslate"><span class="pre">data_preview()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.revoke_donation"><code class="docutils literal notranslate"><span class="pre">revoke_donation()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.views.html#donations.views.google_auth_callback"><code class="docutils literal notranslate"><span class="pre">google_auth_callback()</span></code></a></li>

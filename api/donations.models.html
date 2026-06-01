@@ -93,6 +93,7 @@
 <li><a class="reference internal" href="#donations.models.Donation.participant_id"><code class="docutils literal notranslate"><span class="pre">Donation.participant_id</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.researcher_id"><code class="docutils literal notranslate"><span class="pre">Donation.researcher_id</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.tiktokdonation"><code class="docutils literal notranslate"><span class="pre">Donation.tiktokdonation</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.Donation.tiktokexportdonation"><code class="docutils literal notranslate"><span class="pre">Donation.tiktokexportdonation</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken"><code class="docutils literal notranslate"><span class="pre">ResearcherToken</span></code></a><ul>
@@ -175,6 +176,26 @@
 <li><a class="reference internal" href="#donations.models.TikTokDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_processing_status_display()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a><ul>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.source_type_display</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.uploaded_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.uploaded_files</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.file_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.file_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.data_type_status</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.EXPECTED_DATA_TYPES"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.EXPECTED_DATA_TYPES</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DATA_TYPE_READERS</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.save()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.get_data_types()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.fetch_data()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.count_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.extract_and_process()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.handle_file_upload"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.handle_file_upload()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.cleanup_files()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DoesNotExist</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.MultipleObjectsReturned</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.donation_ptr</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.donation_ptr_id</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -246,6 +267,30 @@
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.donation_ptr_id</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.get_processing_status_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_processing_status_display()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="donations.models.tiktok_export.html">donations.models.tiktok_export module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.watch_history_dummy_reader"><code class="docutils literal notranslate"><span class="pre">watch_history_dummy_reader()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.source_type_display</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.uploaded_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.uploaded_files</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.file_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.file_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.data_type_status</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.EXPECTED_DATA_TYPES"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.EXPECTED_DATA_TYPES</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DATA_TYPE_READERS</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.save()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.get_data_types()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.fetch_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.count_rows()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.extract_and_process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.handle_file_upload"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.handle_file_upload()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.cleanup_files()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DoesNotExist</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.MultipleObjectsReturned</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.donation_ptr</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.donation_ptr_id"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.donation_ptr_id</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -600,6 +645,19 @@ object the first time, the query is executed.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="donations.models.Donation.tiktokdonation">
 <span class="sig-name descname"><span class="pre">tiktokdonation</span></span><a class="headerlink" href="#donations.models.Donation.tiktokdonation" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the reverse side of a one-to-one
+relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Place.restaurant</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.Donation.tiktokexportdonation">
+<span class="sig-name descname"><span class="pre">tiktokexportdonation</span></span><a class="headerlink" href="#donations.models.Donation.tiktokexportdonation" title="Link to this definition"></a></dt>
 <dd><p>Accessor to the related object on the reverse side of a one-to-one
 relation.</p>
 <p>In the example:</p>
@@ -1070,6 +1128,117 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.models.TikTokDonation.get_processing_status_display">
 <span class="sig-name descname"><span class="pre">get_processing_status_display</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.CharField:</span> <span class="pre">processing_status&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.TikTokDonation.get_processing_status_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">TikTokExportDonation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">participant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suggested_participant_token</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">researcher</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_start_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_end_date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requested_data_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_log</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retry_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">created_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_accepted_at</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terms_changed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">donation_ptr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uploaded_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_type_status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation" title="donations.models.Donation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Donation</span></code></a></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.source_type_display">
+<span class="sig-name descname"><span class="pre">source_type_display</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TikTok</span> <span class="pre">Export'</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.source_type_display" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.uploaded_files">
+<span class="sig-name descname"><span class="pre">uploaded_files</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.uploaded_files" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.file_status">
+<span class="sig-name descname"><span class="pre">file_status</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.file_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.data_type_status">
+<span class="sig-name descname"><span class="pre">data_type_status</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.data_type_status" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.EXPECTED_DATA_TYPES">
+<span class="sig-name descname"><span class="pre">EXPECTED_DATA_TYPES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['watch_history']</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.EXPECTED_DATA_TYPES" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.DATA_TYPE_READERS">
+<span class="sig-name descname"><span class="pre">DATA_TYPE_READERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'watch_history':</span> <span class="pre">&lt;function</span> <span class="pre">watch_history_dummy_reader&gt;}</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.DATA_TYPE_READERS" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.save" title="Link to this definition"></a></dt>
+<dd><p>Save the current instance. Override this in a subclass if you want to
+control the saving process.</p>
+<p>The ‘force_insert’ and ‘force_update’ parameters can be used to insist
+that the “save” must be an SQL insert or update (or equivalent for
+non-SQL backends), respectively. Normally, they should not be set.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.get_data_types">
+<span class="sig-name descname"><span class="pre">get_data_types</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.get_data_types"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.get_data_types" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.fetch_data">
+<span class="sig-name descname"><span class="pre">fetch_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.fetch_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.fetch_data" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.count_rows">
+<span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.count_rows" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.extract_and_process">
+<span class="sig-name descname"><span class="pre">extract_and_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.extract_and_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.extract_and_process" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.handle_file_upload">
+<span class="sig-name descname"><span class="pre">handle_file_upload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.handle_file_upload"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.handle_file_upload" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.cleanup_files">
+<span class="sig-name descname"><span class="pre">cleanup_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.cleanup_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.cleanup_files" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation.DoesNotExist" title="donations.models.Donation.DoesNotExist"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoesNotExist</span></code></a></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#donations.models.Donation.MultipleObjectsReturned" title="donations.models.Donation.MultipleObjectsReturned"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.donation_ptr">
+<span class="sig-name descname"><span class="pre">donation_ptr</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.donation_ptr" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a one-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Restaurant</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">place</span> <span class="o">=</span> <span class="n">OneToOneField</span><span class="p">(</span><span class="n">Place</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;restaurant&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Restaurant.place</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardOneToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.donation_ptr_id">
+<span class="sig-name descname"><span class="pre">donation_ptr_id</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.donation_ptr_id" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

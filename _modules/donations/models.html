@@ -210,6 +210,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the most specific subclass instance (e.g. GoogleDonation).&quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.google_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleDonation</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokDonation</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokExportDonation</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">googledonation</span>
         <span class="k">except</span> <span class="n">GoogleDonation</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
@@ -217,6 +218,10 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tiktokdonation</span>
         <span class="k">except</span> <span class="n">TikTokDonation</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tiktokexportdonation</span>
+        <span class="k">except</span> <span class="n">TikTokExportDonation</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 </div>
@@ -265,10 +270,11 @@
 
 
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.google_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleDonation</span>  <span class="c1"># noqa: E402</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokDonation</span>  <span class="c1"># noqa: E402</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.google_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleDonation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokDonation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokExportDonation</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Participant&#39;</span><span class="p">,</span> <span class="s1">&#39;Donation&#39;</span><span class="p">,</span> <span class="s1">&#39;ResearcherToken&#39;</span><span class="p">,</span> <span class="s1">&#39;GoogleDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokDonation&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Participant&#39;</span><span class="p">,</span> <span class="s1">&#39;Donation&#39;</span><span class="p">,</span> <span class="s1">&#39;ResearcherToken&#39;</span><span class="p">,</span> <span class="s1">&#39;GoogleDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokExportDonation&#39;</span><span class="p">]</span>
 </pre></div>
 
            </div>
