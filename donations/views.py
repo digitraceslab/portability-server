@@ -8,6 +8,7 @@ credential.
 import logging
 import uuid
 
+from coverage import data
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
@@ -262,6 +263,25 @@ def authorize(request):
         return redirect('accept-terms')
     auth_url = donation.get_auth_url()
     return redirect(auth_url)
+
+
+@require_http_methods(["POST"])
+def upload_data(request):
+    """Handle file upload"""
+    donation = _get_session_donation(request)
+    if not donation.terms_accepted_at:
+        return redirect('accept-terms')
+    file = request.FILES.get('data_file')
+    if file:
+        success, message = donation.handle_file_upload(file)
+        if not success:
+            return render(request, 'donations/upload.html', {
+                'donation': donation,
+                'error': message,
+            })
+        return redirect('donation-landing')
+    return render(request, 'donations/upload.html', {'donation': donation})
+        
 
 
 def data_preview(request):

@@ -32,6 +32,7 @@ urlpatterns = [
     path('donate/', views.donation_landing, name='donation-landing'),
     path('donate/terms/', views.accept_terms, name='accept-terms'),
     path('donate/authorize/', views.authorize, name='authorize'),
+    path('donate/upload/', views.upload_data, name='upload-data'),
     path('donate/data/', views.data_preview, name='data-preview'),
     path('donate/revoke/', views.revoke_donation, name='revoke-donation'),
     path('donate/switch-to-participant/', views.switch_to_participant, name='switch-to-participant'),

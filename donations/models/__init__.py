@@ -111,6 +111,7 @@ class Donation(models.Model):
         """Return the most specific subclass instance (e.g. GoogleDonation)."""
         from donations.models.google_portability import GoogleDonation
         from donations.models.tiktok_portability import TikTokDonation
+        from donations.models.tiktok_export import TikTokExportDonation
         try:
             return self.googledonation
         except GoogleDonation.DoesNotExist:
@@ -118,6 +119,10 @@ class Donation(models.Model):
         try:
             return self.tiktokdonation
         except TikTokDonation.DoesNotExist:
+            pass
+        try:
+            return self.tiktokexportdonation
+        except TikTokExportDonation.DoesNotExist:
             pass
         return self
 
@@ -152,7 +157,8 @@ class ResearcherToken(models.Model):
         return self.name or 'unnamed'
 
 
-from donations.models.google_portability import GoogleDonation  # noqa: E402
-from donations.models.tiktok_portability import TikTokDonation  # noqa: E402
+from donations.models.google_portability import GoogleDonation
+from donations.models.tiktok_portability import TikTokDonation
+from donations.models.tiktok_export import TikTokExportDonation
 
-__all__ = ['Participant', 'Donation', 'ResearcherToken', 'GoogleDonation', 'TikTokDonation']
+__all__ = ['Participant', 'Donation', 'ResearcherToken', 'GoogleDonation', 'TikTokDonation', 'TikTokExportDonation']

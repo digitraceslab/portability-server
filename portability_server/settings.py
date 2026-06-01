@@ -80,34 +80,35 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-SECURE_HSTS_SECONDS = 31536000
-SECURE_SSL_REDIRECT = True
-SECURE_REFERRER_POLICY = 'same-origin'
+if not DEBUG:
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_SSL_REDIRECT = True
+    SECURE_REFERRER_POLICY = 'same-origin'
 
 
-CORS_ALLOWED_ORIGINS = [
-    "https://portability.cs.aalto.fi",
-    "https://niimport.digitraceslab.com",
-]
+    CORS_ALLOWED_ORIGINS = [
+        "https://portability.cs.aalto.fi",
+        "https://niimport.digitraceslab.com",
+    ]
 
-CORS_ALLOW_CREDENTIALS = True
-
-CONTENT_SECURITY_POLICY = {
-    "DIRECTIVES": {
-        "default-src": ["'self'"],
-        "script-src": ["'self'"],
-        "style-src": ["'self'", "'unsafe-inline'"],
-        "img-src": ["'self'", "data:"],
-        # Google OAuth redirects through accounts.google.com
-        "connect-src": ["'self'", "https://accounts.google.com"],
-        "frame-ancestors": ["'none'"],
-        "form-action": [
-            "'self'",
-            "https://accounts.google.com",
-            "https://www.tiktok.com",
-        ],
+    CORS_ALLOW_CREDENTIALS = True
+    
+    CONTENT_SECURITY_POLICY = {
+        "DIRECTIVES": {
+            "default-src": ["'self'"],
+            "script-src": ["'self'"],
+            "style-src": ["'self'", "'unsafe-inline'"],
+            "img-src": ["'self'", "data:"],
+            # Google OAuth redirects through accounts.google.com
+            "connect-src": ["'self'", "https://accounts.google.com"],
+            "frame-ancestors": ["'none'"],
+            "form-action": [
+                "'self'",
+                "https://accounts.google.com",
+                "https://www.tiktok.com",
+            ],
+        }
     }
-}
 
 
 PERMISSIONS_POLICY = {

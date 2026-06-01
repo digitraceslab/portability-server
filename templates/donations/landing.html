@@ -24,8 +24,25 @@
     <p><a href="{% url 'accept-terms' %}" class="btn">Review &amp; Accept Terms</a></p>
 {% elif donation.status == 'pending' %}
     <p>Terms accepted.</p>
+
+
+    {% if donation.type == 'upload' %}
+    <div>
+        <form method="post" action="{% url 'upload-data' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="data_file">Upload your data file:</label>
+                <input type="file" name="data_file" id="data_file" class="form-control">
+            </div>
+            <button type="submit" class="btn">Upload</button>
+        </form>
+    </div>
+    {% else %}
     <p><a href="{% url 'authorize' %}" class="btn">Authorize Data Access</a></p>
-{% elif donation.status == 'processed' %}
+    {% endif %}
+
+
+    {% elif donation.status == 'processed' %}
     <p><a href="{% url 'data-preview' %}" class="btn">View Your Data</a></p>
 {% elif donation.status == 'processing' %}
     <p>Your data is being processed. Please check back later.</p>

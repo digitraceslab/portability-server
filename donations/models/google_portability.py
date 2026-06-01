@@ -239,6 +239,7 @@ class GoogleDonation(Donation):
             ],
         },
     }
+    
     # Add one entry per individual scope, named by replacing '.' with '_'.
     for _scope in _INDIVIDUAL_SCOPES:
         DATA_TYPE_SCOPE_MAP[_scope.replace('.', '_')] = {
