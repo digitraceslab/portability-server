@@ -5,12 +5,13 @@ from rest_framework.decorators import action, api_view, permission_classes as pe
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
 
-from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken
+from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken
 
 
 SOURCE_TYPE_MODEL_MAP = {
     'google_portability': GoogleDonation,
     'tiktok_portability': TikTokDonation,
+    'tiktok_export': TikTokExportDonation,
 }
 
 
@@ -23,7 +24,7 @@ class DonationCreateSerializer(serializers.Serializer):
     """Parameters for creating a new donation."""
     source_type = serializers.ChoiceField(
         choices=list(SOURCE_TYPE_MODEL_MAP.keys()),
-        help_text="Data source: 'google_portability' or 'tiktok_portability'.",
+        help_text="Data source: 'google_portability', 'tiktok_export' or 'tiktok_portability'.",
     )
     data_start_date = serializers.DateField(
         required=False,

@@ -9,7 +9,7 @@ from rest_framework.test import APIClient
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
 from donations.models import (
-    Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant,
+    Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken, Participant,
 )
 
 
@@ -38,6 +38,13 @@ class TestCreateDonation(DonationAPITestCase):
         self.assertEqual(response.status_code, 201)
         donation = Donation.objects.get(pk=response.data['id'])
         self.assertTrue(TikTokDonation.objects.filter(pk=donation.pk).exists())
+
+    def test_create_tiktok_export_donation(self):
+        response = self.client.post('/api/donations/', {'source_type': 'tiktok_export'})
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['source_type'], 'tiktok_export')
+        donation = Donation.objects.get(pk=response.data['id'])
+        self.assertTrue(TikTokExportDonation.objects.filter(pk=donation.pk).exists())
 
     def test_create_sets_researcher(self):
         response = self.client.post('/api/donations/', {'source_type': 'google_portability'})
