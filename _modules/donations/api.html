@@ -73,12 +73,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.permissions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllowAny</span><span class="p">,</span> <span class="n">BasePermission</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.response</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">ResearcherToken</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">TikTokExportDonation</span><span class="p">,</span> <span class="n">ResearcherToken</span>
 
 
 <span class="n">SOURCE_TYPE_MODEL_MAP</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s1">&#39;google_portability&#39;</span><span class="p">:</span> <span class="n">GoogleDonation</span><span class="p">,</span>
     <span class="s1">&#39;tiktok_portability&#39;</span><span class="p">:</span> <span class="n">TikTokDonation</span><span class="p">,</span>
+    <span class="s1">&#39;tiktok_export&#39;</span><span class="p">:</span> <span class="n">TikTokExportDonation</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -99,7 +100,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Parameters for creating a new donation.&quot;&quot;&quot;</span>
     <span class="n">source_type</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">ChoiceField</span><span class="p">(</span>
         <span class="n">choices</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">SOURCE_TYPE_MODEL_MAP</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
-        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Data source: &#39;google_portability&#39; or &#39;tiktok_portability&#39;.&quot;</span><span class="p">,</span>
+        <span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;Data source: &#39;google_portability&#39;, &#39;tiktok_export&#39; or &#39;tiktok_portability&#39;.&quot;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">data_start_date</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">DateField</span><span class="p">(</span>
         <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
