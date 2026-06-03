@@ -58,6 +58,11 @@ class Donation(models.Model):
     def source_type_display(self):
         return self.source_type
     
+    @property
+    def type(self):
+        """Returns 'oauth' for OAuth-based donations, 'upload' for file upload donations."""
+        return 'oauth'  # Default for OAuth-based donations
+    
     status = models.CharField(
         max_length=20,
         choices=[

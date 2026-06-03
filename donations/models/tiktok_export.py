@@ -31,6 +31,11 @@ def watch_history_dummy_reader(file_path):
 class TikTokExportDonation(Donation):
     source_type_display = "TikTok Export"
 
+    @property
+    def type(self):
+        """TikTok Export uses file upload instead of OAuth."""
+        return 'upload'
+
     uploaded_files = models.JSONField(default=list, blank=True)
     file_status = models.JSONField(
         default=dict, blank=True,
