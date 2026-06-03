@@ -2,6 +2,7 @@
 from django.contrib import admin, messages
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant
+from donations.models.tiktok_export import TikTokExportDonation
 
 
 def _regenerate_one(modeladmin, request, queryset, kind):
@@ -83,6 +84,19 @@ class TikTokDonationAdmin(admin.ModelAdmin):
     """Admin interface for managing TikTok donations."""
     list_display = ('id', 'researcher', 'status', 'processing_status', 'created_at')
     list_filter = ('status', 'processing_status')
+    readonly_fields = ('token', 'created_at')
+    actions = ['regenerate_token']
+
+    @admin.action(description="Regenerate selected donation token (select only one)")
+    def regenerate_token(self, request, queryset):
+        _regenerate_one(self, request, queryset, 'donation')
+
+
+@admin.register(TikTokExportDonation)
+class TikTokExportDonationAdmin(admin.ModelAdmin):
+    """Admin interface for managing TikTok Export donations."""
+    list_display = ('id', 'researcher', 'status', 'created_at')
+    list_filter = ('status',)
     readonly_fields = ('token', 'created_at')
     actions = ['regenerate_token']
 
