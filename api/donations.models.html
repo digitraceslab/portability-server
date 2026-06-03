@@ -68,6 +68,7 @@
 <li><a class="reference internal" href="#donations.models.Donation.researcher"><code class="docutils literal notranslate"><span class="pre">Donation.researcher</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.source_type"><code class="docutils literal notranslate"><span class="pre">Donation.source_type</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.source_type_display"><code class="docutils literal notranslate"><span class="pre">Donation.source_type_display</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.Donation.type"><code class="docutils literal notranslate"><span class="pre">Donation.type</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.status"><code class="docutils literal notranslate"><span class="pre">Donation.status</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.data_start_date"><code class="docutils literal notranslate"><span class="pre">Donation.data_start_date</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.Donation.data_end_date"><code class="docutils literal notranslate"><span class="pre">Donation.data_end_date</span></code></a></li>
@@ -178,6 +179,7 @@
 </li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a><ul>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.source_type_display</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.type"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.type</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.uploaded_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.uploaded_files</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.file_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.file_status</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.data_type_status</span></code></a></li>
@@ -275,6 +277,7 @@
 <li class="toctree-l2"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.watch_history_dummy_reader"><code class="docutils literal notranslate"><span class="pre">watch_history_dummy_reader()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.source_type_display</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.type"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.type</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.uploaded_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.uploaded_files</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.file_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.file_status</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.data_type_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.data_type_status</span></code></a></li>
@@ -484,6 +487,12 @@ object the first time, the query is executed.</p>
 <dt class="sig sig-object py" id="donations.models.Donation.source_type_display">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">source_type_display</span></span><a class="headerlink" href="#donations.models.Donation.source_type_display" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="donations.models.Donation.type">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#donations.models.Donation.type" title="Link to this definition"></a></dt>
+<dd><p>Returns ‘oauth’ for OAuth-based donations, ‘upload’ for file upload donations.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="donations.models.Donation.status">
@@ -1140,6 +1149,12 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dt class="sig sig-object py" id="donations.models.TikTokExportDonation.source_type_display">
 <span class="sig-name descname"><span class="pre">source_type_display</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'TikTok</span> <span class="pre">Export'</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.source_type_display" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.type">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">type</span></span><a class="headerlink" href="#donations.models.TikTokExportDonation.type" title="Link to this definition"></a></dt>
+<dd><p>TikTok Export uses file upload instead of OAuth.</p>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="donations.models.TikTokExportDonation.uploaded_files">

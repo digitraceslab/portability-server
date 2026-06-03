@@ -143,6 +143,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">source_type_display</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span>
     
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns &#39;oauth&#39; for OAuth-based donations, &#39;upload&#39; for file upload donations.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;oauth&#39;</span>  <span class="c1"># Default for OAuth-based donations</span>
+    
     <span class="n">status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
         <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
         <span class="n">choices</span><span class="o">=</span><span class="p">[</span>
