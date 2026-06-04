@@ -105,11 +105,23 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">TikTokExportDonation</span><span class="p">(</span><span class="n">Donation</span><span class="p">):</span>
     <span class="n">source_type_display</span> <span class="o">=</span> <span class="s2">&quot;TikTok Export&quot;</span>
 
+    <span class="n">PROCESSING_STATUS_CHOICES</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="p">(</span><span class="s1">&#39;authorized&#39;</span><span class="p">,</span> <span class="s1">&#39;Authorized, waiting for upload&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;processing&#39;</span><span class="p">,</span> <span class="s1">&#39;Processing&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;processed&#39;</span><span class="p">,</span> <span class="s1">&#39;Processed successfully&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;Error during processing&#39;</span><span class="p">),</span>
+    <span class="p">)</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;TikTok Export uses file upload instead of OAuth.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="s1">&#39;upload&#39;</span>
 
+    <span class="n">processing_status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
+        <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="n">PROCESSING_STATUS_CHOICES</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;authorized&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
     <span class="n">uploaded_files</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">JSONField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">file_status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">JSONField</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="nb">dict</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -245,6 +257,8 @@
                             <span class="k">continue</span>
                         <span class="k">try</span><span class="p">:</span>
                             <span class="n">df</span> <span class="o">=</span> <span class="n">reader</span><span class="p">(</span><span class="n">tmp_fp</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                                <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
                             <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
                                 <span class="k">continue</span>
                             <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
@@ -295,7 +309,7 @@
             <span class="p">)</span>
             <span class="k">if</span> <span class="n">all_files_done</span><span class="p">:</span>
                 <span class="n">expected</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">df</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requested_data_types</span>
+                    <span class="n">dt</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">requested_data_types</span>
                     <span class="k">if</span> <span class="n">dt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE_READERS</span>
                 <span class="p">]</span>
                 <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
@@ -325,9 +339,8 @@
         <span class="n">stored_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">stored_filename</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">stored_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">():</span>
-                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
+        <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
+        <span class="n">crypto</span><span class="o">.</span><span class="n">write_encrypted_bytes</span><span class="p">(</span><span class="n">stored_path</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">uploaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stored_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;File uploaded successfully&quot;</span></div>
