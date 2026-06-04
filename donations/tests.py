@@ -10,7 +10,7 @@ from cryptography.fernet import Fernet
 from django.test import TestCase, Client, override_settings
 from rest_framework.test import APIRequestFactory
 
-from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant, hash_token
+from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken, Participant, hash_token
 from donations.authentication import ResearcherTokenAuthentication
 from donations.utils.crypto import (
     encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes,
@@ -312,6 +312,230 @@ class TikTokDonationModelTests(TestCase):
     def test_get_data_types(self):
         td = TikTokDonation.objects.create()
         self.assertEqual(td.get_data_types(), ['tiktok_portability'])
+
+
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+class TikTokExportDonationModelTests(TestCase):
+    """Tests for TikTokExportDonation model behavior (file upload flow)."""
+
+    def test_create_tiktok_export_donation(self):
+        ted = TikTokExportDonation.objects.create()
+        self.assertEqual(ted.source_type, 'tiktok_export')
+        self.assertEqual(ted.status, 'pending')
+        self.assertIsNotNone(ted.token)
+
+    def test_source_type_display(self):
+        ted = TikTokExportDonation.objects.create()
+        self.assertEqual(ted.source_type_display, 'TikTok Export')
+
+    def test_type_is_upload(self):
+        ted = TikTokExportDonation.objects.create()
+        self.assertEqual(ted.type, 'upload')
+
+    def test_oauth_donations_have_type_oauth(self):
+        gd = GoogleDonation.objects.create()
+        td = TikTokDonation.objects.create()
+        self.assertEqual(gd.type, 'oauth')
+        self.assertEqual(td.type, 'oauth')
+
+    def test_inherits_donation(self):
+        ted = TikTokExportDonation.objects.create()
+        self.assertTrue(Donation.objects.filter(pk=ted.pk).exists())
+
+    def test_csv_path(self):
+        ted = TikTokExportDonation.objects.create()
+        path = ted._csv_path('watch_history')
+        self.assertEqual(path, f'data/{ted.pk}/tiktok_export/watch_history.csv')
+
+    def test_get_data_types_empty_when_not_processed(self):
+        ted = TikTokExportDonation.objects.create()
+        self.assertEqual(ted.get_data_types(), [])
+
+    def test_get_data_types_returns_received(self):
+        ted = TikTokExportDonation.objects.create(
+            processing_status='processed',
+            data_type_status={
+                'watch_history': {'received': True, 'received_at': '2026-01-01'},
+            },
+        )
+        types = ted.get_data_types()
+        self.assertIn('watch_history', types)
+
+    def test_handle_file_upload(self):
+        """Test file upload and encryption."""
+        ted = TikTokExportDonation.objects.create()
+        
+        # Create a temporary test file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as f:
+            f.write('video_id,watched_at\n12345,2024-01-01T12:00:00Z')
+            temp_path = f.name
+        
+        try:
+            # Create a Django UploadedFile mock
+            from django.core.files.uploadedfile import SimpleUploadedFile
+            with open(temp_path, 'rb') as f:
+                upload_file = SimpleUploadedFile('watch_history.csv', f.read())
+                success, message = ted.handle_file_upload(upload_file)
+            
+            self.assertTrue(success)
+            self.assertIn('successfully', message.lower())
+            self.assertEqual(len(ted.uploaded_files), 1)
+            
+            # Verify file is stored and encrypted
+            stored_path = ted.uploaded_files[0]
+            self.assertTrue(os.path.exists(stored_path))
+            self.assertTrue(stored_path.startswith('data/'))
+        finally:
+            # Clean up
+            os.remove(temp_path)
+            for fpath in ted.uploaded_files:
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+            # Remove empty dirs
+            for fpath in ted.uploaded_files:
+                dirpath = os.path.dirname(fpath)
+                while dirpath and dirpath != 'data':
+                    try:
+                        os.rmdir(dirpath)
+                    except OSError:
+                        break
+                    dirpath = os.path.dirname(dirpath)
+            try:
+                os.rmdir('data')
+            except OSError:
+                pass
+
+    def test_fetch_data_not_processed(self):
+        ted = TikTokExportDonation.objects.create()
+        self.assertEqual(ted.fetch_data('watch_history'), [])
+        self.assertEqual(ted.count_rows('watch_history'), 0)
+
+    def test_fetch_data_returns_empty_for_unavailable_type(self):
+        ted = TikTokExportDonation.objects.create(
+            processing_status='processed',
+            data_type_status={'watch_history': {'received': True}},
+        )
+        # 'likes' is not in the data_type_status
+        self.assertEqual(ted.fetch_data('likes'), [])
+        self.assertEqual(ted.count_rows('likes'), 0)
+
+    def test_fetch_data_and_count_with_encrypted_csv(self):
+        """Test reading encrypted CSV data."""
+        ted = TikTokExportDonation.objects.create(
+            processing_status='processed',
+            data_type_status={
+                'watch_history': {'received': True, 'received_at': '2026-01-01'},
+            },
+        )
+        csv_content = "timestamp,video_id,duration_watched\n1704067200000,12345,30\n1704153600000,67890,45\n"
+        csv_path = ted._csv_path('watch_history')
+        write_encrypted_bytes(csv_path, csv_content.encode())
+
+        try:
+            count = ted.count_rows('watch_history')
+            self.assertEqual(count, 2)
+
+            rows = ted.fetch_data('watch_history', limit=1)
+            self.assertEqual(len(rows), 1)
+            self.assertIn('timestamp', rows[0])
+            self.assertIn('video_id', rows[0])
+
+            rows = ted.fetch_data('watch_history', limit=10, offset=1)
+            self.assertEqual(len(rows), 1)
+        finally:
+            # Clean up test files
+            if os.path.exists(csv_path):
+                os.remove(csv_path)
+            dirpath = os.path.dirname(csv_path)
+            while dirpath and dirpath != 'data':
+                try:
+                    os.rmdir(dirpath)
+                except OSError:
+                    break
+                dirpath = os.path.dirname(dirpath)
+            try:
+                os.rmdir('data')
+            except OSError:
+                pass
+
+    def test_cleanup_files(self):
+        """Test that cleanup_files removes uploaded files."""
+        ted = TikTokExportDonation.objects.create()
+        
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as f:
+            f.write('test,data')
+            temp_path = f.name
+        
+        try:
+            from django.core.files.uploadedfile import SimpleUploadedFile
+            with open(temp_path, 'rb') as f:
+                upload_file = SimpleUploadedFile('test.csv', f.read())
+                ted.handle_file_upload(upload_file)
+            
+            self.assertEqual(len(ted.uploaded_files), 1)
+            stored_path = ted.uploaded_files[0]
+            self.assertTrue(os.path.exists(stored_path))
+            
+            ted.cleanup_files()
+            
+            self.assertEqual(ted.uploaded_files, [])
+            self.assertFalse(os.path.exists(stored_path))
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
+    def test_extract_and_process_with_upload(self):
+        """Test processing uploaded TikTok data files."""
+        ted = TikTokExportDonation.objects.create(
+            processing_status='authorized',
+            requested_data_types=['watch_history'],
+        )
+        
+        # Create and upload a test CSV
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv') as f:
+            f.write('video_id,watched_at,duration_watched\n12345,2024-01-01T12:00:00Z,30\n67890,2024-01-02T15:30:00Z,45')
+            temp_path = f.name
+        
+        try:
+            from django.core.files.uploadedfile import SimpleUploadedFile
+            with open(temp_path, 'rb') as f:
+                upload_file = SimpleUploadedFile('watch_history.csv', f.read())
+                ted.handle_file_upload(upload_file)
+            
+            # Mock the reader to return test data
+            def mock_reader(file_path):
+                return [
+                    {'video_id': '12345', 'watched_at': '2024-01-01T12:00:00Z', 'duration_watched': 30},
+                    {'video_id': '67890', 'watched_at': '2024-01-02T15:30:00Z', 'duration_watched': 45},
+                ]
+            
+            with patch.object(ted, 'DATA_TYPE_READERS', {'watch_history': mock_reader}):
+                ted.extract_and_process()
+            
+            ted.refresh_from_db()
+            self.assertEqual(ted.processing_status, 'processed')
+            self.assertEqual(ted.status, 'processed')
+            self.assertTrue(ted.data_type_status.get('watch_history', {}).get('received'))
+        finally:
+            os.remove(temp_path)
+            for fpath in ted.uploaded_files:
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+            # Clean up CSVs and directories
+            csv_path = ted._csv_path('watch_history')
+            if os.path.exists(csv_path):
+                os.remove(csv_path)
+            for dirpath in [os.path.dirname(csv_path), os.path.dirname(os.path.dirname(csv_path))]:
+                while dirpath and dirpath != 'data':
+                    try:
+                        os.rmdir(dirpath)
+                    except OSError:
+                        break
+                    dirpath = os.path.dirname(dirpath)
+            try:
+                os.rmdir('data')
+            except OSError:
+                pass
 
 
 def _set_donation_session(client, raw_token):

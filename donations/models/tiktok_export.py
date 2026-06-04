@@ -31,11 +31,23 @@ def watch_history_dummy_reader(file_path):
 class TikTokExportDonation(Donation):
     source_type_display = "TikTok Export"
 
+    PROCESSING_STATUS_CHOICES = (
+        ('authorized', 'Authorized, waiting for upload'),
+        ('processing', 'Processing'),
+        ('processed', 'Processed successfully'),
+        ('error', 'Error during processing'),
+    )
+
     @property
     def type(self):
         """TikTok Export uses file upload instead of OAuth."""
         return 'upload'
 
+    processing_status = models.CharField(
+        max_length=20,
+        choices=PROCESSING_STATUS_CHOICES,
+        default='authorized',
+    )
     uploaded_files = models.JSONField(default=list, blank=True)
     file_status = models.JSONField(
         default=dict, blank=True,
@@ -157,6 +169,8 @@ class TikTokExportDonation(Donation):
                             continue
                         try:
                             df = reader(tmp_fp)
+                            if isinstance(df, list):
+                                df = pd.DataFrame(df)
                             if df is None or df.empty:
                                 continue
                             df = df.reset_index()
@@ -207,7 +221,7 @@ class TikTokExportDonation(Donation):
             )
             if all_files_done:
                 expected = [
-                    df for dt in self.requested_data_types
+                    dt for dt in self.requested_data_types
                     if dt in self.DATA_TYPE_READERS
                 ]
                 missing = [
@@ -234,9 +248,8 @@ class TikTokExportDonation(Donation):
         stored_path = os.path.join('data', stored_filename)
         if not os.path.exists('data'):
             os.makedirs('data')
-        with open(stored_path, 'wb') as f:
-            for chunk in file.chunks():
-                f.write(chunk)
+        plaintext = b''.join(file.chunks())
+        crypto.write_encrypted_bytes(stored_path, plaintext)
         self.uploaded_files.append(stored_path)
         self.save()
         return True, "File uploaded successfully"

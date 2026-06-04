@@ -95,8 +95,8 @@ class TikTokDonationAdmin(admin.ModelAdmin):
 @admin.register(TikTokExportDonation)
 class TikTokExportDonationAdmin(admin.ModelAdmin):
     """Admin interface for managing TikTok Export donations."""
-    list_display = ('id', 'researcher', 'status', 'created_at')
-    list_filter = ('status',)
+    list_display = ('id', 'researcher', 'status', 'processing_status', 'created_at')
+    list_filter = ('status', 'processing_status')
     readonly_fields = ('token', 'created_at')
     actions = ['regenerate_token']
 
