@@ -47,7 +47,7 @@ cryptography==46.0.5
     # via -r requirements.in
 cycler==0.12.1
     # via matplotlib
-django==5.2.13
+django==5.2.15
     # via
     #   -r requirements.in
     #   django-cors-headers
