@@ -98,7 +98,7 @@ if not DEBUG:
         "DIRECTIVES": {
             "default-src": ["'self'"],
             "script-src": ["'self'"],
-            "style-src": ["'self'", "'unsafe-inline'"],
+            "style-src": ["'self'"],
             "img-src": ["'self'", "data:"],
             # Google OAuth redirects through accounts.google.com
             "connect-src": ["'self'", "https://accounts.google.com"],

@@ -1,21 +1,12 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Data Donation{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% load static %}{% static 'img/niimport-icon.svg' %}">
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        .btn { display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: #fff; text-decoration: none; border: none; cursor: pointer; border-radius: 4px; }
-        .btn-danger { background: #dc3545; }
-        .error { color: #dc3545; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 0.5rem; text-align: left; }
-        th { background: #f5f5f5; }
-        .pagination { margin: 1rem 0; }
-        .pagination a { margin: 0 0.25rem; }
-    </style>
+    <link rel="icon" type="image/svg+xml" href="{% static 'img/niimport-icon.svg' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
     {% if messages %}
@@ -36,7 +27,7 @@
     </form>
     {% endif %}
     <hr>
-    <footer style="font-size: 0.85rem; color: #666;">
+    <footer class="site-footer">
         <a href="{% url 'terms-of-service' %}">Terms of Service</a> ·
         <a href="{% url 'privacy-notice' %}">Privacy Policy</a>
     </footer>
