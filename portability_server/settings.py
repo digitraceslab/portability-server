@@ -85,6 +85,13 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SECURE_REFERRER_POLICY = 'same-origin'
 
+    # CSRF token is only consumed via the {% csrf_token %} form tag (no JS reads
+    # it), so it can be HttpOnly. Also mark session/CSRF cookies Secure so they
+    # are never sent over plain HTTP.
+    CSRF_COOKIE_HTTPONLY = True
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+
 
     CORS_ALLOWED_ORIGINS = [
         "https://portability.cs.aalto.fi",
