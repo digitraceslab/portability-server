@@ -1,97 +1,94 @@
 """Django settings for portability-server project."""
-import environ
+
 from pathlib import Path
+
+import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env()
-environ.Env.read_env(BASE_DIR / '.env')
+environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env("SECRET_KEY")
 
-DEBUG = env.bool('DEBUG', default=False)
+DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework.authtoken',
-    'donations',
-    'accounts',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "donations",
+    "accounts",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'csp.middleware.CSPMiddleware',
-    'django_permissions_policy.PermissionsPolicyMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "csp.middleware.CSPMiddleware",
+    "django_permissions_policy.PermissionsPolicyMiddleware",
 ]
 
-ROOT_URLCONF = 'portability_server.urls'
+ROOT_URLCONF = "portability_server.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'donations.authentication.ResearcherTokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "donations.authentication.ResearcherTokenAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
     ],
 }
 
 # Encryption
-ENCRYPTION_KEY = env('ENCRYPTION_KEY', default=None)
+ENCRYPTION_KEY = env("ENCRYPTION_KEY", default=None)
 
-WSGI_APPLICATION = 'portability_server.wsgi.application'
+WSGI_APPLICATION = "portability_server.wsgi.application"
 
-DATABASES = {
-    'default': env.db()
-}
+DATABASES = {"default": env.db()}
 
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_SSL_REDIRECT = True
-    SECURE_REFERRER_POLICY = 'same-origin'
-
-    # CSRF token is only consumed via the {% csrf_token %} form tag (no JS reads
-    # it), so it can be HttpOnly. Also mark session/CSRF cookies Secure so they
-    # are never sent over plain HTTP.
+    SECURE_REFERRER_POLICY = "same-origin"
     CSRF_COOKIE_HTTPONLY = True
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
-
 
     CORS_ALLOWED_ORIGINS = [
         "https://portability.cs.aalto.fi",
@@ -99,7 +96,7 @@ if not DEBUG:
     ]
 
     CORS_ALLOW_CREDENTIALS = True
-    CSRF_TRUSTED_ORIGINS = ["http://localhost:8000", "http://127.0.0.1:8000"]
+    CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
     CONTENT_SECURITY_POLICY = {
         "DIRECTIVES": {
@@ -131,56 +128,54 @@ PERMISSIONS_POLICY = {
 }
 
 
-
-
 # OAuth credentials
-GOOGLE_OAUTH_CLIENT_ID = env('GOOGLE_OAUTH_CLIENT_ID', default='')
-GOOGLE_OAUTH_CLIENT_SECRET = env('GOOGLE_OAUTH_CLIENT_SECRET', default='')
-TIKTOK_CLIENT_KEY = env('TIKTOK_CLIENT_KEY', default='')
-TIKTOK_CLIENT_SECRET = env('TIKTOK_CLIENT_SECRET', default='')
-TIKTOK_SANDBOX_MODE = env('TIKTOK_SANDBOX_MODE', default=False)
-TIKTOK_FILE_LOGGING_ENABLED = env.bool('TIKTOK_FILE_LOGGING_ENABLED', default=False)
+GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID", default="")
+GOOGLE_OAUTH_CLIENT_SECRET = env("GOOGLE_OAUTH_CLIENT_SECRET", default="")
+TIKTOK_CLIENT_KEY = env("TIKTOK_CLIENT_KEY", default="")
+TIKTOK_CLIENT_SECRET = env("TIKTOK_CLIENT_SECRET", default="")
+TIKTOK_SANDBOX_MODE = env("TIKTOK_SANDBOX_MODE", default=False)
+TIKTOK_FILE_LOGGING_ENABLED = env.bool("TIKTOK_FILE_LOGGING_ENABLED", default=False)
 
 # OAuth callback URLs registered with each provider.
-GOOGLE_REDIRECT_URI = env('GOOGLE_REDIRECT_URI', default='')
-TIKTOK_REDIRECT_URI = env('TIKTOK_REDIRECT_URI', default='')
+GOOGLE_REDIRECT_URI = env("GOOGLE_REDIRECT_URI", default="")
+TIKTOK_REDIRECT_URI = env("TIKTOK_REDIRECT_URI", default="")
 
 # Logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {'class': 'logging.StreamHandler'},
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
     },
-    'loggers': {
-        'donations': {'handlers': ['console'], 'level': 'INFO'},
+    "loggers": {
+        "donations": {"handlers": ["console"], "level": "INFO"},
     },
 }
 
 # Celery
-CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://localhost:6379/1')
-CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://localhost:6379/1')
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+CELERY_BROKER_URL = env("CELERY_BROKER_URL", default="redis://localhost:6379/1")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND", default="redis://localhost:6379/1")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 CELERY_WORKER_CONCURRENCY = 1
 CELERY_BEAT_SCHEDULE = {
-    'check-authorized-donations': {
-        'task': 'donations.tasks.check_pending_donations',
-        'schedule': 300,
+    "check-authorized-donations": {
+        "task": "donations.tasks.check_pending_donations",
+        "schedule": 300,
     },
 }
 
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
