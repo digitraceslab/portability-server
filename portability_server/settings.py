@@ -30,7 +30,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -91,12 +90,6 @@ if not DEBUG:
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
 
-    CORS_ALLOWED_ORIGINS = [
-        "https://portability.cs.aalto.fi",
-        "https://niimport.digitraceslab.com",
-    ]
-
-    CORS_ALLOW_CREDENTIALS = True
     CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
     CONTENT_SECURITY_POLICY = {
