@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>portability_server package &mdash; portability-server  documentation</title>
+  <title>portability_server.middleware module &mdash; portability-server  documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
 
@@ -42,9 +42,8 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">portability_server package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-portability_server">Module contents</a></li>
+<li><a class="reference internal" href="#">portability_server.middleware module</a><ul>
+<li><a class="reference internal" href="#portability_server.middleware.CrossOriginResourcePolicyMiddleware"><code class="docutils literal notranslate"><span class="pre">CrossOriginResourcePolicyMiddleware</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -63,9 +62,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">portability_server package</li>
+      <li class="breadcrumb-item active">portability_server.middleware module</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/api/portability_server.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/api/portability_server.middleware.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -73,33 +72,18 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="portability-server-package">
-<h1>portability_server package<a class="headerlink" href="#portability-server-package" title="Link to this heading"></a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="portability_server.celery.html">portability_server.celery module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="portability_server.middleware.html">portability_server.middleware module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="portability_server.middleware.html#portability_server.middleware.CrossOriginResourcePolicyMiddleware"><code class="docutils literal notranslate"><span class="pre">CrossOriginResourcePolicyMiddleware</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="portability_server.settings.html">portability_server.settings module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="portability_server.urls.html">portability_server.urls module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="portability_server.urls.html#portability_server.urls.health_check"><code class="docutils literal notranslate"><span class="pre">health_check()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="portability_server.views.html">portability_server.views module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="portability_server.views.html#portability_server.views.home"><code class="docutils literal notranslate"><span class="pre">home()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div>
-</section>
-<section id="module-portability_server">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-portability_server" title="Link to this heading"></a></h2>
-<p>Portability server Django project initialization.</p>
-</section>
+  <section id="module-portability_server.middleware">
+<span id="portability-server-middleware-module"></span><h1>portability_server.middleware module<a class="headerlink" href="#module-portability_server.middleware" title="Link to this heading"></a></h1>
+<p>Custom security middleware for portability-server.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="portability_server.middleware.CrossOriginResourcePolicyMiddleware">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">portability_server.middleware.</span></span><span class="sig-name descname"><span class="pre">CrossOriginResourcePolicyMiddleware</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get_response</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/portability_server/middleware.html#CrossOriginResourcePolicyMiddleware"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#portability_server.middleware.CrossOriginResourcePolicyMiddleware" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Set Cross-Origin-Resource-Policy: same-origin on all responses.</p>
+<p>Django has no built-in setting for this header (unlike COOP), so it is
+added here. Skipped under DEBUG to match the project’s hardening pattern.</p>
+</dd></dl>
+
 </section>
 
 

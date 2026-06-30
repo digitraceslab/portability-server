@@ -1,0 +1,7 @@
+portability\_server.middleware module
+=====================================
+
+.. automodule:: portability_server.middleware
+   :members:
+   :show-inheritance:
+   :undoc-members:

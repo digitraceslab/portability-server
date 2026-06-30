@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    portability_server.celery
+   portability_server.middleware
    portability_server.settings
    portability_server.urls
    portability_server.views
