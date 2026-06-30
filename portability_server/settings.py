@@ -39,6 +39,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
     "django_permissions_policy.PermissionsPolicyMiddleware",
+    "portability_server.middleware.CrossOriginResourcePolicyMiddleware",
 ]
 
 ROOT_URLCONF = "portability_server.urls"
