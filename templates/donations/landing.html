@@ -21,7 +21,11 @@
 {% endif %}
 
 {% if not donation.terms_accepted_at %}
+    {% if donation.source_type == 'tiktok_portability' %}
+    <p><a href="{% url 'accept-terms' %}" class="btn">Authorize Data Access</a></p>
+    {% else %}
     <p><a href="{% url 'accept-terms' %}" class="btn">Review &amp; Accept Terms</a></p>
+    {% endif %}
 {% elif donation.status == 'pending' %}
     <p>Terms accepted.</p>
 

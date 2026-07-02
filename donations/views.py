@@ -249,11 +249,15 @@ def donation_landing(request):
 def accept_terms(request):
     """Show terms and record acceptance."""
     donation = _get_session_donation(request)
+    is_tiktok = donation.source_type == 'tiktok_portability'
     if request.method == 'POST':
         donation.terms_accepted_at = timezone.now()
         donation.save()
+        if is_tiktok:
+            return redirect('authorize')
         return redirect('donation-landing')
-    return render(request, 'donations/terms.html', {'donation': donation})
+    template = 'donations/terms_tiktok.html' if is_tiktok else 'donations/terms.html'
+    return render(request, template, {'donation': donation})
 
 
 def authorize(request):
