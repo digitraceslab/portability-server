@@ -483,9 +483,13 @@ Enable and start services
 Nginx
 ~~~~~
 
-Create ``/etc/nginx/sites-available/portability-server``:
+Create ``/etc/nginx/sites-available/portability-server``. The ``limit_req_zone`` directive belongs
+in the ``http`` context (e.g. ``/etc/nginx/nginx.conf``), so add it there if this site config is
+not already included from within ``http { ... }``:
 
 .. code-block:: nginx
+
+   limit_req_zone $binary_remote_addr zone=portability:10m rate=10r/s;
 
    server {
        listen 80;
@@ -499,6 +503,7 @@ Create ``/etc/nginx/sites-available/portability-server``:
 
        ssl_certificate /PATH_TO/fullchain.pem;
        ssl_certificate_key /PATH_TO/privkey.pem;
+       client_max_body_size 55G;
 
        location = /favicon.ico { access_log off; log_not_found off; }
        location /static/ {
@@ -506,6 +511,7 @@ Create ``/etc/nginx/sites-available/portability-server``:
        }
 
        location / {
+           limit_req zone=portability burst=20 nodelay;
            include proxy_params;
            proxy_pass http://unix:/run/portability-server/portability-server.sock;
        }
@@ -562,6 +568,12 @@ All configuration is done via ``.env`` (copy from ``.env.example``):
    * - ``CELERY_RESULT_BACKEND``
      - Redis URL for Celery result storage
      - ``redis://localhost:6379/1``
+   * - ``CACHE_URL``
+     - Redis URL for the Django cache (rate-limit counters)
+     - ``redis://localhost:6379/2``
+   * - ``UPLOAD_MAX_BYTES``
+     - Maximum accepted upload size in bytes (default 55 GB)
+     -
 
 
 Testing

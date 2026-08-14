@@ -1,5 +1,6 @@
 """REST API for researcher donation management."""
 from django.urls import reverse
+from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes as perm_classes
 from rest_framework.permissions import AllowAny, BasePermission
@@ -77,6 +78,7 @@ class DataQuerySerializer(serializers.Serializer):
 class DonationViewSet(viewsets.GenericViewSet):
     permission_classes = [IsResearcherAuthenticated]
     serializer_class = DonationSerializer
+    throttle_scope = "researcher"
     
     def get_serializer_class(self):
         if self.action == 'create':
@@ -164,6 +166,7 @@ def _serializer_fields_info(serializer_class):
     return fields
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @api_view(['GET'])
 @perm_classes([AllowAny])
 def api_docs(request):

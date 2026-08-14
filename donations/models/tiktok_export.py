@@ -3,6 +3,7 @@ import os
 import secrets
 from datetime import timedelta
 import pandas as pd
+from django.conf import settings
 from django.db import models
 from urllib.parse import urlencode
 import donations.utils.crypto as crypto
@@ -242,6 +243,9 @@ class TikTokExportDonation(Donation):
             self.save()
 
     def handle_file_upload(self, file):
+        if file.size > settings.UPLOAD_MAX_BYTES:
+            max_gb = settings.UPLOAD_MAX_BYTES / (1024 ** 3)
+            return False, f"File is too large (maximum {max_gb:.0f} GB)."
         filename = file.name
         unique_suffix = secrets.token_hex(8)
         stored_filename = f"{self.pk}_{unique_suffix}_{filename}"

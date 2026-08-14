@@ -1,5 +1,6 @@
 """Django settings for portability-server project."""
 
+import sys
 from pathlib import Path
 
 import environ
@@ -12,6 +13,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 SECRET_KEY = env("SECRET_KEY")
 
 DEBUG = env.bool("DEBUG", default=False)
+TESTING = "test" in sys.argv
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=[])
 
@@ -39,6 +41,7 @@ MIDDLEWARE = [
     "csp.middleware.CSPMiddleware",
     "django_permissions_policy.PermissionsPolicyMiddleware",
     "portability_server.middleware.CrossOriginResourcePolicyMiddleware",
+    "django_ratelimit.middleware.RatelimitMiddleware",
 ]
 
 ROOT_URLCONF = "portability_server.urls"
@@ -65,6 +68,23 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
 }
+
+if not (DEBUG or TESTING):
+    REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = ["rest_framework.throttling.ScopedRateThrottle"]
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {"researcher": "120/min"}
+
+if TESTING:
+    CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
+else:
+    CACHES = {"default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": env("CACHE_URL", default="redis://localhost:6379/2"),
+    }}
+
+RATELIMIT_ENABLE = not DEBUG and not TESTING
+RATELIMIT_VIEW = "portability_server.views.rate_limited"
+
+UPLOAD_MAX_BYTES = env.int("UPLOAD_MAX_BYTES", default=59055800320)
 
 # Encryption
 ENCRYPTION_KEY = env("ENCRYPTION_KEY", default=None)

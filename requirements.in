@@ -4,10 +4,11 @@ django-environ==0.12.0
 djangorestframework==3.16.1
 django-csp
 django-permissions-policy
+django-ratelimit
 celery==5.5.3
 redis==7.0.1
 cryptography==49.0.0
 requests==2.34.2
 urllib3==2.7.0
 gunicorn==23.0.0
-niimpy @ git+https://github.com/digitraceslab/niimpy.git@development
+niimpy @ https://github.com/digitraceslab/niimpy/archive/e49bdd22dc4b5b0f1a46c099b45f9777cdb92985.tar.gz

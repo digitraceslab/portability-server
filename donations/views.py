@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
+from django_ratelimit.decorators import ratelimit
 
 
 PARTICIPANT_TOKEN_MIN_LENGTH = 32
@@ -103,6 +104,7 @@ def _set_return_url(request, url):
     request.session['return_url'] = url
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET"])
 def donation_entry(request, donation_token):
     """Consume a donation token from the URL, store it in the session, redirect."""
@@ -117,6 +119,7 @@ def donation_entry(request, donation_token):
     return redirect('donation-landing')
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET"])
 def participant_entry(request, token):
     """Consume a participant token from the URL, store it in the session, redirect."""
@@ -127,6 +130,7 @@ def participant_entry(request, token):
     return redirect('participant-home')
 
 
+@ratelimit(key="ip", rate="60/m", block=True)
 @require_http_methods(["GET"])
 def select_donation(request, donation_pk):
     """Switch the active donation in session to one owned by the current participant."""
@@ -147,6 +151,7 @@ def logout_participant(request):
     return redirect('terms-of-service')
 
 
+@ratelimit(key="ip", rate="60/m", block=True)
 @require_http_methods(["GET"])
 def switch_to_participant(request):
     """Verify the current donation has a participant, redirect to participant home."""
@@ -168,6 +173,7 @@ def _participant_link_url(request):
         reverse('participant-entry', kwargs={'token': raw}))
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["POST"])
 def generate_participant_token(request):
     """Link the current donation to the participant identified by the
@@ -186,6 +192,7 @@ def generate_participant_token(request):
     return redirect('donation-landing')
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET", "POST"])
 def donation_landing(request):
     """Status overview page with participant token handling."""
@@ -245,6 +252,7 @@ def donation_landing(request):
     })
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET", "POST"])
 def accept_terms(request):
     """Show terms and record acceptance."""
@@ -260,6 +268,7 @@ def accept_terms(request):
     return render(request, template, {'donation': donation})
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 def authorize(request):
     """Redirect to OAuth URL. Requires terms accepted."""
     donation = _get_session_donation(request)
@@ -269,6 +278,7 @@ def authorize(request):
     return redirect(auth_url)
 
 
+@ratelimit(key="ip", rate="20/h", block=True)
 @require_http_methods(["POST"])
 def upload_data(request):
     """Handle file upload"""
@@ -288,6 +298,7 @@ def upload_data(request):
         
 
 
+@ratelimit(key="ip", rate="60/m", block=True)
 def data_preview(request):
     """Paginated data preview with filtering."""
     donation = _get_session_donation(request)
@@ -326,6 +337,7 @@ def data_preview(request):
     })
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["GET", "POST"])
 def revoke_donation(request):
     """Confirm and revoke a donation."""
@@ -379,6 +391,7 @@ def _queue_processing_after_callback(donation):
         return "Authorization succeeded, but background processing could not be started. Please try again later."
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 def google_auth_callback(request):
     """Handle Google OAuth callback via oauth_state lookup."""
     state = request.GET.get('state')
@@ -406,6 +419,7 @@ def google_auth_callback(request):
     })
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 def tiktok_auth_callback(request):
     """Handle TikTok OAuth callback via oauth_state lookup."""
     state = request.GET.get('state')
@@ -433,6 +447,7 @@ def tiktok_auth_callback(request):
     })
 
 
+@ratelimit(key="ip", rate="60/m", block=True)
 def participant_home(request):
     """Show all donations for a participant."""
     participant = _get_session_participant(request)

@@ -1,5 +1,6 @@
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.http import HttpResponse
 
 from donations.models import Donation, Participant
 
@@ -21,3 +22,7 @@ def home(request):
         return render(request, 'home.html')
     else:
         return render(request, 'home.html')
+
+
+def rate_limited(request, exception=None):
+    return HttpResponse("Too many requests. Please try again later.", status=429)
