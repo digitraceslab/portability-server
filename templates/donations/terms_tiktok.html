@@ -1,6 +1,5 @@
-{% extends "donations/base.html" %}
-{% block title %}Terms of Data Donation{% endblock %}
-{% block content %}
+{% extends "donations/base.html" %} {% block title %}Terms of Data Donation{%
+endblock %} {% block content %}
 <h1>Terms of Data Donation</h1>
 <p>By donating your data, you agree to the following:</p>
 <ul>
@@ -9,11 +8,14 @@
     <li>You can revoke your donation at any time.</li>
     <li>Your identity will not be shared with third parties.</li>
 </ul>
-<p>Please review our <a href="{% url 'terms-of-service' %}">Terms of Service</a> and
-<a href="{% url 'privacy-notice' %}">Privacy Notice</a> for full details.</p>
+<p>
+    Please review our
+    <a href="{% url 'terms-of-service' %}">Terms of Service</a> and
+    <a href="{% url 'privacy-notice' %}">Privacy Notice</a> for full details.
+</p>
 <form method="post">
     {% csrf_token %}
-    <button type="submit" class="btn">I Accept the Terms</button>
+    <button type="submit" class="btn">Accept and Connect to TikTok</button>
 </form>
 <p><a href="{% url 'donation-landing' %}">Back</a></p>
 {% endblock %}
