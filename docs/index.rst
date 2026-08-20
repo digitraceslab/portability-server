@@ -431,9 +431,8 @@ it. This keeps ``update.sh`` safe to run on servers where nginx (or a service un
 hand-edited after the initial ``deploy.sh`` run.
 
 Deployment paths are read from ``.env`` when set: ``APP_DIR`` (default: the repository root
-containing the script), ``VENV_PATH`` (default: ``$APP_DIR/venv``) and ``SERVICES`` (default: the
-three ``portability-*`` units). Each can also be overridden as an environment variable for a
-single run.
+containing the script) and ``VENV_PATH`` (default: ``$APP_DIR/venv``). Either can also be
+overridden as an environment variable for a single run.
 
 .. code-block:: bash
 
