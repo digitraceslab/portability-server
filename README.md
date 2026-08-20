@@ -313,6 +313,10 @@ Whether the re-rendered systemd/nginx configuration is actually installed is con
 initial `deploy.sh` run — set `INSTALL_CONFIGS=yes` once you've reviewed the reported diff and want
 it applied.
 
+Deployment paths are read from `.env` when set: `APP_DIR` (default: the repository root
+containing the script), `VENV_PATH` (default: `$APP_DIR/venv`) and `SERVICES` (default: the three
+`portability-*` units). Each can also be overridden as an environment variable for a single run.
+
 ```bash
 ./scripts/update.sh
 ```

@@ -2,10 +2,16 @@
 # Routine update of an already-deployed portability-server.
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-VENV="$APP_DIR/venv"
-RUN_USER="${RUN_USER:-$(id -un)}"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_env_get() { sed -n "s/^$1=//p" "$REPO_DIR/.env" 2>/dev/null | tail -1 | tr -d "\"'"; }
+
+APP_DIR="${APP_DIR:-$(_env_get APP_DIR)}"
+APP_DIR="${APP_DIR:-$REPO_DIR}"
+VENV="${VENV:-$(_env_get VENV_PATH)}"
+VENV="${VENV:-$APP_DIR/venv}"
+SERVICES="${SERVICES:-$(_env_get SERVICES)}"
 SERVICES="${SERVICES:-portability-gunicorn portability-celery-worker portability-celery-beat}"
+RUN_USER="${RUN_USER:-$(id -un)}"
 INSTALL_CONFIGS="${INSTALL_CONFIGS:-no}"  # yes = apply rendered systemd/nginx configs; no = report drift only
 
 # shellcheck source=lib.sh

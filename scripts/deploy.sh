@@ -2,10 +2,16 @@
 # First-time deployment of portability-server.
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-VENV="$APP_DIR/venv"
-RUN_USER="${RUN_USER:-$(id -un)}"
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+_env_get() { sed -n "s/^$1=//p" "$REPO_DIR/.env" 2>/dev/null | tail -1 | tr -d "\"'"; }
+
+APP_DIR="${APP_DIR:-$(_env_get APP_DIR)}"
+APP_DIR="${APP_DIR:-$REPO_DIR}"
+VENV="${VENV:-$(_env_get VENV_PATH)}"
+VENV="${VENV:-$APP_DIR/venv}"
+SERVICES="${SERVICES:-$(_env_get SERVICES)}"
 SERVICES="${SERVICES:-portability-gunicorn portability-celery-worker portability-celery-beat}"
+RUN_USER="${RUN_USER:-$(id -un)}"
 SETUP_DB="${SETUP_DB:-auto}"        # auto | yes | no — database provisioning
 DB_ADMIN_USER="${DB_ADMIN_USER:-postgres}"
 INSTALL_CONFIGS="${INSTALL_CONFIGS:-yes}"  # first-time setup always installs the rendered configs
