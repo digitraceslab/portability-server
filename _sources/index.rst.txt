@@ -424,6 +424,17 @@ environment configuration, runs migrations and ``collectstatic``, re-renders and
 systemd and nginx configuration from ``deploy/``, and restarts the services, verifying each one
 is active afterwards.
 
+Whether the re-rendered systemd/nginx configuration is actually installed is controlled by
+``INSTALL_CONFIGS`` (default ``no``): if a rendered file differs from what is installed, ``no``
+prints a ``diff -u`` of the drift and leaves the installed file untouched, while ``yes`` applies
+it. This keeps ``update.sh`` safe to run on servers where nginx (or a service unit) has been
+hand-edited after the initial ``deploy.sh`` run.
+
+Deployment paths are read from ``.env`` when set: ``APP_DIR`` (default: the repository root
+containing the script), ``VENV_PATH`` (default: ``$APP_DIR/venv``) and ``SERVICES`` (default: the
+three ``portability-*`` units). Each can also be overridden as an environment variable for a
+single run.
+
 .. code-block:: bash
 
    ./scripts/update.sh

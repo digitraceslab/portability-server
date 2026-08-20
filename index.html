@@ -498,6 +498,15 @@ fast-forward pulls the latest commit, reinstalls dependencies (hash-verified), r
 environment configuration, runs migrations and <code class="docutils literal notranslate"><span class="pre">collectstatic</span></code>, re-renders and reinstalls the
 systemd and nginx configuration from <code class="docutils literal notranslate"><span class="pre">deploy/</span></code>, and restarts the services, verifying each one
 is active afterwards.</p>
+<p>Whether the re-rendered systemd/nginx configuration is actually installed is controlled by
+<code class="docutils literal notranslate"><span class="pre">INSTALL_CONFIGS</span></code> (default <code class="docutils literal notranslate"><span class="pre">no</span></code>): if a rendered file differs from what is installed, <code class="docutils literal notranslate"><span class="pre">no</span></code>
+prints a <code class="docutils literal notranslate"><span class="pre">diff</span> <span class="pre">-u</span></code> of the drift and leaves the installed file untouched, while <code class="docutils literal notranslate"><span class="pre">yes</span></code> applies
+it. This keeps <code class="docutils literal notranslate"><span class="pre">update.sh</span></code> safe to run on servers where nginx (or a service unit) has been
+hand-edited after the initial <code class="docutils literal notranslate"><span class="pre">deploy.sh</span></code> run.</p>
+<p>Deployment paths are read from <code class="docutils literal notranslate"><span class="pre">.env</span></code> when set: <code class="docutils literal notranslate"><span class="pre">APP_DIR</span></code> (default: the repository root
+containing the script), <code class="docutils literal notranslate"><span class="pre">VENV_PATH</span></code> (default: <code class="docutils literal notranslate"><span class="pre">$APP_DIR/venv</span></code>) and <code class="docutils literal notranslate"><span class="pre">SERVICES</span></code> (default: the
+three <code class="docutils literal notranslate"><span class="pre">portability-*</span></code> units). Each can also be overridden as an environment variable for a
+single run.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/update.sh
 </pre></div>
 </div>
