@@ -263,12 +263,70 @@ celery -A portability_server beat -l info
 
 ## Deployment
 
+The `deploy/` templates and `scripts/` in this repository target a single-domain server. Hosts
+serving multiple domains, or otherwise running a customised nginx configuration, should keep
+managing nginx by hand instead — leave `INSTALL_CONFIGS` unset (or `no`) so the scripts never
+touch it.
+
+### Automated setup
+
+After cloning the repository and creating `.env` from `.env.example` (see below), the standard
+way to perform a first-time deployment is:
+
+```bash
+cp .env.example .env
+# Edit .env with production values: DEBUG=False, proper SECRET_KEY, ALLOWED_HOSTS, etc.
+./scripts/deploy.sh
+```
+
+`scripts/deploy.sh` installs the system packages, creates the virtualenv, installs dependencies
+from `requirements.txt` (hash-verified by pip), optionally provisions the PostgreSQL role and
+database, validates the environment configuration, runs migrations and `collectstatic`, and
+installs and starts the systemd services and nginx configuration described in the sections below.
+Being a first-time setup, it always installs the rendered configuration (`INSTALL_CONFIGS=yes`).
+
+Database provisioning is controlled by `SETUP_DB`: `auto` (the default) provisions the database
+locally using passwordless peer authentication via `sudo` when available, otherwise prompts
+interactively for the PostgreSQL admin password (this also works against a remote database), and
+skips provisioning with a warning if an admin connection can't be reached; `yes` behaves the same
+but fails instead of skipping; `no` skips database provisioning entirely. `DB_ADMIN_USER`
+(default `postgres`) selects the admin role used for provisioning. On a fresh PostgreSQL
+install where the admin role has no password yet, the script prompts to set one so the
+instance is not left with a passwordless superuser.
+
+The scripts never modify an existing `.env`, and per-deployment values such as the domain and
+credentials are never version-controlled — the nginx domain is derived from `ALLOWED_HOSTS` in
+`.env`, and TLS certificate paths default to the Let's Encrypt layout, all overridable via the
+`DOMAIN`, `SSL_CERT` and `SSL_KEY` environment variables.
+
+### Updating
+
+`scripts/update.sh` handles routine updates: it aborts if the checkout has local changes,
+fast-forward pulls the latest commit, reinstalls dependencies (hash-verified), re-validates the
+environment configuration, runs migrations and `collectstatic`, re-renders the systemd and nginx
+configuration from `deploy/`, and restarts the services, verifying each one is active afterwards.
+
+Whether the re-rendered systemd/nginx configuration is actually installed is controlled by
+`INSTALL_CONFIGS` (default `no`): if a rendered file differs from what's installed, `no` prints a
+`diff -u` of the drift and leaves the installed file untouched, while `yes` applies it. This keeps
+`update.sh` safe to run on servers where nginx (or a service unit) has been hand-edited after the
+initial `deploy.sh` run — set `INSTALL_CONFIGS=yes` once you've reviewed the reported diff and want
+it applied.
+
+```bash
+./scripts/update.sh
+```
+
 ### System packages
 
 ```bash
 sudo apt update
-sudo apt install python3 python3.12-venv postgresql nginx redis-server clamav clamav-daemon
+sudo apt install python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon
 ```
+
+`nginx-extras` (rather than plain `nginx`) is required because it provides the
+`headers-more-nginx-module`, which `deploy/nginx-site.conf` relies on for its `more_*` header
+directives.
 
 ### Application setup
 
@@ -290,7 +348,8 @@ python manage.py create_researcher_token
 
 ### Gunicorn service
 
-Create `/etc/systemd/system/portability-gunicorn.service`:
+`scripts/deploy.sh` and `scripts/update.sh` render this from `deploy/portability-gunicorn.service`
+and install it to `/etc/systemd/system/portability-gunicorn.service`:
 
 ```ini
 [Unit]
@@ -310,7 +369,9 @@ WantedBy=multi-user.target
 
 ### Celery worker service
 
-Create `/etc/systemd/system/portability-celery-worker.service`:
+`scripts/deploy.sh` and `scripts/update.sh` render this from
+`deploy/portability-celery-worker.service` and install it to
+`/etc/systemd/system/portability-celery-worker.service`:
 
 ```ini
 [Unit]
@@ -330,7 +391,9 @@ WantedBy=multi-user.target
 
 ### Celery beat service
 
-Create `/etc/systemd/system/portability-celery-beat.service`:
+`scripts/deploy.sh` and `scripts/update.sh` render this from
+`deploy/portability-celery-beat.service` and install it to
+`/etc/systemd/system/portability-celery-beat.service`:
 
 ```ini
 [Unit]
@@ -349,6 +412,9 @@ WantedBy=multi-user.target
 ```
 
 ### Enable and start services
+
+`scripts/deploy.sh` does this automatically (and `scripts/update.sh` restarts the services after
+an update); the equivalent manual command is:
 
 ```bash
 sudo systemctl enable --now portability-gunicorn portability-celery-worker portability-celery-beat
@@ -377,9 +443,11 @@ When scanning is enabled (`CLAMAV_ENABLED=True`), the app rejects uploads and do
 
 ### Nginx
 
-Create `/etc/nginx/sites-available/portability-server`. The `limit_req_zone` directive belongs in
-the `http` context (e.g. `/etc/nginx/nginx.conf`), so add it there if this site config is not
-already included from within `http { ... }`:
+`scripts/deploy.sh` and `scripts/update.sh` render this from `deploy/nginx-site.conf` and install
+it to `/etc/nginx/sites-available/portability-server`. The `limit_req_zone` directive can't live
+in a server block, so it ships separately as `deploy/nginx-ratelimit.conf`, installed to
+`/etc/nginx/conf.d/portability-ratelimit.conf` (included from the `http` context automatically by
+most nginx installs):
 
 ```nginx
 limit_req_zone $binary_remote_addr zone=portability:10m rate=10r/s;
@@ -410,6 +478,9 @@ server {
     }
 }
 ```
+
+The scripts do this automatically, including the symlink into `sites-enabled` and
+`nginx -t && systemctl reload nginx`; the equivalent manual commands are:
 
 ```bash
 sudo ln -s /etc/nginx/sites-available/portability-server /etc/nginx/sites-enabled

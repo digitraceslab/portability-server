@@ -1,0 +1,13 @@
+[Unit]
+Description=portability-server celery worker
+After=network.target redis-server.service
+
+[Service]
+User=@RUN_USER@
+Group=@RUN_USER@
+WorkingDirectory=@APP_DIR@
+ExecStart=@APP_DIR@/venv/bin/celery -A portability_server worker -l info
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

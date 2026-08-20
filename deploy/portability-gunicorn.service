@@ -1,0 +1,13 @@
+[Unit]
+Description=portability-server gunicorn
+After=network.target
+
+[Service]
+User=@RUN_USER@
+Group=@RUN_USER@
+WorkingDirectory=@APP_DIR@
+ExecStart=@APP_DIR@/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/portability/portability-server.sock portability_server.wsgi:application
+RuntimeDirectory=portability
+
+[Install]
+WantedBy=multi-user.target
