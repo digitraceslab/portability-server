@@ -86,6 +86,8 @@ RATELIMIT_VIEW = "portability_server.views.rate_limited"
 
 UPLOAD_MAX_BYTES = env.int("UPLOAD_MAX_BYTES", default=59055800320)
 
+CLAMAV_ENABLED = env.bool("CLAMAV_ENABLED", default=not DEBUG) and not TESTING
+
 # Encryption
 ENCRYPTION_KEY = env("ENCRYPTION_KEY", default=None)
 

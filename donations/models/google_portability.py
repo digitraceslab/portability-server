@@ -23,6 +23,7 @@ from niimpy.reading.google_portability import (
 
 from donations.models import Donation
 import donations.utils.crypto as crypto
+from donations.utils.virus_scan import scan_bytes
 
 
 class GoogleDonation(Donation):
@@ -546,6 +547,11 @@ class GoogleDonation(Donation):
                 download_urls = status_data.get('urls', [])
                 for i, url in enumerate(download_urls):
                     file_response = requests.get(url)
+                    clean, detail = scan_bytes(file_response.content)
+                    if not clean:
+                        self.processing_log += f"Downloaded file failed virus scan: {detail}\n"
+                        self.save()
+                        return False, f"Downloaded file failed virus scan: {detail}"
                     if not os.path.exists('data'):
                         os.makedirs('data')
                     path = f'data/google_data_{job_id}_{i}.zip'

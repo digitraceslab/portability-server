@@ -538,6 +538,51 @@ class TikTokExportDonationModelTests(TestCase):
                 pass
 
 
+class TikTokExportVirusScanTests(TestCase):
+    """Tests for virus scanning during TikTok export file upload."""
+
+    @override_settings(CLAMAV_ENABLED=True)
+    @patch('donations.models.tiktok_export.scan_bytes', return_value=(True, 'clean'))
+    def test_upload_succeeds_when_file_is_clean(self, mock_scan_bytes):
+        ted = TikTokExportDonation.objects.create()
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        upload_file = SimpleUploadedFile('watch_history.csv', b'video_id,watched_at\n12345,2024-01-01T12:00:00Z')
+
+        try:
+            success, message = ted.handle_file_upload(upload_file)
+
+            self.assertTrue(success)
+            self.assertEqual(len(ted.uploaded_files), 1)
+            stored_path = ted.uploaded_files[0]
+            self.assertTrue(os.path.exists(stored_path))
+        finally:
+            for fpath in ted.uploaded_files:
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+            try:
+                os.rmdir('data')
+            except OSError:
+                pass
+
+    @override_settings(CLAMAV_ENABLED=True)
+    @patch('donations.models.tiktok_export.scan_bytes', return_value=(False, 'Eicar-Test-Signature FOUND'))
+    def test_upload_rejected_when_file_is_infected(self, mock_scan_bytes):
+        ted = TikTokExportDonation.objects.create()
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        upload_file = SimpleUploadedFile('watch_history.csv', b'video_id,watched_at\n12345,2024-01-01T12:00:00Z')
+
+        success, message = ted.handle_file_upload(upload_file)
+
+        self.assertFalse(success)
+        self.assertEqual(ted.uploaded_files, [])
+        if os.path.exists('data'):
+            self.assertFalse(any(f.startswith(f'{ted.pk}_') for f in os.listdir('data')))
+        ted.refresh_from_db()
+        self.assertIn('Upload rejected by virus scan', ted.processing_log)
+
+
 def _set_donation_session(client, raw_token):
     """Mimic donation_entry: store both the donation pk and raw token in session."""
     session = client.session

@@ -383,7 +383,7 @@ System packages
 .. code-block:: bash
 
    sudo apt update
-   sudo apt install python3 python3.12-venv postgresql nginx redis-server
+   sudo apt install python3 python3.12-venv postgresql nginx redis-server clamav clamav-daemon
 
 
 Application setup
@@ -480,6 +480,23 @@ Enable and start services
    sudo systemctl enable --now portability-gunicorn portability-celery-worker portability-celery-beat
 
 
+Virus scanning
+~~~~~~~~~~~~~~
+
+``freshclam`` updates ClamAV's virus signatures automatically. Uploaded and downloaded export
+archives can be large, so raise the scan limits in ``/etc/clamav/clamd.conf``:
+
+.. code-block::
+
+   MaxFileSize 4000M
+   MaxScanSize 4000M
+
+ClamAV cannot fully scan files larget than 4000M. Larger files are still scanned partially.
+
+When ClamAV is enabled (``CLAMAV_ENABLED=True``), niimport will reject uploads
+and download if the daemon is unreachable.
+
+
 Nginx
 ~~~~~
 
@@ -574,6 +591,9 @@ All configuration is done via ``.env`` (copy from ``.env.example``):
    * - ``UPLOAD_MAX_BYTES``
      - Maximum accepted upload size in bytes (default 55 GB)
      -
+   * - ``CLAMAV_ENABLED``
+     - Scan ingested files with ClamAV (clamdscan); default enabled when ``DEBUG=False``
+     - ``True`` / ``False``
 
 
 Testing

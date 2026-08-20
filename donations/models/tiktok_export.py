@@ -8,6 +8,7 @@ from django.db import models
 from urllib.parse import urlencode
 import donations.utils.crypto as crypto
 from django.utils import timezone
+from donations.utils.virus_scan import scan_bytes, scan_path
 
 
 from donations.models import Donation
@@ -252,7 +253,18 @@ class TikTokExportDonation(Donation):
         stored_path = os.path.join('data', stored_filename)
         if not os.path.exists('data'):
             os.makedirs('data')
-        plaintext = b''.join(file.chunks())
+        if hasattr(file, "temporary_file_path"):
+            clean, detail = scan_path(file.temporary_file_path())
+            plaintext = None
+        else:
+            plaintext = b''.join(file.chunks())
+            clean, detail = scan_bytes(plaintext)
+        if not clean:
+            self.processing_log += f"Upload rejected by virus scan: {detail}\n"
+            self.save()
+            return False, "File failed the security scan and was rejected."
+        if plaintext is None:
+            plaintext = b''.join(file.chunks())
         crypto.write_encrypted_bytes(stored_path, plaintext)
         self.uploaded_files.append(stored_path)
         self.save()
