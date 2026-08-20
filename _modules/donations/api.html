@@ -68,6 +68,7 @@
   <h1>Source code for donations.api</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;REST API for researcher donation management.&quot;&quot;&quot;</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.urls</span><span class="w"> </span><span class="kn">import</span> <span class="n">reverse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django_ratelimit.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">ratelimit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">serializers</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">viewsets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">action</span><span class="p">,</span> <span class="n">api_view</span><span class="p">,</span> <span class="n">permission_classes</span> <span class="k">as</span> <span class="n">perm_classes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.permissions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllowAny</span><span class="p">,</span> <span class="n">BasePermission</span>
@@ -171,6 +172,7 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">DonationViewSet</span><span class="p">(</span><span class="n">viewsets</span><span class="o">.</span><span class="n">GenericViewSet</span><span class="p">):</span>
     <span class="n">permission_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">IsResearcherAuthenticated</span><span class="p">]</span>
     <span class="n">serializer_class</span> <span class="o">=</span> <span class="n">DonationSerializer</span>
+    <span class="n">throttle_scope</span> <span class="o">=</span> <span class="s2">&quot;researcher&quot;</span>
     
 <div class="viewcode-block" id="DonationViewSet.get_serializer_class">
 <a class="viewcode-back" href="../../api/donations.api.html#donations.api.DonationViewSet.get_serializer_class">[docs]</a>
@@ -282,6 +284,7 @@
 
 <div class="viewcode-block" id="api_docs">
 <a class="viewcode-back" href="../../api/donations.api.html#donations.api.api_docs">[docs]</a>
+<span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;30/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@api_view</span><span class="p">([</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
 <span class="nd">@perm_classes</span><span class="p">([</span><span class="n">AllowAny</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">api_docs</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>

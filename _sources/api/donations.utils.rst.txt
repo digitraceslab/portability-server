@@ -9,6 +9,7 @@ Submodules
 
    donations.utils.crypto
    donations.utils.logging_utils
+   donations.utils.virus_scan
 
 Module contents
 ---------------

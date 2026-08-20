@@ -72,10 +72,12 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlencode</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">donations.utils.crypto</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crypto</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils.virus_scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_bytes</span><span class="p">,</span> <span class="n">scan_path</span>
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span>
@@ -333,13 +335,27 @@
 <div class="viewcode-block" id="TikTokExportDonation.handle_file_upload">
 <a class="viewcode-back" href="../../../api/donations.models.tiktok_export.html#donations.models.TikTokExportDonation.handle_file_upload">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">handle_file_upload</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">settings</span><span class="o">.</span><span class="n">UPLOAD_MAX_BYTES</span><span class="p">:</span>
+            <span class="n">max_gb</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">UPLOAD_MAX_BYTES</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;File is too large (maximum </span><span class="si">{</span><span class="n">max_gb</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> GB).&quot;</span>
         <span class="n">filename</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span>
         <span class="n">unique_suffix</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
         <span class="n">stored_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">unique_suffix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="n">stored_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">stored_filename</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
-        <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;temporary_file_path&quot;</span><span class="p">):</span>
+            <span class="n">clean</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">scan_path</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">temporary_file_path</span><span class="p">())</span>
+            <span class="n">plaintext</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
+            <span class="n">clean</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">scan_bytes</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">clean</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Upload rejected by virus scan: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;File failed the security scan and was rejected.&quot;</span>
+        <span class="k">if</span> <span class="n">plaintext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
         <span class="n">crypto</span><span class="o">.</span><span class="n">write_encrypted_bytes</span><span class="p">(</span><span class="n">stored_path</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">uploaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stored_path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>

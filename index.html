@@ -70,6 +70,7 @@
 <li><a class="reference internal" href="#celery-worker-service">Celery worker service</a></li>
 <li><a class="reference internal" href="#celery-beat-service">Celery beat service</a></li>
 <li><a class="reference internal" href="#enable-and-start-services">Enable and start services</a></li>
+<li><a class="reference internal" href="#virus-scanning">Virus scanning</a></li>
 <li><a class="reference internal" href="#nginx">Nginx</a></li>
 </ul>
 </li>
@@ -459,7 +460,7 @@ celery<span class="w"> </span>-A<span class="w"> </span>portability_server<span 
 <section id="system-packages">
 <h3>System packages<a class="headerlink" href="#system-packages" title="Link to this heading"></a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
-sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3<span class="w"> </span>python3.12-venv<span class="w"> </span>postgresql<span class="w"> </span>nginx<span class="w"> </span>redis-server
+sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>python3<span class="w"> </span>python3.12-venv<span class="w"> </span>postgresql<span class="w"> </span>nginx<span class="w"> </span>redis-server<span class="w"> </span>clamav<span class="w"> </span>clamav-daemon
 </pre></div>
 </div>
 </section>
@@ -544,10 +545,26 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 </pre></div>
 </div>
 </section>
+<section id="virus-scanning">
+<h3>Virus scanning<a class="headerlink" href="#virus-scanning" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">freshclam</span></code> updates ClamAV’s virus signatures automatically. Uploaded and downloaded export
+archives can be large, so raise the scan limits in <code class="docutils literal notranslate"><span class="pre">/etc/clamav/clamd.conf</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MaxFileSize</span> <span class="mi">4000</span><span class="n">M</span>
+<span class="n">MaxScanSize</span> <span class="mi">4000</span><span class="n">M</span>
+</pre></div>
+</div>
+<p>ClamAV cannot fully scan files larget than 4000M. Larger files are still scanned partially.</p>
+<p>When ClamAV is enabled (<code class="docutils literal notranslate"><span class="pre">CLAMAV_ENABLED=True</span></code>), niimport will reject uploads
+and download if the daemon is unreachable.</p>
+</section>
 <section id="nginx">
 <h3>Nginx<a class="headerlink" href="#nginx" title="Link to this heading"></a></h3>
-<p>Create <code class="docutils literal notranslate"><span class="pre">/etc/nginx/sites-available/portability-server</span></code>:</p>
-<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<p>Create <code class="docutils literal notranslate"><span class="pre">/etc/nginx/sites-available/portability-server</span></code>. The <code class="docutils literal notranslate"><span class="pre">limit_req_zone</span></code> directive belongs
+in the <code class="docutils literal notranslate"><span class="pre">http</span></code> context (e.g. <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code>), so add it there if this site config is
+not already included from within <code class="docutils literal notranslate"><span class="pre">http</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>:</p>
+<div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">limit_req_zone</span><span class="w"> </span><span class="nv">$binary_remote_addr</span><span class="w"> </span><span class="s">zone=portability:10m</span><span class="w"> </span><span class="s">rate=10r/s</span><span class="p">;</span>
+
+<span class="k">server</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">DOMAIN</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">return</span><span class="w"> </span><span class="mi">301</span><span class="w"> </span><span class="s">https://</span><span class="nv">$server_name$request_uri</span><span class="p">;</span>
@@ -559,6 +576,7 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 
 <span class="w">    </span><span class="kn">ssl_certificate</span><span class="w"> </span><span class="s">/PATH_TO/fullchain.pem</span><span class="p">;</span>
 <span class="w">    </span><span class="kn">ssl_certificate_key</span><span class="w"> </span><span class="s">/PATH_TO/privkey.pem</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">client_max_body_size</span><span class="w"> </span><span class="s">55G</span><span class="p">;</span>
 
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">/favicon.ico</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kn">access_log</span><span class="w"> </span><span class="no">off</span><span class="p">;</span><span class="w"> </span><span class="kn">log_not_found</span><span class="w"> </span><span class="no">off</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/static/</span><span class="w"> </span><span class="p">{</span>
@@ -566,6 +584,7 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 <span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">limit_req</span><span class="w"> </span><span class="s">zone=portability</span><span class="w"> </span><span class="s">burst=20</span><span class="w"> </span><span class="s">nodelay</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">include</span><span class="w"> </span><span class="s">proxy_params</span><span class="p">;</span>
 <span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://unix:/run/portability-server/portability-server.sock</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
@@ -637,6 +656,18 @@ sudo<span class="w"> </span>nginx<span class="w"> </span>-t<span class="w"> </sp
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CELERY_RESULT_BACKEND</span></code></p></td>
 <td><p>Redis URL for Celery result storage</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">redis://localhost:6379/1</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CACHE_URL</span></code></p></td>
+<td><p>Redis URL for the Django cache (rate-limit counters)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">redis://localhost:6379/2</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">UPLOAD_MAX_BYTES</span></code></p></td>
+<td><p>Maximum accepted upload size in bytes (default 55 GB)</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLAMAV_ENABLED</span></code></p></td>
+<td><p>Scan ingested files with ClamAV (clamdscan); default enabled when <code class="docutils literal notranslate"><span class="pre">DEBUG=False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> / <code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
 </tbody>
 </table>
