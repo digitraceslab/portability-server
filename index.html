@@ -64,6 +64,8 @@
 <li><a class="reference internal" href="#installation">Installation</a></li>
 <li><a class="reference internal" href="#running">Running</a></li>
 <li><a class="reference internal" href="#id3">Deployment</a><ul>
+<li><a class="reference internal" href="#automated-setup">Automated setup</a></li>
+<li><a class="reference internal" href="#updating">Updating</a></li>
 <li><a class="reference internal" href="#system-packages">System packages</a></li>
 <li><a class="reference internal" href="#application-setup">Application setup</a></li>
 <li><a class="reference internal" href="#gunicorn-service">Gunicorn service</a></li>
@@ -457,6 +459,49 @@ celery<span class="w"> </span>-A<span class="w"> </span>portability_server<span 
 </section>
 <section id="id3">
 <h2>Deployment<a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">deploy/</span></code> templates and <code class="docutils literal notranslate"><span class="pre">scripts/</span></code> in this repository target a single-domain server.
+Hosts serving multiple domains, or otherwise running a customised nginx configuration, should
+keep managing nginx by hand instead — leave <code class="docutils literal notranslate"><span class="pre">INSTALL_CONFIGS</span></code> unset (or <code class="docutils literal notranslate"><span class="pre">no</span></code>) so the scripts
+never touch it.</p>
+<section id="automated-setup">
+<h3>Automated setup<a class="headerlink" href="#automated-setup" title="Link to this heading"></a></h3>
+<p>After cloning the repository and creating <code class="docutils literal notranslate"><span class="pre">.env</span></code> from <code class="docutils literal notranslate"><span class="pre">.env.example</span></code> (see below), the
+standard way to perform a first-time deployment is:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>.env.example<span class="w"> </span>.env
+<span class="c1"># Edit .env with production values: DEBUG=False, proper SECRET_KEY, ALLOWED_HOSTS, etc.</span>
+./scripts/deploy.sh
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/deploy.sh</span></code> installs the system packages, creates the virtualenv, installs
+dependencies from <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> (hash-verified by pip), optionally provisions the
+PostgreSQL role and database, validates the environment configuration, runs migrations and
+<code class="docutils literal notranslate"><span class="pre">collectstatic</span></code>, and installs and starts the systemd services and nginx configuration
+described in the sections below. Being a first-time setup, it always installs the rendered
+configuration (<code class="docutils literal notranslate"><span class="pre">INSTALL_CONFIGS=yes</span></code>).</p>
+<p>Database provisioning is controlled by <code class="docutils literal notranslate"><span class="pre">SETUP_DB</span></code>: <code class="docutils literal notranslate"><span class="pre">auto</span></code> (the default) provisions the
+database locally using passwordless peer authentication via <code class="docutils literal notranslate"><span class="pre">sudo</span></code> when available, otherwise
+prompts interactively for the PostgreSQL admin password (this also works against a remote
+database), and skips provisioning with a warning if an admin connection can’t be reached;
+<code class="docutils literal notranslate"><span class="pre">yes</span></code> behaves the same but fails instead of skipping; <code class="docutils literal notranslate"><span class="pre">no</span></code> skips database provisioning
+entirely. <code class="docutils literal notranslate"><span class="pre">DB_ADMIN_USER</span></code> (default <code class="docutils literal notranslate"><span class="pre">postgres</span></code>) selects the admin role used for provisioning.
+On a fresh PostgreSQL install where the admin role has no password yet, the script prompts to
+set one so the instance is not left with a passwordless superuser.</p>
+<p>The scripts never modify an existing <code class="docutils literal notranslate"><span class="pre">.env</span></code>, and per-deployment values such as the domain and
+credentials are never version-controlled — the nginx domain is derived from <code class="docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code> in
+<code class="docutils literal notranslate"><span class="pre">.env</span></code>, and TLS certificate paths default to the Let’s Encrypt layout, all overridable via the
+<code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>, <code class="docutils literal notranslate"><span class="pre">SSL_CERT</span></code> and <code class="docutils literal notranslate"><span class="pre">SSL_KEY</span></code> environment variables.</p>
+</section>
+<section id="updating">
+<h3>Updating<a class="headerlink" href="#updating" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/update.sh</span></code> handles routine updates: it aborts if the checkout has local changes,
+fast-forward pulls the latest commit, reinstalls dependencies (hash-verified), re-validates the
+environment configuration, runs migrations and <code class="docutils literal notranslate"><span class="pre">collectstatic</span></code>, re-renders and reinstalls the
+systemd and nginx configuration from <code class="docutils literal notranslate"><span class="pre">deploy/</span></code>, and restarts the services, verifying each one
+is active afterwards.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./scripts/update.sh
+</pre></div>
+</div>
+</section>
 <section id="system-packages">
 <h3>System packages<a class="headerlink" href="#system-packages" title="Link to this heading"></a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>update
@@ -484,7 +529,9 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 </section>
 <section id="gunicorn-service">
 <h3>Gunicorn service<a class="headerlink" href="#gunicorn-service" title="Link to this heading"></a></h3>
-<p>Create <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/portability-gunicorn.service</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/deploy.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">scripts/update.sh</span></code> render this from
+<code class="docutils literal notranslate"><span class="pre">deploy/portability-gunicorn.service</span></code> and install it to
+<code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/portability-gunicorn.service</span></code>:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">portability-server gunicorn</span>
 <span class="na">After</span><span class="o">=</span><span class="s">network.target</span>
@@ -503,7 +550,9 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 </section>
 <section id="celery-worker-service">
 <h3>Celery worker service<a class="headerlink" href="#celery-worker-service" title="Link to this heading"></a></h3>
-<p>Create <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/portability-celery-worker.service</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/deploy.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">scripts/update.sh</span></code> render this from
+<code class="docutils literal notranslate"><span class="pre">deploy/portability-celery-worker.service</span></code> and install it to
+<code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/portability-celery-worker.service</span></code>:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">portability-server celery worker</span>
 <span class="na">After</span><span class="o">=</span><span class="s">network.target redis-server.service</span>
@@ -522,7 +571,9 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 </section>
 <section id="celery-beat-service">
 <h3>Celery beat service<a class="headerlink" href="#celery-beat-service" title="Link to this heading"></a></h3>
-<p>Create <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/portability-celery-beat.service</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/deploy.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">scripts/update.sh</span></code> render this from
+<code class="docutils literal notranslate"><span class="pre">deploy/portability-celery-beat.service</span></code> and install it to
+<code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/portability-celery-beat.service</span></code>:</p>
 <div class="highlight-ini notranslate"><div class="highlight"><pre><span></span><span class="k">[Unit]</span>
 <span class="na">Description</span><span class="o">=</span><span class="s">portability-server celery beat</span>
 <span class="na">After</span><span class="o">=</span><span class="s">network.target redis-server.service</span>
@@ -541,6 +592,8 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 </section>
 <section id="enable-and-start-services">
 <h3>Enable and start services<a class="headerlink" href="#enable-and-start-services" title="Link to this heading"></a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/deploy.sh</span></code> does this automatically (and <code class="docutils literal notranslate"><span class="pre">scripts/update.sh</span></code> restarts the services
+after an update); the equivalent manual command is:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>portability-gunicorn<span class="w"> </span>portability-celery-worker<span class="w"> </span>portability-celery-beat
 </pre></div>
 </div>
@@ -559,9 +612,11 @@ and download if the daemon is unreachable.</p>
 </section>
 <section id="nginx">
 <h3>Nginx<a class="headerlink" href="#nginx" title="Link to this heading"></a></h3>
-<p>Create <code class="docutils literal notranslate"><span class="pre">/etc/nginx/sites-available/portability-server</span></code>. The <code class="docutils literal notranslate"><span class="pre">limit_req_zone</span></code> directive belongs
-in the <code class="docutils literal notranslate"><span class="pre">http</span></code> context (e.g. <code class="docutils literal notranslate"><span class="pre">/etc/nginx/nginx.conf</span></code>), so add it there if this site config is
-not already included from within <code class="docutils literal notranslate"><span class="pre">http</span> <span class="pre">{</span> <span class="pre">...</span> <span class="pre">}</span></code>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/deploy.sh</span></code> and <code class="docutils literal notranslate"><span class="pre">scripts/update.sh</span></code> render this from <code class="docutils literal notranslate"><span class="pre">deploy/nginx-site.conf</span></code> and
+install it to <code class="docutils literal notranslate"><span class="pre">/etc/nginx/sites-available/portability-server</span></code>. The <code class="docutils literal notranslate"><span class="pre">limit_req_zone</span></code>
+directive can’t live in a server block, so it ships separately as
+<code class="docutils literal notranslate"><span class="pre">deploy/nginx-ratelimit.conf</span></code>, installed to <code class="docutils literal notranslate"><span class="pre">/etc/nginx/conf.d/portability-ratelimit.conf</span></code>
+(included from the <code class="docutils literal notranslate"><span class="pre">http</span></code> context automatically by most nginx installs):</p>
 <div class="highlight-nginx notranslate"><div class="highlight"><pre><span></span><span class="k">limit_req_zone</span><span class="w"> </span><span class="nv">$binary_remote_addr</span><span class="w"> </span><span class="s">zone=portability:10m</span><span class="w"> </span><span class="s">rate=10r/s</span><span class="p">;</span>
 
 <span class="k">server</span><span class="w"> </span><span class="p">{</span>
@@ -591,6 +646,8 @@ not already included from within <code class="docutils literal notranslate"><spa
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>The scripts do this automatically, including the symlink into <code class="docutils literal notranslate"><span class="pre">sites-enabled</span></code> and
+<code class="docutils literal notranslate"><span class="pre">nginx</span> <span class="pre">-t</span> <span class="pre">&amp;&amp;</span> <span class="pre">systemctl</span> <span class="pre">reload</span> <span class="pre">nginx</span></code>; the equivalent manual commands are:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/nginx/sites-available/portability-server<span class="w"> </span>/etc/nginx/sites-enabled
 sudo<span class="w"> </span>nginx<span class="w"> </span>-t<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
 </pre></div>
