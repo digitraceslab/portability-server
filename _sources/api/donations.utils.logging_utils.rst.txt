@@ -1,7 +1,0 @@
-donations.utils.logging\_utils module
-=====================================
-
-.. automodule:: donations.utils.logging_utils
-   :members:
-   :show-inheritance:
-   :undoc-members:
