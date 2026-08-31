@@ -5,7 +5,6 @@ import logging
 import secrets
 from datetime import timedelta
 from urllib.parse import urlencode
-from donations.utils.logging_utils import log_api_response
 
 import requests
 from django.conf import settings
@@ -165,32 +164,9 @@ class TikTokDonation(Donation):
             try:
                 token_info = response.json()
             except ValueError as e:
-                log_api_response(
-                    'tiktok',
-                    self.pk,
-                    '/v2/oauth/token/',
-                    {'response_text': response.text},
-                    error=f"Invalid JSON response: {e}",
-                )
                 self.processing_log += f"TikTok token exchange returned invalid JSON: {e}\n"
                 self.save(update_fields=['processing_log'])
                 return False, "Invalid response from TikTok during token exchange."
-
-            # Persist token exchange payload for production diagnostics, but
-            # never write raw tokens to disk.
-            log_token_info = dict(token_info)
-            if 'access_token' in log_token_info:
-                log_token_info['access_token'] = 'REDACTED'
-            if 'refresh_token' in log_token_info:
-                log_token_info['refresh_token'] = 'REDACTED'
-            if isinstance(log_token_info.get('data'), dict):
-                redacted_data = dict(log_token_info['data'])
-                if 'access_token' in redacted_data:
-                    redacted_data['access_token'] = 'REDACTED'
-                if 'refresh_token' in redacted_data:
-                    redacted_data['refresh_token'] = 'REDACTED'
-                log_token_info['data'] = redacted_data
-            log_api_response('tiktok', self.pk, '/v2/oauth/token/', log_token_info)
 
             logger.info("TikTok token exchange response: %s", token_info)
 
@@ -198,13 +174,6 @@ class TikTokDonation(Donation):
             if token_info.get('error'):
                 error_desc = token_info.get('error_description') or token_info.get('message') or 'Unknown token exchange error'
                 self.processing_log += f"TikTok token exchange error: {token_info.get('error')} - {error_desc}\n"
-                log_api_response(
-                    'tiktok',
-                    self.pk,
-                    '/v2/oauth/token/',
-                    log_token_info,
-                    error=f"{token_info.get('error')}: {error_desc}"
-                )
                 self.save(update_fields=['processing_log'])
                 return False, f"TikTok token exchange failed: {error_desc}"
             
@@ -212,7 +181,6 @@ class TikTokDonation(Donation):
             try:
                 self._store_token_info(token_info)
             except KeyError as e:
-                log_api_response('tiktok', self.pk, '/v2/oauth/token/', log_token_info, error=f"Missing key in token response: {e}")
                 top_keys = ','.join(sorted(list(token_info.keys())))
                 nested_keys = ''
                 if isinstance(token_info.get('data'), dict):
@@ -232,10 +200,6 @@ class TikTokDonation(Donation):
             return True, "Authorization successful."
 
         except requests.RequestException as e:
-            response_text = None
-            if e.response is not None:
-                response_text = e.response.text
-            log_api_response('tiktok', self.pk, '/v2/oauth/token/', {'response_text': response_text}, error=str(e))
             self.processing_log += f"TikTok token exchange HTTP error: {e}\n"
             self.save(update_fields=['processing_log'])
             return False, f"Error during token exchange: {e}"
@@ -290,8 +254,6 @@ class TikTokDonation(Donation):
         Returns:
             tuple: (success: bool, message: str)
         """
-        from donations.utils.logging_utils import log_api_response
-        
         if not self.access_token:
             self.processing_log += "Cannot fetch user info: no access token.\n"
             return False, "No access token available."
@@ -320,16 +282,12 @@ class TikTokDonation(Donation):
             response.raise_for_status()
             user_info_response = response.json()
             
-            # Log the API response for debugging
-            log_api_response('tiktok', self.pk, '/v2/user/info/', user_info_response)
-            
             # Check for API errors in response
             error_obj = user_info_response.get('error') or {}
             error_code = error_obj.get('code')
             if error_code and error_code != 'ok':
                 error_msg = error_obj.get('message') or 'Unknown error'
                 self.processing_log += f"TikTok user info error: {error_msg}\n"
-                log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=error_msg)
                 return False, f"TikTok API error: {error_msg}"
             
             # Extract user data from response
@@ -349,11 +307,9 @@ class TikTokDonation(Donation):
             
         except requests.RequestException as e:
             self.processing_log += f"Error fetching user info from TikTok API: {e}\n"
-            log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=str(e))
             return False, f"Error fetching user info: {e}"
         except (ValueError, KeyError) as e:
             self.processing_log += f"Invalid response from TikTok user info API: {e}\n"
-            log_api_response('tiktok', self.pk, '/v2/user/info/', None, error=f"Invalid response: {e}")
             return False, f"Invalid API response: {e}"
 
     def _process_data(self):

@@ -5,6 +5,12 @@
 # source. Only meaningful when INSTALL_CONFIGS=no; verify.sh reads it.
 DRIFT_COUNT=${DRIFT_COUNT:-0}
 
+# Certificates referenced by the rendered nginx config that are missing or
+# unreadable, and whether the nginx comparison actually ran. verify.sh reads
+# both: a check that could not be performed must never be reported as a pass.
+CERT_PROBLEMS=${CERT_PROBLEMS:-0}
+NGINX_CHECKED=${NGINX_CHECKED:-0}
+
 validate_env() {
     echo "==> Validating environment configuration"
     "$VENV/bin/python" - <<'PYEOF'
@@ -105,22 +111,31 @@ PYEOF
 )}}"
     domains="${domains//,/ }"
 
-    local changed=0 tmp_site
+    local changed=0 missing_certs=0 tmp_site
     tmp_site="$(mktemp)"
-    # Render every domain before anything is installed: a missing certificate
-    # must not leave a config behind that serves only some of the names.
+    # Certificate paths are substituted into the template as text, so a missing
+    # certificate does not stop the config being rendered and compared. It only
+    # stops it being installed: nginx would refuse to load it.
     for domain in $domains; do
         ssl_cert="${SSL_CERT:-/etc/letsencrypt/live/$domain/fullchain.pem}"
         ssl_key="${SSL_KEY:-/etc/letsencrypt/live/$domain/privkey.pem}"
         if [ ! -f "$ssl_cert" ]; then
-            echo "Warning: TLS certificate for $domain not found at $ssl_cert. Provision certificates (e.g. via certbot) and rerun. Skipping nginx configuration." >&2
-            rm -f "$tmp_site"
-            return
+            echo "Warning: TLS certificate for $domain is missing or unreadable at $ssl_cert." >&2
+            missing_certs=$((missing_certs + 1))
+            CERT_PROBLEMS=$((CERT_PROBLEMS + 1))
         fi
         sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" -e "s|@APP_DIR@|$APP_DIR|g" \
             "$APP_DIR/deploy/nginx-site.conf" >> "$tmp_site"
         echo >> "$tmp_site"
     done
+
+    if [ "$missing_certs" -gt 0 ] && [ "$INSTALL_CONFIGS" = "yes" ]; then
+        echo "Refusing to install an nginx config that references $missing_certs missing certificate(s). Provision them (e.g. via certbot) and rerun." >&2
+        rm -f "$tmp_site"
+        return
+    fi
+
+    NGINX_CHECKED=1
     if _apply_or_report "$tmp_site" /etc/nginx/sites-available/portability-server "nginx site config"; then
         changed=1
     fi

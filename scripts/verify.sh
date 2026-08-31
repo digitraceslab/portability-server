@@ -127,9 +127,15 @@ fi
 echo "==> Installed configuration"
 render_services
 install_nginx
+if [ "$NGINX_CHECKED" -eq 0 ]; then
+    fail "the nginx configuration could not be compared and is unverified"
+fi
+if [ "$CERT_PROBLEMS" -gt 0 ]; then
+    fail "$CERT_PROBLEMS TLS certificate(s) referenced by the nginx config are missing or unreadable"
+fi
 if [ "$DRIFT_COUNT" -gt 0 ]; then
     fail "$DRIFT_COUNT installed config file(s) differ from the version-controlled source (diffs above)"
-else
+elif [ "$NGINX_CHECKED" -eq 1 ]; then
     pass "installed systemd and nginx configs match the version-controlled source"
 fi
 
