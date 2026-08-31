@@ -115,10 +115,12 @@ else
 fi
 
 echo "==> Django deployment checks"
-if "$VENV/bin/python" manage.py check --deploy; then
+# --fail-level WARNING: check --deploy exits 0 on warnings by default, which
+# would report a pass while printing security warnings.
+if "$VENV/bin/python" manage.py check --deploy --fail-level WARNING; then
     pass "manage.py check --deploy reported no issues"
 else
-    fail "manage.py check --deploy reported issues"
+    fail "manage.py check --deploy reported issues (listed above)"
 fi
 
 echo "==> Installed configuration"
