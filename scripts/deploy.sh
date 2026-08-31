@@ -11,6 +11,7 @@ VENV="${VENV:-$(_env_get VENV_PATH)}"
 VENV="${VENV:-$APP_DIR/venv}"
 SERVICES="portability-gunicorn portability-celery-worker portability-celery-beat"
 RUN_USER="${RUN_USER:-$(id -un)}"
+DOMAINS="${DOMAINS:-$(_env_get DOMAINS)}"   # comma-separated; see .env.example
 SETUP_DB="${SETUP_DB:-auto}"        # auto | yes | no — database provisioning
 DB_ADMIN_USER="${DB_ADMIN_USER:-postgres}"
 INSTALL_CONFIGS="${INSTALL_CONFIGS:-yes}"  # first-time setup always installs the rendered configs

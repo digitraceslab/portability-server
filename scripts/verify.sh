@@ -22,6 +22,7 @@ VENV="${VENV:-$(_env_get VENV_PATH)}"
 VENV="${VENV:-$APP_DIR/venv}"
 SERVICES="portability-gunicorn portability-celery-worker portability-celery-beat"
 RUN_USER="${RUN_USER:-$(id -un)}"
+DOMAINS="${DOMAINS:-$(_env_get DOMAINS)}"   # comma-separated; see .env.example
 INSTALL_CONFIGS=no   # lib.sh only reports differences in this mode
 
 # shellcheck source=lib.sh

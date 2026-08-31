@@ -11,6 +11,7 @@ VENV="${VENV:-$(_env_get VENV_PATH)}"
 VENV="${VENV:-$APP_DIR/venv}"
 SERVICES="portability-gunicorn portability-celery-worker portability-celery-beat"
 RUN_USER="${RUN_USER:-$(id -un)}"
+DOMAINS="${DOMAINS:-$(_env_get DOMAINS)}"   # comma-separated; see .env.example
 INSTALL_CONFIGS="${INSTALL_CONFIGS:-no}"  # yes = apply rendered systemd/nginx configs; no = report drift only
 
 # shellcheck source=lib.sh

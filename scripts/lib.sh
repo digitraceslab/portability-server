@@ -41,9 +41,16 @@ _apply_or_report() {
         echo "$desc: installed"
         return 0
     fi
+    # Indentation and blank lines are not significant to nginx or systemd, so a
+    # file that differs only in those was reformatted by an editor rather than
+    # changed. Report it, but do not count it as drift.
+    if [ -f "$target" ] && diff -q -w -B "$src" "$target" >/dev/null 2>&1; then
+        echo "$desc: differs from $target in whitespace only (reformatted in place; no change in meaning)"
+        return 1
+    fi
     echo "Warning: $desc differs from the installed config at $target (or is not installed there)." >&2
-    echo "Diff (installed vs rendered):" >&2
-    diff -u "$target" "$src" 2>&1 >&2 || true
+    echo "Diff (installed vs rendered, ignoring whitespace and blank lines):" >&2
+    diff -u -w -B "$target" "$src" 2>&1 >&2 || true
     echo "Set INSTALL_CONFIGS=yes to apply this change." >&2
     DRIFT_COUNT=$((DRIFT_COUNT + 1))
     return 1
@@ -83,8 +90,11 @@ verify_services_active() {
 
 install_nginx() {
     echo "==> Rendering nginx configuration"
-    local domain ssl_cert ssl_key
-    domain="${DOMAIN:-$("$VENV/bin/python" - <<'PYEOF'
+    local domains domain ssl_cert ssl_key
+    # DOMAINS lists the names to serve, comma-separated, one pair of server
+    # blocks each. DOMAIN remains accepted for a single name, and both fall
+    # back to the first entry of ALLOWED_HOSTS.
+    domains="${DOMAINS:-${DOMAIN:-$("$VENV/bin/python" - <<'PYEOF'
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "portability_server.settings")
 import django
@@ -92,19 +102,25 @@ django.setup()
 from django.conf import settings
 print(settings.ALLOWED_HOSTS[0])
 PYEOF
-)}"
-    ssl_cert="${SSL_CERT:-/etc/letsencrypt/live/$domain/fullchain.pem}"
-    ssl_key="${SSL_KEY:-/etc/letsencrypt/live/$domain/privkey.pem}"
-
-    if [ ! -f "$ssl_cert" ]; then
-        echo "Warning: TLS certificate not found at $ssl_cert. Provision certificates (e.g. via certbot) and rerun. Skipping nginx installation." >&2
-        return
-    fi
+)}}"
+    domains="${domains//,/ }"
 
     local changed=0 tmp_site
     tmp_site="$(mktemp)"
-    sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" -e "s|@APP_DIR@|$APP_DIR|g" \
-        "$APP_DIR/deploy/nginx-site.conf" > "$tmp_site"
+    # Render every domain before anything is installed: a missing certificate
+    # must not leave a config behind that serves only some of the names.
+    for domain in $domains; do
+        ssl_cert="${SSL_CERT:-/etc/letsencrypt/live/$domain/fullchain.pem}"
+        ssl_key="${SSL_KEY:-/etc/letsencrypt/live/$domain/privkey.pem}"
+        if [ ! -f "$ssl_cert" ]; then
+            echo "Warning: TLS certificate for $domain not found at $ssl_cert. Provision certificates (e.g. via certbot) and rerun. Skipping nginx configuration." >&2
+            rm -f "$tmp_site"
+            return
+        fi
+        sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" -e "s|@APP_DIR@|$APP_DIR|g" \
+            "$APP_DIR/deploy/nginx-site.conf" >> "$tmp_site"
+        echo >> "$tmp_site"
+    done
     if _apply_or_report "$tmp_site" /etc/nginx/sites-available/portability-server "nginx site config"; then
         changed=1
     fi

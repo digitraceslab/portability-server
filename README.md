@@ -364,8 +364,8 @@ After=network.target
 User=USERNAME
 Group=USERNAME
 WorkingDirectory=/opt/portability-server
-ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application
-RuntimeDirectory=portability-server
+ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --timeout 120 --bind unix:/run/portability/portability-server.sock portability_server.wsgi:application
+RuntimeDirectory=portability
 
 [Install]
 WantedBy=multi-user.target
@@ -451,7 +451,14 @@ When scanning is enabled (`CLAMAV_ENABLED=True`), the app rejects uploads and do
 it to `/etc/nginx/sites-available/portability-server`. The `limit_req_zone` directive can't live
 in a server block, so it ships separately as `deploy/nginx-ratelimit.conf`, installed to
 `/etc/nginx/conf.d/portability-ratelimit.conf` (included from the `http` context automatically by
-most nginx installs):
+most nginx installs).
+
+Set `DOMAINS` in `.env` to a comma-separated list to serve more than one name. The template is
+rendered once per domain, and each rendered block takes its certificate from
+`/etc/letsencrypt/live/<domain>/`. With `DOMAINS` unset the first entry of `ALLOWED_HOSTS` is
+used, which is the single-domain case below. `SSL_CERT` and `SSL_KEY` override the certificate
+paths for every rendered block, so they only make sense with a single domain.
+
 
 ```nginx
 limit_req_zone $binary_remote_addr zone=portability:10m rate=10r/s;
@@ -478,7 +485,7 @@ server {
     location / {
         limit_req zone=portability burst=20 nodelay;
         include proxy_params;
-        proxy_pass http://unix:/run/portability-server/portability-server.sock;
+        proxy_pass http://unix:/run/portability/portability-server.sock;
     }
 }
 ```
