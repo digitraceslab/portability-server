@@ -1,5 +1,9 @@
-# Shared helpers for deploy.sh and update.sh.
+# Shared helpers for deploy.sh, update.sh and verify.sh.
 # Expects APP_DIR, VENV, RUN_USER, SERVICES and INSTALL_CONFIGS to already be set by the caller.
+
+# Number of installed configs found to differ from the version-controlled
+# source. Only meaningful when INSTALL_CONFIGS=no; verify.sh reads it.
+DRIFT_COUNT=${DRIFT_COUNT:-0}
 
 validate_env() {
     echo "==> Validating environment configuration"
@@ -41,6 +45,7 @@ _apply_or_report() {
     echo "Diff (installed vs rendered):" >&2
     diff -u "$target" "$src" 2>&1 >&2 || true
     echo "Set INSTALL_CONFIGS=yes to apply this change." >&2
+    DRIFT_COUNT=$((DRIFT_COUNT + 1))
     return 1
 }
 
