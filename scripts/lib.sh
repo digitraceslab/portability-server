@@ -94,6 +94,18 @@ verify_services_active() {
     fi
 }
 
+# Certificates normally live under /etc/letsencrypt, which is readable only by
+# root, so an unprivileged test cannot tell "absent" from "unreadable". Retry
+# with non-interactive sudo before calling one missing.
+# Returns 0 present, 1 definitely absent, 2 undetermined.
+_cert_present() {
+    local path="$1"
+    [ -f "$path" ] && return 0
+    sudo -n test -f "$path" 2>/dev/null && return 0
+    sudo -n true 2>/dev/null || return 2
+    return 1
+}
+
 install_nginx() {
     echo "==> Rendering nginx configuration"
     local domains domain ssl_cert ssl_key
@@ -111,7 +123,7 @@ PYEOF
 )}}"
     domains="${domains//,/ }"
 
-    local changed=0 missing_certs=0 tmp_site
+    local changed=0 missing_certs=0 cert_state tmp_site
     tmp_site="$(mktemp)"
     # Certificate paths are substituted into the template as text, so a missing
     # certificate does not stop the config being rendered and compared. It only
@@ -119,9 +131,16 @@ PYEOF
     for domain in $domains; do
         ssl_cert="${SSL_CERT:-/etc/letsencrypt/live/$domain/fullchain.pem}"
         ssl_key="${SSL_KEY:-/etc/letsencrypt/live/$domain/privkey.pem}"
-        if [ ! -f "$ssl_cert" ]; then
-            echo "Warning: TLS certificate for $domain is missing or unreadable at $ssl_cert." >&2
+        cert_state=0
+        _cert_present "$ssl_cert" || cert_state=$?
+        if [ "$cert_state" -eq 1 ]; then
+            echo "Warning: TLS certificate for $domain is missing at $ssl_cert." >&2
             missing_certs=$((missing_certs + 1))
+            CERT_PROBLEMS=$((CERT_PROBLEMS + 1))
+        elif [ "$cert_state" -eq 2 ]; then
+            # Unverifiable is not the same as absent: report it, but do not
+            # block a deployment over a file this account cannot read.
+            echo "Warning: cannot verify the TLS certificate for $domain at $ssl_cert (needs root, and passwordless sudo is unavailable)." >&2
             CERT_PROBLEMS=$((CERT_PROBLEMS + 1))
         fi
         sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" -e "s|@APP_DIR@|$APP_DIR|g" \
