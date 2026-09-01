@@ -91,15 +91,14 @@
 <span class="p">)</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.parquet_storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetStorageMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.archive_donation</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchiveDonationMixin</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">donations.utils.crypto</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crypto</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parquet_store</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils.virus_scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_bytes</span>
 
 
 <div class="viewcode-block" id="GoogleDonation">
 <a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">GoogleDonation</span><span class="p">(</span><span class="n">ParquetStorageMixin</span><span class="p">,</span> <span class="n">Donation</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GoogleDonation</span><span class="p">(</span><span class="n">ArchiveDonationMixin</span><span class="p">,</span> <span class="n">Donation</span><span class="p">):</span>
     <span class="n">source_type_display</span> <span class="o">=</span> <span class="s1">&#39;Google&#39;</span>
     <span class="n">storage_name</span> <span class="o">=</span> <span class="s1">&#39;google_portability&#39;</span>
     <span class="n">archive_field</span> <span class="o">=</span> <span class="s1">&#39;downloaded_files&#39;</span>
@@ -589,15 +588,12 @@
                 <span class="n">download_urls</span> <span class="o">=</span> <span class="n">status_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;urls&#39;</span><span class="p">,</span> <span class="p">[])</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">download_urls</span><span class="p">):</span>
                     <span class="n">file_response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-                    <span class="n">clean</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">scan_bytes</span><span class="p">(</span><span class="n">file_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">clean</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Downloaded file failed virus scan: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-                        <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Downloaded file failed virus scan: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="s2">&quot;</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
-                        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
-                    <span class="n">path</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;data/google_data_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.zip&#39;</span>
-                    <span class="n">crypto</span><span class="o">.</span><span class="n">write_encrypted_bytes</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ARCHIVE_DIR</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="n">settings</span><span class="o">.</span><span class="n">ARCHIVE_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;google_data_</span><span class="si">{</span><span class="n">job_id</span><span class="si">}</span><span class="s1">_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">.zip&#39;</span>
+                    <span class="p">)</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+                        <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">downloaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
@@ -626,6 +622,12 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_archives</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_combine_archives</span><span class="p">()</span>
+                <span class="n">rejected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rejected_archives</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">rejected</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Archives rejected by virus scan: </span><span class="si">{</span><span class="n">rejected</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                    <span class="k">return</span>
                 <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">dt</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_data_types</span><span class="p">()</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_type_status</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;received&#39;</span><span class="p">)</span>

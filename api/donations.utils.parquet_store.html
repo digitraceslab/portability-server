@@ -50,6 +50,7 @@
 <li><a class="reference internal" href="#donations.utils.parquet_store.write_frames"><code class="docutils literal notranslate"><span class="pre">write_frames()</span></code></a></li>
 <li><a class="reference internal" href="#donations.utils.parquet_store.count_rows"><code class="docutils literal notranslate"><span class="pre">count_rows()</span></code></a></li>
 <li><a class="reference internal" href="#donations.utils.parquet_store.read_rows"><code class="docutils literal notranslate"><span class="pre">read_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.in_time_order"><code class="docutils literal notranslate"><span class="pre">in_time_order()</span></code></a></li>
 <li><a class="reference internal" href="#donations.utils.parquet_store.combine"><code class="docutils literal notranslate"><span class="pre">combine()</span></code></a></li>
 </ul>
 </li>
@@ -138,9 +139,21 @@ recorded range settles how many of their rows match.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.in_time_order">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">in_time_order</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">frame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#in_time_order"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.in_time_order" title="Link to this definition"></a></dt>
+<dd><p>Sort rows by timestamp, keeping the original order within equal ones.</p>
+<p>Row group statistics prune a date filter only when the ranges of different
+groups do not overlap, which needs the rows to be written in order. Sources
+usually deliver sorted data, but that cannot be relied on.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="donations.utils.parquet_store.combine">
 <span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">combine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#combine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.combine" title="Link to this definition"></a></dt>
-<dd><p>Merge a type’s per-archive files into one, a row group at a time.</p>
+<dd><p>Merge a type’s per-archive files into one, in timestamp order.</p>
+<p>Ordering the result means holding it in memory, so this is the step to
+revisit first if a data type outgrows the machine: a k-way merge over the
+already-sorted inputs would replace it without changing the result.</p>
 </dd></dl>
 
 </section>

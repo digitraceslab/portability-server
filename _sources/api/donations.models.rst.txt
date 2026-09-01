@@ -7,8 +7,8 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   donations.models.archive_donation
    donations.models.google_portability
-   donations.models.parquet_storage
    donations.models.tiktok_export
    donations.models.tiktok_portability
 

@@ -77,11 +77,10 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlencode</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">donations.utils.crypto</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crypto</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils.virus_scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_bytes</span><span class="p">,</span> <span class="n">scan_path</span>
 
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.parquet_storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetStorageMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.archive_donation</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchiveDonationMixin</span>
 
 
 <div class="viewcode-block" id="watch_history_dummy_reader">
@@ -105,7 +104,7 @@
 
 <div class="viewcode-block" id="TikTokExportDonation">
 <a class="viewcode-back" href="../../../api/donations.models.tiktok_export.html#donations.models.TikTokExportDonation">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">TikTokExportDonation</span><span class="p">(</span><span class="n">ParquetStorageMixin</span><span class="p">,</span> <span class="n">Donation</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TikTokExportDonation</span><span class="p">(</span><span class="n">ArchiveDonationMixin</span><span class="p">,</span> <span class="n">Donation</span><span class="p">):</span>
     <span class="n">source_type_display</span> <span class="o">=</span> <span class="s2">&quot;TikTok Export&quot;</span>
 
     <span class="n">PROCESSING_STATUS_CHOICES</span> <span class="o">=</span> <span class="p">(</span>
@@ -173,6 +172,12 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_archives</span><span class="p">():</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_combine_archives</span><span class="p">()</span>
+                <span class="n">rejected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rejected_archives</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">rejected</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Archives rejected by virus scan: </span><span class="si">{</span><span class="n">rejected</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+                    <span class="k">return</span>
                 <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span>
                     <span class="n">dt</span> <span class="k">for</span> <span class="n">dt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_expected_data_types</span><span class="p">()</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_type_status</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dt</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;received&#39;</span><span class="p">)</span>
@@ -200,27 +205,20 @@
         <span class="n">filename</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span>
         <span class="n">unique_suffix</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
         <span class="n">stored_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">unique_suffix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">stored_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">stored_filename</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">):</span>
-            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="s2">&quot;temporary_file_path&quot;</span><span class="p">):</span>
-            <span class="n">clean</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">scan_path</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">temporary_file_path</span><span class="p">())</span>
-            <span class="n">plaintext</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
-            <span class="n">clean</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">scan_bytes</span><span class="p">(</span><span class="n">plaintext</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">clean</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Upload rejected by virus scan: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;File failed the security scan and was rejected.&quot;</span>
-        <span class="k">if</span> <span class="n">plaintext</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
-        <span class="n">crypto</span><span class="o">.</span><span class="n">write_encrypted_bytes</span><span class="p">(</span><span class="n">stored_path</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">)</span>
+        <span class="n">stored_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ARCHIVE_DIR</span><span class="p">,</span> <span class="n">stored_filename</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ARCHIVE_DIR</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Written straight to disk: scanning and reading it are the worker&#39;s</span>
+        <span class="c1"># job, so the request does not wait for either. Held unencrypted only</span>
+        <span class="c1"># while it is being processed, and deleted as soon as it has been read.</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">stored_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">():</span>
+                <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">chunk</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">uploaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stored_path</span><span class="p">)</span>
         <span class="c1"># An upload needs no authorization step: it is ready to read as soon</span>
         <span class="c1"># as it is stored.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_queue_processing</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;File uploaded successfully&quot;</span></div>
 
 

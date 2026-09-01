@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>donations.models.parquet_storage &mdash; portability-server  documentation</title>
+  <title>donations.models.archive_donation &mdash; portability-server  documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
 
@@ -57,7 +57,7 @@
       <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
           <li class="breadcrumb-item"><a href="../models.html">donations.models</a></li>
-      <li class="breadcrumb-item active">donations.models.parquet_storage</li>
+      <li class="breadcrumb-item active">donations.models.archive_donation</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -66,29 +66,33 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for donations.models.parquet_storage</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Storage behaviour shared by every donation type backed by files.</span>
+  <h1>Source code for donations.models.archive_donation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Donations whose source data arrives as archives.</span>
 
 <span class="sd">Sources differ in how archives arrive and how their contents are read, but not</span>
 <span class="sd">in how the result is stored or served: one encrypted Parquet file per data type</span>
 <span class="sd">per archive, combined into one file per type when the export is complete, and</span>
 <span class="sd">read back a page at a time.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">donations.utils.crypto</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">crypto</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">parquet_store</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils.virus_scan</span><span class="w"> </span><span class="kn">import</span> <span class="n">scan_path</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ParquetStorageMixin">
-<a class="viewcode-back" href="../../../api/donations.models.parquet_storage.html#donations.models.parquet_storage.ParquetStorageMixin">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ParquetStorageMixin</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Per-type encrypted Parquet storage, paging and combining.</span>
+<div class="viewcode-block" id="ArchiveDonationMixin">
+<a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ArchiveDonationMixin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Reading archives into per-data-type storage, and serving pages of it.</span>
 
 <span class="sd">    Subclasses provide ``storage_name``, ``archive_field`` and</span>
-<span class="sd">    ``DATA_TYPE_READERS``.</span>
+<span class="sd">    ``DATA_TYPE_READERS``; they differ only in how archives arrive and how</span>
+<span class="sd">    their contents are read.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1">#: Subdirectory under the donation&#39;s data directory.</span>
@@ -128,8 +132,8 @@
 
     <span class="c1"># -- reading ----------------------------------------------------------</span>
 
-<div class="viewcode-block" id="ParquetStorageMixin.fetch_data">
-<a class="viewcode-back" href="../../../api/donations.models.parquet_storage.html#donations.models.parquet_storage.ParquetStorageMixin.fetch_data">[docs]</a>
+<div class="viewcode-block" id="ArchiveDonationMixin.fetch_data">
+<a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.fetch_data">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;A page of stored rows. Empty only when there is nothing to return.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">():</span>
@@ -149,8 +153,8 @@
         <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(</span><span class="s1">&#39;records&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ParquetStorageMixin.count_rows">
-<a class="viewcode-back" href="../../../api/donations.models.parquet_storage.html#donations.models.parquet_storage.ParquetStorageMixin.count_rows">[docs]</a>
+<div class="viewcode-block" id="ArchiveDonationMixin.count_rows">
+<a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.count_rows">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">count_rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">():</span>
             <span class="k">return</span> <span class="mi">0</span>
@@ -193,15 +197,23 @@
                 <span class="n">file_status</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;processed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;skipped&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
                 <span class="k">continue</span>
 
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">tmp_fp</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">decrypt_file_to_temp</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Failed to decrypt </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">clean</span><span class="p">,</span> <span class="n">detail</span> <span class="o">=</span> <span class="n">scan_path</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">clean</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Archive rejected by virus scan: </span><span class="si">{</span><span class="n">detail</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_discard_archive</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+                <span class="n">file_status</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s1">&#39;processed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s1">&#39;rejected&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s1">&#39;processed_at&#39;</span><span class="p">:</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                <span class="p">}</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_status</span> <span class="o">=</span> <span class="n">file_status</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
                 <span class="k">continue</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">:</span>
-                    <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_data_type</span><span class="p">(</span><span class="n">tmp_fp</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_touch_archive</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+                    <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_data_type</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="k">continue</span>
                     <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_archive_path</span><span class="p">(</span><span class="n">data_type</span><span class="p">,</span> <span class="n">archive_index</span><span class="p">)</span>
@@ -213,10 +225,7 @@
                     <span class="p">}</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Received </span><span class="si">{</span><span class="n">data_type</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="k">finally</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">tmp_fp</span><span class="p">)</span>
-                <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-                    <span class="k">pass</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_discard_archive</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
 
             <span class="n">file_status</span><span class="p">[</span><span class="n">filepath</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;processed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -227,6 +236,59 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">filepath</span> <span class="ow">in</span> <span class="n">file_status</span> <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_archives</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_queue_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Ask a worker to process this donation as soon as it can.</span>
+
+<span class="sd">        A broker that is unavailable must not fail the request that stored the</span>
+<span class="sd">        archive; the periodic sweep picks the donation up instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">donations.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_donation</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">process_donation</span><span class="o">.</span><span class="n">apply_async</span><span class="p">(</span>
+                <span class="n">args</span><span class="o">=</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">],</span> <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;process-donation-</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Could not queue donation </span><span class="si">%s</span><span class="s2"> for processing&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Processing could not be queued: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_log&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ArchiveDonationMixin.rejected_archives">
+<a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.rejected_archives">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rejected_archives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Archives the scanner refused, which make the donation an error.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">path</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_status</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rejected&#39;</span><span class="p">)</span>
+        <span class="p">]</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_touch_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mark an archive as still in use.</span>
+
+<span class="sd">        Reading a file does not update its modification time, so a cleanup</span>
+<span class="sd">        that collects abandoned archives by age would eventually collect one</span>
+<span class="sd">        that is still being read. Touching it between data types keeps the</span>
+<span class="sd">        timestamp advancing while work is happening, and stops advancing the</span>
+<span class="sd">        moment the worker dies.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">utime</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_discard_archive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove an archive once it has been read, or once reading failed.</span>
+
+<span class="sd">        Archives are held unencrypted while they are being processed, so they</span>
+<span class="sd">        are not kept afterwards. Continuing after a failure means fetching the</span>
+<span class="sd">        archive again rather than reusing a copy left on disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_read_data_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">archive_path</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">source_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Rows of one data type from one archive, or None if it holds none.&quot;&quot;&quot;</span>
@@ -248,7 +310,7 @@
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">reset_index</span><span class="p">()</span>
         <span class="n">frame</span><span class="p">[</span><span class="s1">&#39;device_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device_id</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">frame</span>
+        <span class="k">return</span> <span class="n">parquet_store</span><span class="o">.</span><span class="n">in_time_order</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_combine_archives</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_types</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Merge each data type&#39;s per-archive files into a single file.&quot;&quot;&quot;</span>

@@ -300,15 +300,37 @@
 
 
 
+<div class="viewcode-block" id="in_time_order">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.in_time_order">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">in_time_order</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sort rows by timestamp, keeping the original order within equal ones.</span>
+
+<span class="sd">    Row group statistics prune a date filter only when the ranges of different</span>
+<span class="sd">    groups do not overlap, which needs the rows to be written in order. Sources</span>
+<span class="sd">    usually deliver sorted data, but that cannot be relied on.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">TIMESTAMP_COLUMN</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">frame</span>
+    <span class="k">if</span> <span class="n">frame</span><span class="p">[</span><span class="n">TIMESTAMP_COLUMN</span><span class="p">]</span><span class="o">.</span><span class="n">is_monotonic_increasing</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">frame</span>
+    <span class="k">return</span> <span class="n">frame</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">TIMESTAMP_COLUMN</span><span class="p">,</span> <span class="n">kind</span><span class="o">=</span><span class="s2">&quot;stable&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="combine">
 <a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.combine">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">combine</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">destination</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge a type&#39;s per-archive files into one, a row group at a time.&quot;&quot;&quot;</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">groups</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">_rows</span><span class="p">,</span> <span class="n">_low</span><span class="p">,</span> <span class="n">_high</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
-            <span class="k">yield</span> <span class="n">_read_group</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge a type&#39;s per-archive files into one, in timestamp order.</span>
 
-    <span class="k">return</span> <span class="n">write_frames</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">groups</span><span class="p">())</span></div>
+<span class="sd">    Ordering the result means holding it in memory, so this is the step to</span>
+<span class="sd">    revisit first if a data type outgrows the machine: a k-way merge over the</span>
+<span class="sd">    already-sorted inputs would replace it without changing the result.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">frames</span> <span class="o">=</span> <span class="p">[</span><span class="n">_read_group</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">_r</span><span class="p">,</span> <span class="n">_l</span><span class="p">,</span> <span class="n">_h</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">paths</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">merged</span> <span class="o">=</span> <span class="n">in_time_order</span><span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">write_frames</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="p">[</span><span class="n">merged</span><span class="p">])</span></div>
 
 </pre></div>
 

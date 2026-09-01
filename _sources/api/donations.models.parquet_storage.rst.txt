@@ -1,7 +1,0 @@
-donations.models.parquet\_storage module
-========================================
-
-.. automodule:: donations.models.parquet_storage
-   :members:
-   :show-inheritance:
-   :undoc-members:
