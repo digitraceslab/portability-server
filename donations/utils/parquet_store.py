@@ -16,7 +16,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.parquet.encryption as pe
-from django.conf import settings
+from cryptography.fernet import Fernet
 
 from donations.utils import crypto
 
@@ -38,7 +38,7 @@ class _LocalKms(pe.KmsClient):
 
     def __init__(self, config):
         pe.KmsClient.__init__(self)
-        self._fernet = crypto._get_fernet()
+        self._fernet = Fernet(config.custom_kms_conf[_FOOTER_KEY_ID])
 
     def wrap_key(self, key_bytes, master_key_id):
         return self._fernet.encrypt(key_bytes).decode()
@@ -52,8 +52,10 @@ def _factory():
 
 
 def _kms_config():
-    # The master key never leaves the service; this only names it.
-    return pe.KmsConnectionConfig(custom_kms_conf={_FOOTER_KEY_ID: ""})
+    """Hands the master key to the client; it never leaves the process."""
+    return pe.KmsConnectionConfig(
+        custom_kms_conf={_FOOTER_KEY_ID: crypto._resolve_key().decode()}
+    )
 
 
 def _encryption_properties():
