@@ -1,0 +1,176 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>donations.utils.parquet_store module &mdash; portability-server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            portability-server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">donations.utils.parquet_store module</a><ul>
+<li><a class="reference internal" href="#donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES"><code class="docutils literal notranslate"><span class="pre">ROW_GROUP_TARGET_BYTES</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.MIN_ROWS_PER_GROUP"><code class="docutils literal notranslate"><span class="pre">MIN_ROWS_PER_GROUP</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.rows_per_group"><code class="docutils literal notranslate"><span class="pre">rows_per_group()</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.open_file"><code class="docutils literal notranslate"><span class="pre">open_file()</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.write_frames"><code class="docutils literal notranslate"><span class="pre">write_frames()</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.count_rows"><code class="docutils literal notranslate"><span class="pre">count_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.read_rows"><code class="docutils literal notranslate"><span class="pre">read_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.utils.parquet_store.combine"><code class="docutils literal notranslate"><span class="pre">combine()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">portability-server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">donations.utils.parquet_store module</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/api/donations.utils.parquet_store.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-donations.utils.parquet_store">
+<span id="donations-utils-parquet-store-module"></span><h1>donations.utils.parquet_store module<a class="headerlink" href="#module-donations.utils.parquet_store" title="Link to this heading"></a></h1>
+<p>Encrypted Parquet storage for processed donation data.</p>
+<p>One file per data type per archive while an export is being ingested, combined
+into a single file per type when it finishes. Row groups bound how much has to
+be decrypted to answer a request: a page reads the one group that holds it, and
+a date filter skips groups whose recorded timestamp range cannot match.</p>
+<p>Encryption is Parquet Modular Encryption with an encrypted footer, so metadata
+and statistics are unreadable without the key and nothing is parsed before it
+has been authenticated. Parquet’s data keys are wrapped with the service’s own
+<code class="docutils literal notranslate"><span class="pre">ENCRYPTION_KEY</span></code>; no key management service is involved.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">ROW_GROUP_TARGET_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4194304</span></span><a class="headerlink" href="#donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES" title="Link to this definition"></a></dt>
+<dd><p>Target size of a row group. The row count is derived from this and the
+observed row width, so types with wide rows get fewer rows per group.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.MIN_ROWS_PER_GROUP">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">MIN_ROWS_PER_GROUP</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></span><a class="headerlink" href="#donations.utils.parquet_store.MIN_ROWS_PER_GROUP" title="Link to this definition"></a></dt>
+<dd><p>A row group always holds at least one row, even one wider than the target.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.rows_per_group">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">rows_per_group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#rows_per_group"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.rows_per_group" title="Link to this definition"></a></dt>
+<dd><p>Row count for a group, from this table’s average row width.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.open_file">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">open_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#open_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.open_file" title="Link to this definition"></a></dt>
+<dd><p>Open an encrypted Parquet file for reading.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.write_frames">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">write_frames</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frames</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#write_frames"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.write_frames" title="Link to this definition"></a></dt>
+<dd><p>Write frames to one encrypted file, a row group at a time.</p>
+<p>Returns the number of rows written. Nothing larger than a batch is held in
+memory, so the caller decides how much to read at once.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.count_rows">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.count_rows" title="Link to this definition"></a></dt>
+<dd><p>Count matching rows, reading only groups the filter cuts through.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.read_rows">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">read_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#read_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.read_rows" title="Link to this definition"></a></dt>
+<dd><p>Return a page of matching rows as a DataFrame.</p>
+<p>Groups before the offset are skipped without being read whenever their
+recorded range settles how many of their rows match.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.utils.parquet_store.combine">
+<span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">combine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/parquet_store.html#combine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.parquet_store.combine" title="Link to this definition"></a></dt>
+<dd><p>Merge a type’s per-archive files into one, a row group at a time.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2026, Aalto RSE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

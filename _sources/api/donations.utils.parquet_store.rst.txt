@@ -1,0 +1,7 @@
+donations.utils.parquet\_store module
+=====================================
+
+.. automodule:: donations.utils.parquet_store
+   :members:
+   :show-inheritance:
+   :undoc-members:

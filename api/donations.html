@@ -98,6 +98,10 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.google_portability.html#donations.models.google_portability.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.parquet_storage.html">donations.models.parquet_storage module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.parquet_storage.html#donations.models.parquet_storage.ParquetStorageMixin"><code class="docutils literal notranslate"><span class="pre">ParquetStorageMixin</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html">donations.models.tiktok_export module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.watch_history_dummy_reader"><code class="docutils literal notranslate"><span class="pre">watch_history_dummy_reader()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a></li>
@@ -180,6 +184,8 @@
 </li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.source_type_display</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.storage_name"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.storage_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.archive_field"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.archive_field</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.PROCESSING_STATUS_CHOICES"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.PROCESSING_STATUS_CHOICES</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.access_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.access_token</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.refresh_token"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.refresh_token</span></code></a></li>
@@ -197,8 +203,6 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.DATA_TYPE_SCOPE_MAP"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.DATA_TYPE_SCOPE_MAP</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.save"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.save()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_data_types()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.fetch_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.count_rows()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.get_auth_url()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.create_archive_job"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.create_archive_job()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">GoogleDonation.handle_auth_callback()</span></code></a></li>
@@ -245,6 +249,8 @@
 <li class="toctree-l3"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.source_type_display"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.source_type_display</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.PROCESSING_STATUS_CHOICES"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.PROCESSING_STATUS_CHOICES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.storage_name"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.storage_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.archive_field"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.archive_field</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.type"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.type</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.processing_status"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.processing_status</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.uploaded_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.uploaded_files</span></code></a></li>
@@ -254,8 +260,6 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.DATA_TYPE_READERS"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DATA_TYPE_READERS</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.save()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.get_data_types()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.fetch_data"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.fetch_data()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.count_rows"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.count_rows()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.extract_and_process()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.handle_file_upload"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.handle_file_upload()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.TikTokExportDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.cleanup_files()</span></code></a></li>
@@ -291,6 +295,17 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.utils.crypto.html#donations.utils.crypto.decrypt_file_to_temp"><code class="docutils literal notranslate"><span class="pre">decrypt_file_to_temp()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.utils.crypto.html#donations.utils.crypto.encrypt_text"><code class="docutils literal notranslate"><span class="pre">encrypt_text()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.utils.crypto.html#donations.utils.crypto.decrypt_text"><code class="docutils literal notranslate"><span class="pre">decrypt_text()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="donations.utils.parquet_store.html">donations.utils.parquet_store module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES"><code class="docutils literal notranslate"><span class="pre">ROW_GROUP_TARGET_BYTES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.MIN_ROWS_PER_GROUP"><code class="docutils literal notranslate"><span class="pre">MIN_ROWS_PER_GROUP</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.rows_per_group"><code class="docutils literal notranslate"><span class="pre">rows_per_group()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.open_file"><code class="docutils literal notranslate"><span class="pre">open_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.write_frames"><code class="docutils literal notranslate"><span class="pre">write_frames()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.count_rows"><code class="docutils literal notranslate"><span class="pre">count_rows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.read_rows"><code class="docutils literal notranslate"><span class="pre">read_rows()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.utils.parquet_store.html#donations.utils.parquet_store.combine"><code class="docutils literal notranslate"><span class="pre">combine()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="donations.utils.virus_scan.html">donations.utils.virus_scan module</a><ul>

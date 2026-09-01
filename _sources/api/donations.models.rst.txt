@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    donations.models.google_portability
+   donations.models.parquet_storage
    donations.models.tiktok_export
    donations.models.tiktok_portability
 

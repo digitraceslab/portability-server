@@ -1,0 +1,340 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>donations.utils.parquet_store &mdash; portability-server  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            portability-server
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">portability-server</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">donations.utils.parquet_store</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for donations.utils.parquet_store</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Encrypted Parquet storage for processed donation data.</span>
+
+<span class="sd">One file per data type per archive while an export is being ingested, combined</span>
+<span class="sd">into a single file per type when it finishes. Row groups bound how much has to</span>
+<span class="sd">be decrypted to answer a request: a page reads the one group that holds it, and</span>
+<span class="sd">a date filter skips groups whose recorded timestamp range cannot match.</span>
+
+<span class="sd">Encryption is Parquet Modular Encryption with an encrypted footer, so metadata</span>
+<span class="sd">and statistics are unreadable without the key and nothing is parsed before it</span>
+<span class="sd">has been authenticated. Parquet&#39;s data keys are wrapped with the service&#39;s own</span>
+<span class="sd">``ENCRYPTION_KEY``; no key management service is involved.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pq</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet.encryption</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pe</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">crypto</span>
+
+<span class="c1">#: Target size of a row group. The row count is derived from this and the</span>
+<span class="c1">#: observed row width, so types with wide rows get fewer rows per group.</span>
+<span class="n">ROW_GROUP_TARGET_BYTES</span> <span class="o">=</span> <span class="mi">4</span> <span class="o">*</span> <span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span>
+
+<span class="c1">#: A row group always holds at least one row, even one wider than the target.</span>
+<span class="n">MIN_ROWS_PER_GROUP</span> <span class="o">=</span> <span class="mi">1</span>
+
+<span class="n">_FOOTER_KEY_ID</span> <span class="o">=</span> <span class="s2">&quot;donation-data&quot;</span>
+<span class="n">_KEY_CACHE_LIFETIME</span> <span class="o">=</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="n">TIMESTAMP_COLUMN</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_LocalKms</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">KmsClient</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps Parquet&#39;s data keys with the service&#39;s own encryption key.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">KmsClient</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">_get_fernet</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrap_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_bytes</span><span class="p">,</span> <span class="n">master_key_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">key_bytes</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">unwrap_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapped_key</span><span class="p">,</span> <span class="n">master_key_id</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">wrapped_key</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_factory</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">CryptoFactory</span><span class="p">(</span><span class="k">lambda</span> <span class="n">config</span><span class="p">:</span> <span class="n">_LocalKms</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_kms_config</span><span class="p">():</span>
+    <span class="c1"># The master key never leaves the service; this only names it.</span>
+    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">KmsConnectionConfig</span><span class="p">(</span><span class="n">custom_kms_conf</span><span class="o">=</span><span class="p">{</span><span class="n">_FOOTER_KEY_ID</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_encryption_properties</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_factory</span><span class="p">()</span><span class="o">.</span><span class="n">file_encryption_properties</span><span class="p">(</span>
+        <span class="n">_kms_config</span><span class="p">(),</span>
+        <span class="n">pe</span><span class="o">.</span><span class="n">EncryptionConfiguration</span><span class="p">(</span>
+            <span class="n">footer_key</span><span class="o">=</span><span class="n">_FOOTER_KEY_ID</span><span class="p">,</span>
+            <span class="n">uniform_encryption</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">cache_lifetime</span><span class="o">=</span><span class="n">_KEY_CACHE_LIFETIME</span><span class="p">,</span>
+            <span class="n">data_key_length_bits</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_decryption_properties</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_factory</span><span class="p">()</span><span class="o">.</span><span class="n">file_decryption_properties</span><span class="p">(</span>
+        <span class="n">_kms_config</span><span class="p">(),</span> <span class="n">pe</span><span class="o">.</span><span class="n">DecryptionConfiguration</span><span class="p">(</span><span class="n">cache_lifetime</span><span class="o">=</span><span class="n">_KEY_CACHE_LIFETIME</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="rows_per_group">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.rows_per_group">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">rows_per_group</span><span class="p">(</span><span class="n">table</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Row count for a group, from this table&#39;s average row width.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">num_rows</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MIN_ROWS_PER_GROUP</span>
+    <span class="n">average</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">nbytes</span> <span class="o">//</span> <span class="n">table</span><span class="o">.</span><span class="n">num_rows</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">MIN_ROWS_PER_GROUP</span><span class="p">,</span> <span class="n">ROW_GROUP_TARGET_BYTES</span> <span class="o">//</span> <span class="n">average</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="open_file">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.open_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">open_file</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Open an encrypted Parquet file for reading.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">decryption_properties</span><span class="o">=</span><span class="n">_decryption_properties</span><span class="p">())</span></div>
+
+
+
+<div class="viewcode-block" id="write_frames">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.write_frames">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">write_frames</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">frames</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write frames to one encrypted file, a row group at a time.</span>
+
+<span class="sd">    Returns the number of rows written. Nothing larger than a batch is held in</span>
+<span class="sd">    memory, so the caller decides how much to read at once.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">group_size</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">written</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">frames</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">frame</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">Table</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">preserve_index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">writer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">group_size</span> <span class="o">=</span> <span class="n">rows_per_group</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+                <span class="n">writer</span> <span class="o">=</span> <span class="n">pq</span><span class="o">.</span><span class="n">ParquetWriter</span><span class="p">(</span>
+                    <span class="n">path</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">encryption_properties</span><span class="o">=</span><span class="n">_encryption_properties</span><span class="p">()</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">writer</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">write_table</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">row_group_size</span><span class="o">=</span><span class="n">group_size</span><span class="p">)</span>
+            <span class="n">written</span> <span class="o">+=</span> <span class="n">table</span><span class="o">.</span><span class="n">num_rows</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">writer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">written</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_groups</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield (path, row_group_index, num_rows, min_timestamp, max_timestamp).&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">metadata</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">metadata</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">num_columns</span><span class="p">)]</span>
+        <span class="n">column</span> <span class="o">=</span> <span class="n">names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">TIMESTAMP_COLUMN</span><span class="p">)</span> <span class="k">if</span> <span class="n">TIMESTAMP_COLUMN</span> <span class="ow">in</span> <span class="n">names</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">num_row_groups</span><span class="p">):</span>
+            <span class="n">group</span> <span class="o">=</span> <span class="n">metadata</span><span class="o">.</span><span class="n">row_group</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+            <span class="n">low</span> <span class="o">=</span> <span class="n">high</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">column</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">statistics</span> <span class="o">=</span> <span class="n">group</span><span class="o">.</span><span class="n">column</span><span class="p">(</span><span class="n">column</span><span class="p">)</span><span class="o">.</span><span class="n">statistics</span>
+                <span class="k">if</span> <span class="n">statistics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">statistics</span><span class="o">.</span><span class="n">has_min_max</span><span class="p">:</span>
+                    <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="n">statistics</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">statistics</span><span class="o">.</span><span class="n">max</span>
+            <span class="k">yield</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">group</span><span class="o">.</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_overlaps</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether a group&#39;s timestamp range can contain a matching row.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">low</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">high</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">high</span> <span class="o">&lt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">low</span> <span class="o">&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">end</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_within</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Whether every row in the group matches, so it need not be read.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">low</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">high</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">low</span> <span class="o">&lt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">start</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">high</span> <span class="o">&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">end</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_filtered</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">frame</span><span class="p">[</span><span class="n">TIMESTAMP_COLUMN</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">start</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="p">[</span><span class="n">frame</span><span class="p">[</span><span class="n">TIMESTAMP_COLUMN</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Timestamp</span><span class="p">(</span><span class="n">end</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">frame</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_read_group</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">read_row_group</span><span class="p">(</span><span class="n">index</span><span class="p">)</span><span class="o">.</span><span class="n">to_pandas</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="count_rows">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.count_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">count_rows</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count matching rows, reading only groups the filter cuts through.&quot;&quot;&quot;</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_overlaps</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">_within</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">):</span>
+            <span class="n">total</span> <span class="o">+=</span> <span class="n">num_rows</span>
+            <span class="k">continue</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_filtered</span><span class="p">(</span><span class="n">_read_group</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">),</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">total</span></div>
+
+
+
+<div class="viewcode-block" id="read_rows">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.read_rows">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">read_rows</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a page of matching rows as a DataFrame.</span>
+
+<span class="sd">    Groups before the offset are skipped without being read whenever their</span>
+<span class="sd">    recorded range settles how many of their rows match.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">remaining_offset</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span> <span class="ow">or</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">collected</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">gathered</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">num_rows</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">gathered</span> <span class="o">&gt;=</span> <span class="n">limit</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_overlaps</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">):</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">_within</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span> <span class="ow">and</span> <span class="n">remaining_offset</span> <span class="o">&gt;=</span> <span class="n">num_rows</span><span class="p">:</span>
+            <span class="n">remaining_offset</span> <span class="o">-=</span> <span class="n">num_rows</span>
+            <span class="k">continue</span>
+
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">_filtered</span><span class="p">(</span><span class="n">_read_group</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">),</span> <span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">remaining_offset</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">remaining_offset</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+                <span class="n">remaining_offset</span> <span class="o">-=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">remaining_offset</span><span class="p">:]</span>
+            <span class="n">remaining_offset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">limit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">frame</span> <span class="o">=</span> <span class="n">frame</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span> <span class="n">limit</span> <span class="o">-</span> <span class="n">gathered</span><span class="p">]</span>
+        <span class="n">gathered</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">collected</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">collected</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">collected</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="combine">
+<a class="viewcode-back" href="../../../api/donations.utils.parquet_store.html#donations.utils.parquet_store.combine">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">combine</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">destination</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Merge a type&#39;s per-archive files into one, a row group at a time.&quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">groups</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">_rows</span><span class="p">,</span> <span class="n">_low</span><span class="p">,</span> <span class="n">_high</span> <span class="ow">in</span> <span class="n">_groups</span><span class="p">(</span><span class="n">paths</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">_read_group</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">write_frames</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">groups</span><span class="p">())</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-2026, Aalto RSE.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

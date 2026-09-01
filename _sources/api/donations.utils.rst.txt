@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    donations.utils.crypto
+   donations.utils.parquet_store
    donations.utils.virus_scan
 
 Module contents
