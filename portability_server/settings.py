@@ -86,6 +86,14 @@ RATELIMIT_VIEW = "portability_server.views.rate_limited"
 
 UPLOAD_MAX_BYTES = env.int("UPLOAD_MAX_BYTES", default=59055800320)
 
+# Archives arrive here and are deleted as soon as they have been read. The
+# directory is separate from the processed data so that the cleanup task can
+# treat everything in it as disposable.
+ARCHIVE_DIR = env("ARCHIVE_DIR", default="data/archives")
+# Age at which an archive left behind by a crash is removed. Conservative by
+# default: a healthy worker deletes its own archives immediately.
+ARCHIVE_MAX_AGE_SECONDS = env.int("ARCHIVE_MAX_AGE_SECONDS", default=24 * 60 * 60)
+
 CLAMAV_ENABLED = env.bool("CLAMAV_ENABLED", default=not DEBUG) and not TESTING
 
 # Encryption
@@ -183,6 +191,10 @@ CELERY_BEAT_SCHEDULE = {
     "check-authorized-donations": {
         "task": "donations.tasks.check_pending_donations",
         "schedule": 300,
+    },
+    "remove-stale-archives": {
+        "task": "donations.tasks.remove_stale_archives",
+        "schedule": 3600,
     },
 }
 

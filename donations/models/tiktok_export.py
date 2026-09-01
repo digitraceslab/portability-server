@@ -12,7 +12,7 @@ from donations.utils.virus_scan import scan_bytes, scan_path
 
 
 from donations.models import Donation
-from donations.models.parquet_storage import ParquetStorageMixin
+from donations.models.archive_donation import ArchiveDonationMixin
 
 
 def watch_history_dummy_reader(file_path):
@@ -31,7 +31,7 @@ def watch_history_dummy_reader(file_path):
     ]
 
 
-class TikTokExportDonation(ParquetStorageMixin, Donation):
+class TikTokExportDonation(ArchiveDonationMixin, Donation):
     source_type_display = "TikTok Export"
 
     PROCESSING_STATUS_CHOICES = (
@@ -115,9 +115,8 @@ class TikTokExportDonation(ParquetStorageMixin, Donation):
         filename = file.name
         unique_suffix = secrets.token_hex(8)
         stored_filename = f"{self.pk}_{unique_suffix}_{filename}"
-        stored_path = os.path.join('data', stored_filename)
-        if not os.path.exists('data'):
-            os.makedirs('data')
+        stored_path = os.path.join(settings.ARCHIVE_DIR, stored_filename)
+        os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
         if hasattr(file, "temporary_file_path"):
             clean, detail = scan_path(file.temporary_file_path())
             plaintext = None
@@ -130,7 +129,10 @@ class TikTokExportDonation(ParquetStorageMixin, Donation):
             return False, "File failed the security scan and was rejected."
         if plaintext is None:
             plaintext = b''.join(file.chunks())
-        crypto.write_encrypted_bytes(stored_path, plaintext)
+        # Held unencrypted only while it is being processed, and deleted as
+        # soon as it has been read.
+        with open(stored_path, 'wb') as handle:
+            handle.write(plaintext)
         self.uploaded_files.append(stored_path)
         # An upload needs no authorization step: it is ready to read as soon
         # as it is stored.

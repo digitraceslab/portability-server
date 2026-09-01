@@ -1,5 +1,10 @@
 """Celery tasks for asynchronous donation processing."""
 import logging
+import os
+import time
+
+from django.conf import settings
+
 from donations.models import Donation
 from celery import shared_task
 
@@ -66,3 +71,33 @@ def check_pending_donations():
             continue
         logger.info("Queueing donation %s (status=%s) for processing.", donation.pk, donation.status)
         process_donation.apply_async(args=[donation.pk], task_id=f'process-donation-{donation.pk}')
+
+
+@shared_task
+def remove_stale_archives():
+    """Periodic task: delete archives no worker is reading any more.
+
+    Archives are held unencrypted while they are processed and deleted as soon
+    as they have been read, whether reading succeeded or failed. This collects
+    what a crash or a reboot left behind. A worker touches an archive as it
+    works through it, so an archive still being read keeps a recent
+    modification time however long the reading takes.
+    """
+    directory = settings.ARCHIVE_DIR
+    if not os.path.isdir(directory):
+        return 0
+
+    cutoff = time.time() - settings.ARCHIVE_MAX_AGE_SECONDS
+    removed = 0
+    for name in os.listdir(directory):
+        path = os.path.join(directory, name)
+        try:
+            if not os.path.isfile(path) or os.path.getmtime(path) > cutoff:
+                continue
+            os.remove(path)
+        except OSError as exc:
+            logger.warning("Could not remove stale archive %s: %s", path, exc)
+            continue
+        removed += 1
+        logger.info("Removed stale archive %s", path)
+    return removed

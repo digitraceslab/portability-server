@@ -71,8 +71,8 @@ class DataQuerySerializer(serializers.Serializer):
     data_type = serializers.CharField(required=False)
     start_date = serializers.DateField(required=False)
     end_date = serializers.DateField(required=False)
-    limit = serializers.IntegerField(required=False, default=1000)
-    offset = serializers.IntegerField(required=False, default=0)
+    limit = serializers.IntegerField(required=False, default=1000, min_value=1, max_value=1000)
+    offset = serializers.IntegerField(required=False, default=0, min_value=0)
 
 
 class DonationViewSet(viewsets.GenericViewSet):

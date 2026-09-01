@@ -22,13 +22,13 @@ from niimpy.reading.google_portability import (
 )
 
 from donations.models import Donation
-from donations.models.parquet_storage import ParquetStorageMixin
+from donations.models.archive_donation import ArchiveDonationMixin
 import donations.utils.crypto as crypto
 from donations.utils import parquet_store
 from donations.utils.virus_scan import scan_bytes
 
 
-class GoogleDonation(ParquetStorageMixin, Donation):
+class GoogleDonation(ArchiveDonationMixin, Donation):
     source_type_display = 'Google'
     storage_name = 'google_portability'
     archive_field = 'downloaded_files'
@@ -500,10 +500,12 @@ class GoogleDonation(ParquetStorageMixin, Donation):
                         self.processing_log += f"Downloaded file failed virus scan: {detail}\n"
                         self.save()
                         return False, f"Downloaded file failed virus scan: {detail}"
-                    if not os.path.exists('data'):
-                        os.makedirs('data')
-                    path = f'data/google_data_{job_id}_{i}.zip'
-                    crypto.write_encrypted_bytes(path, file_response.content)
+                    os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
+                    path = os.path.join(
+                        settings.ARCHIVE_DIR, f'google_data_{job_id}_{i}.zip'
+                    )
+                    with open(path, 'wb') as handle:
+                        handle.write(file_response.content)
                     self.downloaded_files.append(path)
                 self.processing_status = 'processing'
                 self.status = 'processing'

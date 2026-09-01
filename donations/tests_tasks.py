@@ -1,10 +1,16 @@
 """Tests for Celery tasks and the OAuth callback views that queue them."""
+import os
+import shutil
+import tempfile
+import time
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from donations.models import Donation, GoogleDonation, TikTokDonation
-from donations.tasks import process_donation, check_pending_donations, MAX_RETRIES
+from donations.tasks import (
+    process_donation, check_pending_donations, remove_stale_archives, MAX_RETRIES,
+)
 
 
 def _fake_process_data(donation):
@@ -209,3 +215,37 @@ class TestOAuthCallbackQueuesTask(TestCase):
         )
         donation.refresh_from_db()
         self.assertIn('broker unavailable', donation.processing_log)
+
+
+@override_settings(ARCHIVE_MAX_AGE_SECONDS=3600)
+class RemoveStaleArchivesTests(TestCase):
+    """Archives left behind by a crash are collected; live ones are not."""
+
+    def setUp(self):
+        self.archive_dir = tempfile.mkdtemp(prefix="archives-")
+        self.addCleanup(shutil.rmtree, self.archive_dir, ignore_errors=True)
+        patcher = override_settings(ARCHIVE_DIR=self.archive_dir)
+        patcher.enable()
+        self.addCleanup(patcher.disable)
+
+    def _archive(self, name, age_seconds):
+        path = os.path.join(self.archive_dir, name)
+        with open(path, "wb") as handle:
+            handle.write(b"archive")
+        stamp = time.time() - age_seconds
+        os.utime(path, (stamp, stamp))
+        return path
+
+    def test_removes_archives_past_the_maximum_age(self):
+        stale = self._archive("stale.zip", 7200)
+        self.assertEqual(remove_stale_archives(), 1)
+        self.assertFalse(os.path.exists(stale))
+
+    def test_keeps_archives_being_worked_on(self):
+        fresh = self._archive("fresh.zip", 60)
+        self.assertEqual(remove_stale_archives(), 0)
+        self.assertTrue(os.path.exists(fresh))
+
+    def test_missing_directory_is_not_an_error(self):
+        with override_settings(ARCHIVE_DIR=os.path.join(self.archive_dir, "gone")):
+            self.assertEqual(remove_stale_archives(), 0)

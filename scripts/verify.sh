@@ -13,6 +13,11 @@
 # Deliberately no -e: every check runs and the findings are collected.
 set -uo pipefail
 
+# Keep a copy of everything reported, so the run can be mailed afterwards.
+REPORT="$(mktemp)"
+trap 'rm -f "$REPORT"' EXIT
+exec > >(tee "$REPORT") 2>&1
+
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _env_get() { sed -n "s/^$1=//p" "$REPO_DIR/.env" 2>/dev/null | tail -1 | tr -d "\"'"; }
 
@@ -139,6 +144,15 @@ elif [ "$NGINX_CHECKED" -eq 1 ]; then
     pass "installed systemd and nginx configs match the version-controlled source"
 fi
 
+echo "==> Disk"
+df -h / "$APP_DIR" 2>/dev/null | awk 'NR==1 || !seen[$0]++'
+for filesystem in / "$APP_DIR"; do
+    use="$(df --output=pcent "$filesystem" 2>/dev/null | tail -1 | tr -dc '0-9')"
+    if [ -n "$use" ] && [ "$use" -ge 90 ]; then
+        fail "$filesystem is ${use}% full"
+    fi
+done
+
 echo "==> Services"
 for service in $SERVICES; do
     if systemctl is-active --quiet "$service"; then
@@ -148,10 +162,23 @@ for service in $SERVICES; do
     fi
 done
 
+# Mails the report when VERIFY_EMAIL is set. Cron then only needs to run the
+# script; a quiet run still confirms the check happened.
+_mail_report() {
+    local status="$1"
+    [ -n "${VERIFY_EMAIL:-}" ] || return 0
+    command -v mail >/dev/null 2>&1 || return 0
+    local subject="portability-server verify: OK"
+    [ "$status" -eq 0 ] || subject="portability-server verify: $FINDINGS problem(s)"
+    mail -s "$subject on $(hostname -s)" "$VERIFY_EMAIL" < "$REPORT"
+}
+
 echo
 if [ "$FINDINGS" -eq 0 ]; then
     echo "Integrity check passed: the deployment matches version control."
+    _mail_report 0
     exit 0
 fi
 echo "Integrity check found $FINDINGS problem(s); see the output above." >&2
+_mail_report 1
 exit 1

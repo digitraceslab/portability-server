@@ -50,7 +50,8 @@ class StepTestCase(TestCase):
     def _store_archive(self, name, frame):
         """Write a frame where a downloaded archive would be stored."""
         path = os.path.join(self._workdir, name)
-        crypto.write_encrypted_bytes(path, frame.to_csv(index=False).encode())
+        with open(path, "wb") as handle:
+            handle.write(frame.to_csv(index=False).encode())
         return path
 
 
@@ -190,3 +191,29 @@ class TestUploadStep(StepTestCase):
             self.donation.extract_and_process()
 
         self.assertEqual(self.donation.processing_status, "processed")
+
+    def test_uploaded_archive_is_plain_and_removed_after_reading(self):
+        self.donation.requested_data_types = ["watch_history"]
+        upload = SimpleUploadedFile("export.csv", _frame("2024-01-01", 2).to_csv(index=False).encode())
+        self.donation.handle_file_upload(upload)
+        stored = self.donation.uploaded_files[0]
+
+        with open(stored, "rb") as handle:
+            self.assertIn(b"timestamp", handle.read(), "archive is held as it arrived")
+
+        with patch.object(TikTokExportDonation, "DATA_TYPE_READERS", {"watch_history": _reader}):
+            self.donation.extract_and_process()
+        self.assertFalse(os.path.exists(stored), "archive is removed once read")
+
+    def test_archive_is_removed_even_when_reading_fails(self):
+        self.donation.requested_data_types = ["watch_history"]
+        self.donation.uploaded_files = [self._store_archive("upload", _frame("2024-01-01", 2))]
+        self.donation.processing_status = "processing"
+        self.donation.save()
+
+        def explode(path):
+            raise ValueError("unreadable")
+
+        with patch.object(TikTokExportDonation, "DATA_TYPE_READERS", {"watch_history": explode}):
+            self.donation.extract_and_process()
+        self.assertFalse(os.path.exists(self.donation.uploaded_files[0]))

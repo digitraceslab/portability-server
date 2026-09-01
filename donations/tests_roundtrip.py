@@ -15,6 +15,7 @@ removed at teardown; nothing is written to the repository. Set
 import os
 import shutil
 import tempfile
+import zipfile
 
 import numpy as np
 import pandas as pd
@@ -121,8 +122,7 @@ class RoundTripTest(TestCase):
         for data_type in self.data_types:
             source = os.path.join(self.source_dir, f"{data_type}.csv")
             stored = os.path.join(parts_dir, f"{data_type}.part")
-            with open(source, "rb") as handle:
-                crypto.write_encrypted_bytes(stored, handle.read())
+            shutil.copyfile(source, stored)
             self.donation.downloaded_files.append(stored)
         self.donation.save()
 
@@ -235,3 +235,90 @@ class RoundTripTest(TestCase):
             "location_history", limit=PAGE, offset=0, start_date=start, end_date=end
         )
         self.assertEqual(page[0]["timestamp"], int(start.value // 10**6))
+
+
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+class MultipleArchiveTest(TestCase):
+    """A data type continued across archives, delivered as zips.
+
+    A source splits a large data type when an archive reaches its maximum
+    size, so the same type arrives in more than one file and has to be
+    stitched back together.
+    """
+
+    ROWS_PER_ARCHIVE = 400
+    DATA_TYPE = "location_history"
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls._previous_cwd = os.getcwd()
+        cls._workdir = tempfile.mkdtemp(prefix="multi-archive-")
+        os.chdir(cls._workdir)
+
+        cls.source = pd.DataFrame({
+            "timestamp": pd.date_range("2024-01-01", periods=cls.ROWS_PER_ARCHIVE * 3, freq="min"),
+            "activity": ["still", "walking", "running"] * cls.ROWS_PER_ARCHIVE,
+        })
+
+    @classmethod
+    def tearDownClass(cls):
+        os.chdir(cls._previous_cwd)
+        shutil.rmtree(cls._workdir, ignore_errors=True)
+        super().tearDownClass()
+
+    def setUp(self):
+        self.researcher = ResearcherToken.objects.create(name="multi-archive")
+        self.donation = GoogleDonation.objects.create(
+            researcher=self.researcher, requested_data_types=[self.DATA_TYPE],
+        )
+        self.donation.processing_status = "processing"
+
+        # Three archives, each carrying a slice of the same data type.
+        for index in range(3):
+            chunk = self.source.iloc[
+                index * self.ROWS_PER_ARCHIVE:(index + 1) * self.ROWS_PER_ARCHIVE
+            ]
+            archive = os.path.join(self._workdir, f"export-{index}.zip")
+            with zipfile.ZipFile(archive, "w") as bundle:
+                bundle.writestr(f"{self.DATA_TYPE}.csv", chunk.to_csv(index=False))
+            self.donation.downloaded_files.append(archive)
+        self.donation.save()
+
+        def read_from_zip(path):
+            with zipfile.ZipFile(path) as bundle:
+                name = f"{self.DATA_TYPE}.csv"
+                if name not in bundle.namelist():
+                    return None
+                with bundle.open(name) as member:
+                    return pd.read_csv(member, parse_dates=["timestamp"])
+
+        original = GoogleDonation.DATA_TYPE_READERS
+        GoogleDonation.DATA_TYPE_READERS = {self.DATA_TYPE: read_from_zip}
+        self.addCleanup(setattr, GoogleDonation, "DATA_TYPE_READERS", original)
+
+        self.donation.extract_and_process()
+        self.donation.refresh_from_db()
+
+    def test_every_row_from_every_archive_is_kept(self):
+        self.assertEqual(self.donation.count_rows(self.DATA_TYPE), len(self.source))
+
+    def test_pages_reassemble_across_archives(self):
+        rows = []
+        offset = 0
+        while True:
+            page = self.donation.fetch_data(self.DATA_TYPE, limit=250, offset=offset)
+            if not page:
+                break
+            rows.extend(page)
+            offset += 250
+        self.assertEqual([row["activity"] for row in rows], list(self.source["activity"]))
+
+    def test_archives_are_combined_into_one_file(self):
+        self.assertTrue(os.path.exists(self.donation._combined_path(self.DATA_TYPE)))
+        self.assertEqual(self.donation._archive_paths(self.DATA_TYPE), [])
+        self.assertEqual(len(self.donation._data_paths(self.DATA_TYPE)), 1)
+
+    def test_archives_are_deleted_after_processing(self):
+        for archive in self.donation.downloaded_files:
+            self.assertFalse(os.path.exists(archive))

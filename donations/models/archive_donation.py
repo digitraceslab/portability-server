@@ -1,4 +1,4 @@
-"""Storage behaviour shared by every donation type backed by files.
+"""Donations whose source data arrives as archives.
 
 Sources differ in how archives arrive and how their contents are read, but not
 in how the result is stored or served: one encrypted Parquet file per data type
@@ -9,15 +9,15 @@ import os
 
 from django.utils import timezone
 
-import donations.utils.crypto as crypto
 from donations.utils import parquet_store
 
 
-class ParquetStorageMixin:
-    """Per-type encrypted Parquet storage, paging and combining.
+class ArchiveDonationMixin:
+    """Reading archives into per-data-type storage, and serving pages of it.
 
     Subclasses provide ``storage_name``, ``archive_field`` and
-    ``DATA_TYPE_READERS``.
+    ``DATA_TYPE_READERS``; they differ only in how archives arrive and how
+    their contents are read.
     """
 
     #: Subdirectory under the donation's data directory.
@@ -117,14 +117,9 @@ class ParquetStorageMixin:
                 continue
 
             try:
-                tmp_fp = crypto.decrypt_file_to_temp(filepath)
-            except Exception as e:
-                self.processing_log += f"Failed to decrypt {filepath}: {e}\n"
-                continue
-
-            try:
                 for data_type in expected:
-                    frame = self._read_data_type(tmp_fp, data_type, filepath)
+                    self._touch_archive(filepath)
+                    frame = self._read_data_type(filepath, data_type, filepath)
                     if frame is None:
                         continue
                     path = self._archive_path(data_type, archive_index)
@@ -136,10 +131,7 @@ class ParquetStorageMixin:
                     }
                     self.processing_log += f"Received {data_type} from {filepath}\n"
             finally:
-                try:
-                    os.remove(tmp_fp)
-                except Exception:
-                    pass
+                self._discard_archive(filepath)
 
             file_status[filepath] = {
                 'processed': True,
@@ -150,6 +142,32 @@ class ParquetStorageMixin:
             self.save()
 
         return all(filepath in file_status for filepath in self._archives())
+
+    def _touch_archive(self, path):
+        """Mark an archive as still in use.
+
+        Reading a file does not update its modification time, so a cleanup
+        that collects abandoned archives by age would eventually collect one
+        that is still being read. Touching it between data types keeps the
+        timestamp advancing while work is happening, and stops advancing the
+        moment the worker dies.
+        """
+        try:
+            os.utime(path, None)
+        except OSError:
+            pass
+
+    def _discard_archive(self, path):
+        """Remove an archive once it has been read, or once reading failed.
+
+        Archives are held unencrypted while they are being processed, so they
+        are not kept afterwards. Continuing after a failure means fetching the
+        archive again rather than reusing a copy left on disk.
+        """
+        try:
+            os.remove(path)
+        except OSError:
+            pass
 
     def _read_data_type(self, archive_path, data_type, source_name):
         """Rows of one data type from one archive, or None if it holds none."""
