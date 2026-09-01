@@ -11,7 +11,10 @@ import pandas as pd
 from cryptography.fernet import Fernet
 from django.test import TestCase, override_settings
 
-from donations.models import GoogleDonation, ResearcherToken
+from django.core.files.uploadedfile import SimpleUploadedFile
+from unittest.mock import patch
+
+from donations.models import GoogleDonation, ResearcherToken, TikTokExportDonation
 from donations.utils import crypto, parquet_store
 
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
@@ -156,3 +159,34 @@ class TestReadStep(StepTestCase):
         rows = self.donation.fetch_data("activity_log", limit=1)
         expected = int(pd.Timestamp("2024-01-01").value // 10**6)
         self.assertEqual(rows[0]["timestamp"], expected)
+
+
+@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+class TestUploadStep(StepTestCase):
+    """An upload needs no authorization step, so it is ready to read at once."""
+
+    def setUp(self):
+        super().setUp()
+        self.donation = TikTokExportDonation.objects.create()
+
+    def test_upload_marks_the_donation_as_processing(self):
+        self.assertEqual(self.donation.processing_status, "waiting")
+        upload = SimpleUploadedFile("export.csv", _frame("2024-01-01", 2).to_csv(index=False).encode())
+        ok, _message = self.donation.handle_file_upload(upload)
+        self.assertTrue(ok)
+        self.assertEqual(self.donation.processing_status, "processing")
+
+    def test_extraction_waits_until_something_is_uploaded(self):
+        self.donation.extract_and_process()
+        self.assertEqual(self.donation.processing_status, "waiting")
+
+    def test_extraction_retries_after_an_error(self):
+        self.donation.requested_data_types = ["watch_history"]
+        self.donation.uploaded_files = [self._store_archive("upload", _frame("2024-01-01", 2))]
+        self.donation.processing_status = "error"
+        self.donation.save()
+
+        with patch.object(TikTokExportDonation, "DATA_TYPE_READERS", {"watch_history": _reader}):
+            self.donation.extract_and_process()
+
+        self.assertEqual(self.donation.processing_status, "processed")

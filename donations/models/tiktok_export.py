@@ -35,7 +35,7 @@ class TikTokExportDonation(ParquetStorageMixin, Donation):
     source_type_display = "TikTok Export"
 
     PROCESSING_STATUS_CHOICES = (
-        ('authorized', 'Authorized, waiting for upload'),
+        ('waiting', 'Waiting for upload'),
         ('processing', 'Processing'),
         ('processed', 'Processed successfully'),
         ('error', 'Error during processing'),
@@ -52,7 +52,7 @@ class TikTokExportDonation(ParquetStorageMixin, Donation):
     processing_status = models.CharField(
         max_length=20,
         choices=PROCESSING_STATUS_CHOICES,
-        default='authorized',
+        default='waiting',
     )
     uploaded_files = models.JSONField(default=list, blank=True)
     file_status = models.JSONField(
@@ -86,9 +86,7 @@ class TikTokExportDonation(ParquetStorageMixin, Donation):
         ]
 
     def extract_and_process(self):
-        # Unlike the OAuth sources, an upload is ready to read as soon as it
-        # has been stored, so 'processing' and 'error' are not entry states.
-        if self.processing_status in ['processing', 'error']:
+        if self.processing_status not in ('processing', 'error'):
             return
         try:
             if self._read_archives():
@@ -134,6 +132,9 @@ class TikTokExportDonation(ParquetStorageMixin, Donation):
             plaintext = b''.join(file.chunks())
         crypto.write_encrypted_bytes(stored_path, plaintext)
         self.uploaded_files.append(stored_path)
+        # An upload needs no authorization step: it is ready to read as soon
+        # as it is stored.
+        self.processing_status = 'processing'
         self.save()
         return True, "File uploaded successfully"
 
