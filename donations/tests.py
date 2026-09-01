@@ -4,6 +4,7 @@ import tempfile
 import uuid
 from unittest.mock import patch, MagicMock
 
+import pandas as pd
 import requests
 
 from cryptography.fernet import Fernet
@@ -12,6 +13,7 @@ from rest_framework.test import APIRequestFactory
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken, Participant, hash_token
 from donations.authentication import ResearcherTokenAuthentication
+from donations.utils import parquet_store
 from donations.utils.crypto import (
     encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes,
     write_encrypted_bytes,
@@ -134,10 +136,12 @@ class GoogleDonationModelTests(TestCase):
         gd = GoogleDonation.objects.create()
         self.assertTrue(Donation.objects.filter(pk=gd.pk).exists())
 
-    def test_csv_path(self):
+    def test_data_paths(self):
         gd = GoogleDonation.objects.create()
-        path = gd._csv_path('youtube_history')
-        self.assertEqual(path, f'data/{gd.pk}/google_portability/youtube_history_processed.csv')
+        directory = f'data/{gd.pk}/google_portability/youtube_history'
+        self.assertEqual(gd._combined_path('youtube_history'), f'{directory}/combined.parquet')
+        self.assertEqual(gd._archive_path('youtube_history', 2), f'{directory}/part-0002.parquet')
+        self.assertEqual(gd._data_paths('youtube_history'), [])
 
     def test_get_data_types_empty_when_not_processed(self):
         gd = GoogleDonation.objects.create()
@@ -216,9 +220,14 @@ class GoogleDonationModelTests(TestCase):
                 'youtube_history': {'received': True, 'received_at': '2026-01-01'},
             },
         )
-        csv_content = "timestamp,title,device_id\n2026-01-15 10:00:00,Video A,1\n2026-01-16 11:00:00,Video B,1\n"
-        csv_path = gd._csv_path('youtube_history')
-        write_encrypted_bytes(csv_path, csv_content.encode())
+        frame = pd.DataFrame({
+            'timestamp': pd.to_datetime(['2026-01-15 10:00:00', '2026-01-16 11:00:00']),
+            'title': ['Video A', 'Video B'],
+            'device_id': ['1', '1'],
+        })
+        csv_path = gd._combined_path('youtube_history')
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        parquet_store.write_frames(csv_path, [frame])
 
         try:
             count = gd.count_rows('youtube_history')
@@ -342,10 +351,12 @@ class TikTokExportDonationModelTests(TestCase):
         ted = TikTokExportDonation.objects.create()
         self.assertTrue(Donation.objects.filter(pk=ted.pk).exists())
 
-    def test_csv_path(self):
+    def test_data_paths(self):
         ted = TikTokExportDonation.objects.create()
-        path = ted._csv_path('watch_history')
-        self.assertEqual(path, f'data/{ted.pk}/tiktok_export/watch_history.csv')
+        directory = f'data/{ted.pk}/tiktok_export/watch_history'
+        self.assertEqual(ted._combined_path('watch_history'), f'{directory}/combined.parquet')
+        self.assertEqual(ted._archive_path('watch_history', 1), f'{directory}/part-0001.parquet')
+        self.assertEqual(ted._data_paths('watch_history'), [])
 
     def test_get_data_types_empty_when_not_processed(self):
         ted = TikTokExportDonation.objects.create()
@@ -427,9 +438,14 @@ class TikTokExportDonationModelTests(TestCase):
                 'watch_history': {'received': True, 'received_at': '2026-01-01'},
             },
         )
-        csv_content = "timestamp,video_id,duration_watched\n1704067200000,12345,30\n1704153600000,67890,45\n"
-        csv_path = ted._csv_path('watch_history')
-        write_encrypted_bytes(csv_path, csv_content.encode())
+        frame = pd.DataFrame({
+            'timestamp': pd.to_datetime(['2024-01-01 00:00:00', '2024-01-02 00:00:00']),
+            'video_id': ['12345', '67890'],
+            'duration_watched': [30, 45],
+        })
+        csv_path = ted._combined_path('watch_history')
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        parquet_store.write_frames(csv_path, [frame])
 
         try:
             count = ted.count_rows('watch_history')
@@ -521,8 +537,8 @@ class TikTokExportDonationModelTests(TestCase):
             for fpath in ted.uploaded_files:
                 if os.path.exists(fpath):
                     os.remove(fpath)
-            # Clean up CSVs and directories
-            csv_path = ted._csv_path('watch_history')
+            # Clean up stored data and directories
+            csv_path = ted._combined_path('watch_history')
             if os.path.exists(csv_path):
                 os.remove(csv_path)
             for dirpath in [os.path.dirname(csv_path), os.path.dirname(os.path.dirname(csv_path))]:

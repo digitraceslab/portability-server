@@ -22,12 +22,16 @@ from niimpy.reading.google_portability import (
 )
 
 from donations.models import Donation
+from donations.models.parquet_storage import ParquetStorageMixin
 import donations.utils.crypto as crypto
+from donations.utils import parquet_store
 from donations.utils.virus_scan import scan_bytes
 
 
-class GoogleDonation(Donation):
+class GoogleDonation(ParquetStorageMixin, Donation):
     source_type_display = 'Google'
+    storage_name = 'google_portability'
+    archive_field = 'downloaded_files'
 
     PROCESSING_STATUS_CHOICES = (
         ('authorized', 'Authorized, waiting for download'),
@@ -282,62 +286,6 @@ class GoogleDonation(Donation):
             if status.get('received')
         ]
 
-    def _csv_path(self, data_type):
-        return f'data/{self.pk}/google_portability/{data_type}_processed.csv'
-
-    def fetch_data(self, data_type, limit=1000, start_date=None, end_date=None, offset=0):
-        if data_type not in self.get_data_types():
-            return []
-        csv_path = self._csv_path(data_type)
-        if not os.path.exists(csv_path):
-            return []
-        try:
-            tmp = crypto.decrypt_file_to_temp(csv_path)
-            try:
-                df = pd.read_csv(tmp, parse_dates=['timestamp'])
-            finally:
-                try:
-                    os.remove(tmp)
-                except Exception:
-                    pass
-            if start_date:
-                df = df[df['timestamp'] >= pd.Timestamp(start_date)]
-            if end_date:
-                df = df[df['timestamp'] <= pd.Timestamp(end_date)]
-            df['timestamp'] = df['timestamp'].astype('int64') // 10**6
-            start = int(offset) if offset else 0
-            end = start + int(limit) if limit is not None else None
-            return df.iloc[start:end].to_dict('records')
-        except Exception as e:
-            self.processing_log += f"Error fetching {data_type} data: {e}\n"
-            self.save()
-            return []
-
-    def count_rows(self, data_type, start_date=None, end_date=None):
-        if data_type not in self.get_data_types():
-            return 0
-        csv_path = self._csv_path(data_type)
-        if not os.path.exists(csv_path):
-            return 0
-        try:
-            tmp = crypto.decrypt_file_to_temp(csv_path)
-            try:
-                df = pd.read_csv(tmp, parse_dates=['timestamp'])
-            finally:
-                try:
-                    os.remove(tmp)
-                except Exception:
-                    pass
-            if start_date:
-                df = df[df['timestamp'] >= pd.Timestamp(start_date)]
-            if end_date:
-                df = df[df['timestamp'] <= pd.Timestamp(end_date)]
-            return len(df)
-        except Exception as e:
-            self.processing_log += f"Error counting {data_type} data: {e}\n"
-            self.save()
-            return 0
-
     def get_auth_url(self):
         state_token = secrets.token_urlsafe(16)
         self.oauth_state = state_token
@@ -578,92 +526,12 @@ class GoogleDonation(Donation):
     def extract_and_process(self):
         if self.processing_status not in ('processing', 'error'):
             return
-
         try:
-            if not os.path.exists('data'):
-                os.makedirs('data')
-
-            file_status = self.file_status or {}
-            data_type_status = self.data_type_status or {}
-
-            for filepath in self.downloaded_files:
-                if file_status.get(filepath, {}).get('processed'):
-                    continue
-                if not os.path.exists(filepath):
-                    self.processing_log += f"File not found: {filepath}\n"
-                    file_status[filepath] = {'processed': True, 'skipped': True}
-                    continue
-
-                try:
-                    tmp_fp = crypto.decrypt_file_to_temp(filepath)
-                except Exception as e:
-                    self.processing_log += f"Failed to decrypt {filepath}: {e}\n"
-                    continue
-
-                try:
-                    for data_type, reader in self.DATA_TYPE_READERS.items():
-                        if data_type not in self.requested_data_types:
-                            continue
-                        if data_type_status.get(data_type, {}).get('received'):
-                            continue
-                        try:
-                            df = reader(tmp_fp)
-                            if df is None or df.empty:
-                                continue
-                            df = df.reset_index()
-                            df["device_id"] = str(self.pk)
-                            csv_path = self._csv_path(data_type)
-                            existing_df = pd.DataFrame()
-                            if os.path.exists(csv_path):
-                                try:
-                                    tmp_csv = crypto.decrypt_file_to_temp(csv_path)
-                                    try:
-                                        existing_df = pd.read_csv(tmp_csv)
-                                    finally:
-                                        try:
-                                            os.remove(tmp_csv)
-                                        except Exception:
-                                            pass
-                                except Exception:
-                                    pass
-                            combined = pd.concat([existing_df, df], ignore_index=True)
-                            crypto.write_encrypted_bytes(
-                                csv_path, combined.to_csv(index=False).encode()
-                            )
-                            data_type_status[data_type] = {
-                                'received': True,
-                                'received_at': timezone.now().isoformat(),
-                            }
-                            self.processing_log += f"Received {data_type} from {filepath}\n"
-                        except NotImplementedError:
-                            pass
-                        except Exception as e:
-                            self.processing_log += f"Failed to read {data_type} from {filepath}: {e}\n"
-                finally:
-                    try:
-                        os.remove(tmp_fp)
-                    except Exception:
-                        pass
-
-                file_status[filepath] = {
-                    'processed': True,
-                    'processed_at': timezone.now().isoformat(),
-                }
-                self.file_status = file_status
-                self.data_type_status = data_type_status
-                self.save()
-
-            all_files_done = all(
-                filepath in file_status for filepath in self.downloaded_files
-            )
-            if all_files_done:
-                expected = [
-                    dt for dt in self.requested_data_types
-                    if dt in self.DATA_TYPE_READERS
-                ]
+            if self._read_archives():
+                self._combine_archives()
                 missing = [
-                    dt for dt in expected
-                    if not data_type_status.get(dt, {}).get('received')
+                    dt for dt in self._expected_data_types()
+                    if not (self.data_type_status or {}).get(dt, {}).get('received')
                 ]
                 if missing:
                     self.processing_log += f"Missing data types after all files processed: {missing}\n"
@@ -672,11 +540,11 @@ class GoogleDonation(Donation):
                     self.processing_status = 'processed'
                     self.status = 'processed'
                 self.save()
-
         except Exception as e:
             self.processing_log += f"Unexpected error during processing: {e}\n"
             self.processing_status = 'error'
             self.save()
+
 
     def _process_data(self):
         self.download_data_files()
