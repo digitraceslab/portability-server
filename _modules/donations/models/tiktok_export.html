@@ -109,7 +109,7 @@
     <span class="n">source_type_display</span> <span class="o">=</span> <span class="s2">&quot;TikTok Export&quot;</span>
 
     <span class="n">PROCESSING_STATUS_CHOICES</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="p">(</span><span class="s1">&#39;authorized&#39;</span><span class="p">,</span> <span class="s1">&#39;Authorized, waiting for upload&#39;</span><span class="p">),</span>
+        <span class="p">(</span><span class="s1">&#39;waiting&#39;</span><span class="p">,</span> <span class="s1">&#39;Waiting for upload&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="s1">&#39;processing&#39;</span><span class="p">,</span> <span class="s1">&#39;Processing&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="s1">&#39;processed&#39;</span><span class="p">,</span> <span class="s1">&#39;Processed successfully&#39;</span><span class="p">),</span>
         <span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">,</span> <span class="s1">&#39;Error during processing&#39;</span><span class="p">),</span>
@@ -126,7 +126,7 @@
     <span class="n">processing_status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span>
         <span class="n">max_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
         <span class="n">choices</span><span class="o">=</span><span class="n">PROCESSING_STATUS_CHOICES</span><span class="p">,</span>
-        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;authorized&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s1">&#39;waiting&#39;</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="n">uploaded_files</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">JSONField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">file_status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">JSONField</span><span class="p">(</span>
@@ -168,9 +168,7 @@
 <div class="viewcode-block" id="TikTokExportDonation.extract_and_process">
 <a class="viewcode-back" href="../../../api/donations.models.tiktok_export.html#donations.models.TikTokExportDonation.extract_and_process">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">extract_and_process</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Unlike the OAuth sources, an upload is ready to read as soon as it</span>
-        <span class="c1"># has been stored, so &#39;processing&#39; and &#39;error&#39; are not entry states.</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;processing&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;processing&#39;</span><span class="p">,</span> <span class="s1">&#39;error&#39;</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_archives</span><span class="p">():</span>
@@ -219,6 +217,9 @@
             <span class="n">plaintext</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">chunks</span><span class="p">())</span>
         <span class="n">crypto</span><span class="o">.</span><span class="n">write_encrypted_bytes</span><span class="p">(</span><span class="n">stored_path</span><span class="p">,</span> <span class="n">plaintext</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">uploaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stored_path</span><span class="p">)</span>
+        <span class="c1"># An upload needs no authorization step: it is ready to read as soon</span>
+        <span class="c1"># as it is stored.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;File uploaded successfully&quot;</span></div>
 
