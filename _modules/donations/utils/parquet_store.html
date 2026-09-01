@@ -84,7 +84,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet.encryption</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pe</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">cryptography.fernet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fernet</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">crypto</span>
 
@@ -106,7 +106,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
         <span class="n">pe</span><span class="o">.</span><span class="n">KmsClient</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">_get_fernet</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span> <span class="o">=</span> <span class="n">Fernet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">custom_kms_conf</span><span class="p">[</span><span class="n">_FOOTER_KEY_ID</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">wrap_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_bytes</span><span class="p">,</span> <span class="n">master_key_id</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">key_bytes</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
@@ -120,8 +120,10 @@
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_kms_config</span><span class="p">():</span>
-    <span class="c1"># The master key never leaves the service; this only names it.</span>
-    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">KmsConnectionConfig</span><span class="p">(</span><span class="n">custom_kms_conf</span><span class="o">=</span><span class="p">{</span><span class="n">_FOOTER_KEY_ID</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">})</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hands the master key to the client; it never leaves the process.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">KmsConnectionConfig</span><span class="p">(</span>
+        <span class="n">custom_kms_conf</span><span class="o">=</span><span class="p">{</span><span class="n">_FOOTER_KEY_ID</span><span class="p">:</span> <span class="n">crypto</span><span class="o">.</span><span class="n">_resolve_key</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()}</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_encryption_properties</span><span class="p">():</span>
