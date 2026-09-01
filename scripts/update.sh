@@ -42,6 +42,7 @@ echo "==> Running migrations and collecting static files"
 
 render_services
 install_nginx
+check_clamd_settings
 
 echo "==> Restarting services"
 sudo systemctl restart $SERVICES

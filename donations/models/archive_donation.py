@@ -5,11 +5,15 @@ in how the result is stored or served: one encrypted Parquet file per data type
 per archive, combined into one file per type when the export is complete, and
 read back a page at a time.
 """
+import logging
 import os
 
 from django.utils import timezone
 
 from donations.utils import parquet_store
+from donations.utils.virus_scan import scan_path
+
+logger = logging.getLogger(__name__)
 
 
 class ArchiveDonationMixin:
@@ -116,6 +120,19 @@ class ArchiveDonationMixin:
                 file_status[filepath] = {'processed': True, 'skipped': True}
                 continue
 
+            clean, detail = scan_path(filepath)
+            if not clean:
+                self.processing_log += f"Archive rejected by virus scan: {detail}\n"
+                self._discard_archive(filepath)
+                file_status[filepath] = {
+                    'processed': True,
+                    'rejected': True,
+                    'processed_at': timezone.now().isoformat(),
+                }
+                self.file_status = file_status
+                self.save()
+                continue
+
             try:
                 for data_type in expected:
                     self._touch_archive(filepath)
@@ -142,6 +159,30 @@ class ArchiveDonationMixin:
             self.save()
 
         return all(filepath in file_status for filepath in self._archives())
+
+    def _queue_processing(self):
+        """Ask a worker to process this donation as soon as it can.
+
+        A broker that is unavailable must not fail the request that stored the
+        archive; the periodic sweep picks the donation up instead.
+        """
+        from donations.tasks import process_donation
+
+        try:
+            process_donation.apply_async(
+                args=[self.pk], task_id=f'process-donation-{self.pk}'
+            )
+        except Exception as exc:
+            logger.exception("Could not queue donation %s for processing", self.pk)
+            self.processing_log += f"Processing could not be queued: {exc}\n"
+            self.save(update_fields=['processing_log'])
+
+    def rejected_archives(self):
+        """Archives the scanner refused, which make the donation an error."""
+        return [
+            path for path, status in (self.file_status or {}).items()
+            if status.get('rejected')
+        ]
 
     def _touch_archive(self, path):
         """Mark an archive as still in use.
@@ -189,7 +230,7 @@ class ArchiveDonationMixin:
             return None
         frame = frame.reset_index()
         frame['device_id'] = self._device_id()
-        return frame
+        return parquet_store.in_time_order(frame)
 
     def _combine_archives(self, data_types=None):
         """Merge each data type's per-archive files into a single file."""

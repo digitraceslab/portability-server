@@ -144,6 +144,13 @@ elif [ "$NGINX_CHECKED" -eq 1 ]; then
     pass "installed systemd and nginx configs match the version-controlled source"
 fi
 
+check_clamd_settings
+if [ "$CLAMD_PROBLEMS" -gt 0 ]; then
+    fail "$CLAMD_PROBLEMS virus scanner setting(s) differ from what the service requires"
+else
+    pass "virus scanner settings"
+fi
+
 echo "==> Disk"
 df -h / "$APP_DIR" 2>/dev/null | awk 'NR==1 || !seen[$0]++'
 for filesystem in / "$APP_DIR"; do

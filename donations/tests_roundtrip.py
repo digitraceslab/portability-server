@@ -152,8 +152,8 @@ class RoundTripTest(TestCase):
         return rows
 
     def _expected(self, data_type):
-        """The generated rows, with timestamps in the form the API returns."""
-        frame = self.sources[data_type].copy()
+        """The generated rows as stored: in time order, timestamps in ms."""
+        frame = self.sources[data_type].sort_values("timestamp", kind="stable").copy()
         frame["timestamp"] = frame["timestamp"].astype("datetime64[ms]").astype("int64")
         return frame.to_dict("records")
 
@@ -197,11 +197,22 @@ class RoundTripTest(TestCase):
         self._compare("search_queries", self._page_through("search_queries", 7))
         self._compare("search_queries", self._page_through("search_queries", 299))
 
-    def test_unsorted_source_keeps_its_order(self):
+    def test_unsorted_source_is_stored_in_time_order(self):
+        source = list(self.sources["search_queries"]["timestamp"])
+        self.assertNotEqual(source, sorted(source), "generated data should be unsorted")
+
         rows = self._page_through("search_queries", PAGE)
         stored = [row["timestamp"] for row in rows]
-        self.assertNotEqual(stored, sorted(stored), "generated data should be unsorted")
+        self.assertEqual(stored, sorted(stored), "stored data is ordered by time")
         self._compare("search_queries", rows)
+
+    def test_ordering_lets_a_date_filter_skip_row_groups(self):
+        frame = self.sources["search_queries"].sort_values("timestamp")
+        start = frame["timestamp"].iloc[-5]
+        rows = self.donation.fetch_data(
+            "search_queries", limit=PAGE, start_date=start,
+        )
+        self.assertEqual(len(rows), 5)
 
     def test_final_partial_page(self):
         total = len(self.sources["search_queries"])

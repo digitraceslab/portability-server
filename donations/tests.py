@@ -1,8 +1,11 @@
 """Tests for donations app functionality."""
 import os
+import shutil
 import tempfile
 import uuid
 from unittest.mock import patch, MagicMock
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 import pandas as pd
 import requests
@@ -555,48 +558,64 @@ class TikTokExportDonationModelTests(TestCase):
 
 
 class TikTokExportVirusScanTests(TestCase):
-    """Tests for virus scanning during TikTok export file upload."""
+    """Scanning happens in the worker, just before an archive is read."""
+
+    def setUp(self):
+        self.archive_dir = tempfile.mkdtemp(prefix="scan-archives-")
+        self.addCleanup(shutil.rmtree, self.archive_dir, ignore_errors=True)
+        patcher = override_settings(ARCHIVE_DIR=self.archive_dir)
+        patcher.enable()
+        self.addCleanup(patcher.disable)
+        self.donation = TikTokExportDonation.objects.create(
+            requested_data_types=['watch_history'],
+        )
+
+    def _upload(self):
+        upload = SimpleUploadedFile(
+            'watch_history.csv', b'timestamp,video_id\n2024-01-01 00:00:00,12345\n'
+        )
+        with patch.object(TikTokExportDonation, '_queue_processing'):
+            return self.donation.handle_file_upload(upload)
+
+    def test_upload_is_stored_without_scanning_it_in_the_request(self):
+        with patch('donations.models.archive_donation.scan_path') as scan:
+            success, _message = self._upload()
+        self.assertTrue(success)
+        self.assertEqual(len(self.donation.uploaded_files), 1)
+        self.assertTrue(os.path.exists(self.donation.uploaded_files[0]))
+        scan.assert_not_called()
+
+    def test_upload_queues_processing(self):
+        upload = SimpleUploadedFile('watch_history.csv', b'timestamp,video_id\n')
+        with patch.object(TikTokExportDonation, '_queue_processing') as queue:
+            self.donation.handle_file_upload(upload)
+        queue.assert_called_once()
 
     @override_settings(CLAMAV_ENABLED=True)
-    @patch('donations.models.tiktok_export.scan_bytes', return_value=(True, 'clean'))
-    def test_upload_succeeds_when_file_is_clean(self, mock_scan_bytes):
-        ted = TikTokExportDonation.objects.create()
+    @patch('donations.models.archive_donation.scan_path',
+           return_value=(False, 'Eicar-Test-Signature FOUND'))
+    def test_infected_archive_is_rejected_and_removed(self, _scan):
+        self._upload()
+        stored = self.donation.uploaded_files[0]
 
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        upload_file = SimpleUploadedFile('watch_history.csv', b'video_id,watched_at\n12345,2024-01-01T12:00:00Z')
+        self.donation.extract_and_process()
+        self.donation.refresh_from_db()
 
-        try:
-            success, message = ted.handle_file_upload(upload_file)
+        self.assertFalse(os.path.exists(stored), "rejected archive is deleted")
+        self.assertEqual(self.donation.processing_status, 'error')
+        self.assertIn('rejected by virus scan', self.donation.processing_log)
+        self.assertEqual(self.donation.rejected_archives(), [stored])
 
-            self.assertTrue(success)
-            self.assertEqual(len(ted.uploaded_files), 1)
-            stored_path = ted.uploaded_files[0]
-            self.assertTrue(os.path.exists(stored_path))
-        finally:
-            for fpath in ted.uploaded_files:
-                if os.path.exists(fpath):
-                    os.remove(fpath)
-            try:
-                os.rmdir('data')
-            except OSError:
-                pass
+    @patch('donations.models.archive_donation.scan_path', return_value=(True, 'clean'))
+    def test_clean_archive_is_read(self, _scan):
+        self._upload()
+        with patch.object(TikTokExportDonation, 'DATA_TYPE_READERS',
+                          {'watch_history': lambda path: pd.read_csv(path, parse_dates=['timestamp'])}):
+            self.donation.extract_and_process()
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.processing_status, 'processed')
+        self.assertEqual(self.donation.count_rows('watch_history'), 1)
 
-    @override_settings(CLAMAV_ENABLED=True)
-    @patch('donations.models.tiktok_export.scan_bytes', return_value=(False, 'Eicar-Test-Signature FOUND'))
-    def test_upload_rejected_when_file_is_infected(self, mock_scan_bytes):
-        ted = TikTokExportDonation.objects.create()
-
-        from django.core.files.uploadedfile import SimpleUploadedFile
-        upload_file = SimpleUploadedFile('watch_history.csv', b'video_id,watched_at\n12345,2024-01-01T12:00:00Z')
-
-        success, message = ted.handle_file_upload(upload_file)
-
-        self.assertFalse(success)
-        self.assertEqual(ted.uploaded_files, [])
-        if os.path.exists('data'):
-            self.assertFalse(any(f.startswith(f'{ted.pk}_') for f in os.listdir('data')))
-        ted.refresh_from_db()
-        self.assertIn('Upload rejected by virus scan', ted.processing_log)
 
 
 def _set_donation_session(client, raw_token):

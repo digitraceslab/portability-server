@@ -217,10 +217,29 @@ def read_rows(paths, limit=None, offset=0, start_date=None, end_date=None):
     return pd.concat(collected, ignore_index=True)
 
 
-def combine(paths, destination):
-    """Merge a type's per-archive files into one, a row group at a time."""
-    def groups():
-        for path, index, _rows, _low, _high in _groups(paths):
-            yield _read_group(path, index)
+def in_time_order(frame):
+    """Sort rows by timestamp, keeping the original order within equal ones.
 
-    return write_frames(destination, groups())
+    Row group statistics prune a date filter only when the ranges of different
+    groups do not overlap, which needs the rows to be written in order. Sources
+    usually deliver sorted data, but that cannot be relied on.
+    """
+    if TIMESTAMP_COLUMN not in frame.columns:
+        return frame
+    if frame[TIMESTAMP_COLUMN].is_monotonic_increasing:
+        return frame
+    return frame.sort_values(TIMESTAMP_COLUMN, kind="stable").reset_index(drop=True)
+
+
+def combine(paths, destination):
+    """Merge a type's per-archive files into one, in timestamp order.
+
+    Ordering the result means holding it in memory, so this is the step to
+    revisit first if a data type outgrows the machine: a k-way merge over the
+    already-sorted inputs would replace it without changing the result.
+    """
+    frames = [_read_group(path, index) for path, index, _r, _l, _h in _groups(paths)]
+    if not frames:
+        return 0
+    merged = in_time_order(pd.concat(frames, ignore_index=True))
+    return write_frames(destination, [merged])

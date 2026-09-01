@@ -9,6 +9,9 @@ DRIFT_COUNT=${DRIFT_COUNT:-0}
 # unreadable, and whether the nginx comparison actually ran. verify.sh reads
 # both: a check that could not be performed must never be reported as a pass.
 CERT_PROBLEMS=${CERT_PROBLEMS:-0}
+
+# Scanner settings that differ from what this service requires.
+CLAMD_PROBLEMS=${CLAMD_PROBLEMS:-0}
 NGINX_CHECKED=${NGINX_CHECKED:-0}
 
 validate_env() {
@@ -171,5 +174,67 @@ PYEOF
     if [ "$changed" -eq 1 ]; then
         sudo nginx -t
         sudo systemctl reload nginx
+    fi
+}
+
+CLAMD_CONF="${CLAMD_CONF:-/etc/clamav/clamd.conf}"
+
+# Required scanner settings, as "key value" pairs.
+_clamd_required() {
+    grep -vE '^\s*(#|$)' "$APP_DIR/deploy/clamd-settings.conf"
+}
+
+# What clamd reports as being in effect. Sizes come back in bytes and unset
+# options as "disabled", which is normalised to 0/no for comparison.
+_clamd_effective() {
+    local key="$1" line
+    line="$(clamconf 2>/dev/null | grep -E "^${key} " | head -1)"
+    case "$line" in
+        "") echo "" ;;
+        *disabled*) echo "disabled" ;;
+        *) echo "$line" | sed 's/.*= "//; s/"$//' ;;
+    esac
+}
+
+_clamd_matches() {
+    local want="$1" have="$2"
+    [ "$want" = "$have" ] && return 0
+    # unlimited and off are both reported as "disabled"
+    { [ "$want" = "0" ] || [ "$want" = "no" ]; } && [ "$have" = "disabled" ] && return 0
+    return 1
+}
+
+# Compares clamd's effective settings against the required ones. Applies them
+# when INSTALL_CONFIGS=yes, otherwise reports. Sets CLAMD_PROBLEMS.
+check_clamd_settings() {
+    echo "==> Virus scanner settings"
+    if ! command -v clamconf >/dev/null 2>&1; then
+        echo "Warning: clamconf not available; scanner settings not verified." >&2
+        CLAMD_PROBLEMS=$((CLAMD_PROBLEMS + 1))
+        return
+    fi
+
+    local changed=0 key want have
+    while read -r key want; do
+        [ -n "$key" ] || continue
+        have="$(_clamd_effective "$key")"
+        if _clamd_matches "$want" "$have"; then
+            continue
+        fi
+        if [ "$INSTALL_CONFIGS" = "yes" ]; then
+            sudo sed -i "/^${key}[[:space:]]/d" "$CLAMD_CONF"
+            echo "$key $want" | sudo tee -a "$CLAMD_CONF" >/dev/null
+            echo "$key: set to $want (was ${have:-unset})"
+            changed=1
+        else
+            echo "Warning: $key is ${have:-unset}, expected $want." >&2
+            CLAMD_PROBLEMS=$((CLAMD_PROBLEMS + 1))
+        fi
+    done < <(_clamd_required)
+
+    if [ "$changed" -eq 1 ]; then
+        sudo systemctl restart clamav-daemon
+    elif [ "$CLAMD_PROBLEMS" -eq 0 ]; then
+        echo "scanner settings as required"
     fi
 }

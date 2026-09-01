@@ -111,6 +111,7 @@ sudo systemctl enable --now $SERVICES
 verify_services_active
 
 install_nginx
+check_clamd_settings
 
 cat <<MSG
 ==> Deployment complete.

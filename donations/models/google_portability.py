@@ -25,7 +25,6 @@ from donations.models import Donation
 from donations.models.archive_donation import ArchiveDonationMixin
 import donations.utils.crypto as crypto
 from donations.utils import parquet_store
-from donations.utils.virus_scan import scan_bytes
 
 
 class GoogleDonation(ArchiveDonationMixin, Donation):
@@ -495,11 +494,6 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
                 download_urls = status_data.get('urls', [])
                 for i, url in enumerate(download_urls):
                     file_response = requests.get(url)
-                    clean, detail = scan_bytes(file_response.content)
-                    if not clean:
-                        self.processing_log += f"Downloaded file failed virus scan: {detail}\n"
-                        self.save()
-                        return False, f"Downloaded file failed virus scan: {detail}"
                     os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
                     path = os.path.join(
                         settings.ARCHIVE_DIR, f'google_data_{job_id}_{i}.zip'
@@ -531,6 +525,12 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
         try:
             if self._read_archives():
                 self._combine_archives()
+                rejected = self.rejected_archives()
+                if rejected:
+                    self.processing_log += f"Archives rejected by virus scan: {rejected}\n"
+                    self.processing_status = 'error'
+                    self.save()
+                    return
                 missing = [
                     dt for dt in self._expected_data_types()
                     if not (self.data_type_status or {}).get(dt, {}).get('received')

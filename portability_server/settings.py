@@ -185,7 +185,9 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
 CELERY_TASK_TRACK_STARTED = True
-CELERY_TASK_TIME_LIMIT = 30 * 60
+# An export can be tens of GB: reading it, and scanning what is read at a
+# few tens of MB/s, is measured in hours rather than minutes.
+CELERY_TASK_TIME_LIMIT = env.int("CELERY_TASK_TIME_LIMIT", default=6 * 60 * 60)
 CELERY_WORKER_CONCURRENCY = 1
 CELERY_BEAT_SCHEDULE = {
     "check-authorized-donations": {

@@ -8,7 +8,6 @@ from django.db import models
 from urllib.parse import urlencode
 import donations.utils.crypto as crypto
 from django.utils import timezone
-from donations.utils.virus_scan import scan_bytes, scan_path
 
 
 from donations.models import Donation
@@ -91,6 +90,12 @@ class TikTokExportDonation(ArchiveDonationMixin, Donation):
         try:
             if self._read_archives():
                 self._combine_archives()
+                rejected = self.rejected_archives()
+                if rejected:
+                    self.processing_log += f"Archives rejected by virus scan: {rejected}\n"
+                    self.processing_status = 'error'
+                    self.save()
+                    return
                 missing = [
                     dt for dt in self._expected_data_types()
                     if not (self.data_type_status or {}).get(dt, {}).get('received')
@@ -117,27 +122,18 @@ class TikTokExportDonation(ArchiveDonationMixin, Donation):
         stored_filename = f"{self.pk}_{unique_suffix}_{filename}"
         stored_path = os.path.join(settings.ARCHIVE_DIR, stored_filename)
         os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
-        if hasattr(file, "temporary_file_path"):
-            clean, detail = scan_path(file.temporary_file_path())
-            plaintext = None
-        else:
-            plaintext = b''.join(file.chunks())
-            clean, detail = scan_bytes(plaintext)
-        if not clean:
-            self.processing_log += f"Upload rejected by virus scan: {detail}\n"
-            self.save()
-            return False, "File failed the security scan and was rejected."
-        if plaintext is None:
-            plaintext = b''.join(file.chunks())
-        # Held unencrypted only while it is being processed, and deleted as
-        # soon as it has been read.
+        # Written straight to disk: scanning and reading it are the worker's
+        # job, so the request does not wait for either. Held unencrypted only
+        # while it is being processed, and deleted as soon as it has been read.
         with open(stored_path, 'wb') as handle:
-            handle.write(plaintext)
+            for chunk in file.chunks():
+                handle.write(chunk)
         self.uploaded_files.append(stored_path)
         # An upload needs no authorization step: it is ready to read as soon
         # as it is stored.
         self.processing_status = 'processing'
         self.save()
+        self._queue_processing()
         return True, "File uploaded successfully"
 
     def _process_data(self):
