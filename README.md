@@ -594,7 +594,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `CELERY_TASK_TIME_LIMIT` | Seconds a processing task may run (default 21600) | |
 | `RETENTION_DAYS` | Days donated data is kept after it arrives (default 14) | |
 | `CAN_DELETE_RETENTION_DAYS` | Days kept after the researcher confirms a verified copy (default 2) | |
-| `RETENTION_WARNING_DAYS` | Donations expiring within this many days are named in the daily mail (default 3) | |
+| `RETENTION_WARNING_DAYS` | Unflagged donations expiring within this many days are named in the daily mail (default 2) | |
 | `EMAIL_FROM` | Sender for administrator mail; must be an `aalto.fi` address | `portability@aalto.fi` |
 | `ADMIN_EMAILS` | Comma-separated recipients of the daily retention mail | |
 

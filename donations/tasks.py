@@ -165,7 +165,9 @@ def expire_donations():
         if due <= now:
             deleted.append(f"donation {donation.pk} ({donation.source_type}), due {due:%Y-%m-%d %H:%M}")
             _delete_expired(donation)
-        elif due <= warn_before:
+        elif due <= warn_before and donation.can_delete_at is None:
+            # A flagged donation is expected to go; only the unflagged ones
+            # are worth anyone's attention.
             expiring.append(f"donation {donation.pk} ({donation.source_type}), due {due:%Y-%m-%d %H:%M}")
 
     if deleted or expiring:

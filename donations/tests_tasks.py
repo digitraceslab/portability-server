@@ -257,7 +257,7 @@ class RemoveStaleArchivesTests(TestCase):
 
 
 @override_settings(
-    RETENTION_DAYS=14, CAN_DELETE_RETENTION_DAYS=2, RETENTION_WARNING_DAYS=3,
+    RETENTION_DAYS=14, CAN_DELETE_RETENTION_DAYS=2, RETENTION_WARNING_DAYS=2,
     ADMIN_EMAILS=['admin@aalto.fi'],
 )
 class ExpireDonationsTests(TestCase):
@@ -299,14 +299,21 @@ class ExpireDonationsTests(TestCase):
 
     def test_reports_deletions_and_upcoming_expiry(self):
         self._donation(received_days_ago=15)
-        self._donation(received_days_ago=12)  # due in 2 days, inside the warning
+        self._donation(received_days_ago=13)  # due in a day, inside the warning
         expire_donations()
 
         self.assertEqual(len(mail.outbox), 1)
         message = mail.outbox[0]
         self.assertEqual(message.to, ['admin@aalto.fi'])
         self.assertIn('Deleted:', message.body)
-        self.assertIn('Expiring within 3 days:', message.body)
+        self.assertIn('Expiring within 2 days:', message.body)
+
+    def test_flagged_donations_are_not_warned_about(self):
+        """A donation the researcher has released is expected to go."""
+        donation = self._donation(received_days_ago=13, can_delete_days_ago=0)
+        expire_donations()
+        self.assertEqual(mail.outbox, [])
+        self.assertTrue(Donation.objects.filter(pk=donation.pk).exists())
 
     def test_no_mail_when_nothing_happened(self):
         self._donation(received_days_ago=1)

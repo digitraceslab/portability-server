@@ -106,8 +106,9 @@ PROCESSING_CLAIM_TIMEOUT_SECONDS = env.int(
 
 RETENTION_DAYS = env.int("RETENTION_DAYS", default=14)
 CAN_DELETE_RETENTION_DAYS = env.int("CAN_DELETE_RETENTION_DAYS", default=2)
-#: Donations expiring within this many days are named in the daily mail.
-RETENTION_WARNING_DAYS = env.int("RETENTION_WARNING_DAYS", default=3)
+#: Donations expiring within this many days are named in the daily mail,
+#: unless the researcher has already flagged them deletable.
+RETENTION_WARNING_DAYS = env.int("RETENTION_WARNING_DAYS", default=2)
 
 # Mail goes through the local transfer agent. The sender must be an aalto.fi
 # address; which local part does not matter.
