@@ -141,6 +141,22 @@ curl -X GET "http://localhost:8000/api/donations/<id>/data/?data_type=youtube_hi
    -H "Authorization: Token <researcher_token>"
 ```
 
+### Signal that a donation may be deleted
+
+```
+POST /api/donations/<id>/can-delete/
+```
+
+Records that a verified copy of the data is held. Nothing is deleted at that
+point: it starts a shorter retention clock, after which the service deletes the
+donation itself. Repeating the call keeps the first time.
+
+Example
+``` bash
+curl -X POST http://localhost:8000/api/donations/<id>/can-delete/ \
+   -H "Authorization: Token <researcher_token>"
+```
+
 ### Delete a donation
 
 ```
@@ -519,6 +535,18 @@ clean - the verification is worth running often:
 15 * * * * VERIFY_EMAIL=you@example.org /home/USER/portability-server/scripts/verify.sh >/dev/null
 ```
 
+### Retention
+
+Donated data is kept for `RETENTION_DAYS` from the moment it arrives, which
+defaults to 14 days and mirrors how long Google keeps an export available, so
+no copy is held longer than the source keeps its own. When a researcher signals
+that they hold a verified copy, a shorter clock of `CAN_DELETE_RETENTION_DAYS`
+applies instead. Whichever expires first decides.
+
+A scheduled task checks twice a day, deletes what has expired - revoking the
+platform grant first, where there is one - and mails the administrators what it
+deleted and what is due within `RETENTION_WARNING_DAYS`.
+
 ## How data is stored
 
 An archive - a Google export or a participant's upload - is written to
@@ -563,6 +591,12 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `DOMAINS` | Domains nginx serves, comma-separated; defaults to the first `ALLOWED_HOSTS` entry | `a.example,b.example` |
 | `ARCHIVE_DIR` | Where archives are held while being processed (default `data/archives`) | |
 | `ARCHIVE_MAX_AGE_SECONDS` | Age at which an abandoned archive is deleted (default 86400) | |
+| `CELERY_TASK_TIME_LIMIT` | Seconds a processing task may run (default 21600) | |
+| `RETENTION_DAYS` | Days donated data is kept after it arrives (default 14) | |
+| `CAN_DELETE_RETENTION_DAYS` | Days kept after the researcher confirms a verified copy (default 2) | |
+| `RETENTION_WARNING_DAYS` | Donations expiring within this many days are named in the daily mail (default 3) | |
+| `EMAIL_FROM` | Sender for administrator mail; must be an `aalto.fi` address | `portability@aalto.fi` |
+| `ADMIN_EMAILS` | Comma-separated recipients of the daily retention mail | |
 
 ## Testing
 

@@ -94,6 +94,32 @@ ARCHIVE_DIR = env("ARCHIVE_DIR", default="data/archives")
 # default: a healthy worker deletes its own archives immediately.
 ARCHIVE_MAX_AGE_SECONDS = env.int("ARCHIVE_MAX_AGE_SECONDS", default=24 * 60 * 60)
 
+# How long donated data is kept. From arrival, 14 days mirrors how long Google
+# keeps an export available, so no copy is held longer than the source keeps
+# its own. Once a researcher confirms they hold a verified copy, a shorter
+# clock applies; whichever expires first wins.
+#: How long a worker's claim on a donation stands without being refreshed.
+#: Longer than the gap between refreshes, shorter than anyone's patience.
+PROCESSING_CLAIM_TIMEOUT_SECONDS = env.int(
+    "PROCESSING_CLAIM_TIMEOUT_SECONDS", default=30 * 60
+)
+
+RETENTION_DAYS = env.int("RETENTION_DAYS", default=14)
+CAN_DELETE_RETENTION_DAYS = env.int("CAN_DELETE_RETENTION_DAYS", default=2)
+#: Donations expiring within this many days are named in the daily mail.
+RETENTION_WARNING_DAYS = env.int("RETENTION_WARNING_DAYS", default=3)
+
+# Mail goes through the local transfer agent. The sender must be an aalto.fi
+# address; which local part does not matter.
+EMAIL_HOST = env("EMAIL_HOST", default="localhost")
+EMAIL_PORT = env.int("EMAIL_PORT", default=25)
+DEFAULT_FROM_EMAIL = env("EMAIL_FROM", default="portability@aalto.fi")
+ADMIN_EMAILS = [
+    address.strip()
+    for address in env("ADMIN_EMAILS", default="").split(",")
+    if address.strip()
+]
+
 CLAMAV_ENABLED = env.bool("CLAMAV_ENABLED", default=not DEBUG) and not TESTING
 
 # Encryption
@@ -197,6 +223,10 @@ CELERY_BEAT_SCHEDULE = {
     "remove-stale-archives": {
         "task": "donations.tasks.remove_stale_archives",
         "schedule": 3600,
+    },
+    "expire-donations": {
+        "task": "donations.tasks.expire_donations",
+        "schedule": 12 * 60 * 60,
     },
 }
 

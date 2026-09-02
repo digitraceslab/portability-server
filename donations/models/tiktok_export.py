@@ -132,6 +132,7 @@ class TikTokExportDonation(ArchiveDonationMixin, Donation):
         # An upload needs no authorization step: it is ready to read as soon
         # as it is stored.
         self.processing_status = 'processing'
+        self.data_received_at = self.data_received_at or timezone.now()
         self.save()
         self._queue_processing()
         return True, "File uploaded successfully"

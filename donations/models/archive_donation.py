@@ -136,6 +136,7 @@ class ArchiveDonationMixin:
             try:
                 for data_type in expected:
                     self._touch_archive(filepath)
+                    self.claim_processing()
                     frame = self._read_data_type(filepath, data_type, filepath)
                     if frame is None:
                         continue
@@ -176,6 +177,26 @@ class ArchiveDonationMixin:
             logger.exception("Could not queue donation %s for processing", self.pk)
             self.processing_log += f"Processing could not be queued: {exc}\n"
             self.save(update_fields=['processing_log'])
+
+    def has_archives(self):
+        """Whether any archive is still on disk to be read.
+
+        False covers two cases that look the same from outside: nothing has
+        been fetched yet, and what was fetched has since been removed - by the
+        worker that finished with it, or by the cleanup that collects what a
+        crash left behind.
+        """
+        return any(os.path.exists(path) for path in self._archives())
+
+    def forget_archives(self):
+        """Forget archives that are no longer on disk, so they are fetched again."""
+        remaining = [path for path in self._archives() if os.path.exists(path)]
+        setattr(self, self.archive_field, remaining)
+        self.file_status = {
+            path: status for path, status in (self.file_status or {}).items()
+            if path in remaining
+        }
+        self.save()
 
     def rejected_archives(self):
         """Archives the scanner refused, which make the donation an error."""

@@ -171,3 +171,37 @@ class TestDataEndpoint(DonationAPITestCase):
         client = APIClient()
         response = client.get(f'/api/donations/{donation.pk}/data/')
         self.assertIn(response.status_code, [401, 403])
+
+
+class TestCanDeleteSignal(DonationAPITestCase):
+    """The signal starts a shorter retention clock; it does not delete."""
+
+    def setUp(self):
+        super().setUp()
+        response = self.client.post('/api/donations/', {'source_type': 'google_portability'})
+        self.donation_id = response.data['id']
+
+    def test_signal_records_when_it_arrived(self):
+        response = self.client.post(f'/api/donations/{self.donation_id}/can-delete/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.data['can_delete_at'])
+
+        donation = Donation.objects.get(pk=self.donation_id)
+        self.assertIsNotNone(donation.can_delete_at)
+
+    def test_signal_does_not_delete_the_donation(self):
+        self.client.post(f'/api/donations/{self.donation_id}/can-delete/')
+        self.assertTrue(Donation.objects.filter(pk=self.donation_id).exists())
+
+    def test_repeating_the_signal_keeps_the_first_time(self):
+        self.client.post(f'/api/donations/{self.donation_id}/can-delete/')
+        first = Donation.objects.get(pk=self.donation_id).can_delete_at
+        self.client.post(f'/api/donations/{self.donation_id}/can-delete/')
+        self.assertEqual(Donation.objects.get(pk=self.donation_id).can_delete_at, first)
+
+    def test_another_researcher_cannot_signal(self):
+        other = ResearcherToken.objects.create(name='other-researcher')
+        client = APIClient()
+        client.credentials(HTTP_AUTHORIZATION=f'Token {other._raw_key}')
+        response = client.post(f'/api/donations/{self.donation_id}/can-delete/')
+        self.assertEqual(response.status_code, 404)

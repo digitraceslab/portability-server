@@ -1,5 +1,7 @@
 """REST API for researcher donation management."""
+from django.conf import settings
 from django.urls import reverse
+from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes as perm_classes
@@ -121,6 +123,23 @@ class DonationViewSet(viewsets.GenericViewSet):
         donation.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(detail=True, methods=['post'], url_path='can-delete')
+    def can_delete(self, request, pk=None):
+        """Signal that a verified copy exists and the donation may be released.
+
+        This does not delete anything: it starts a shorter retention clock,
+        after which the service deletes the donation itself. Deleting now is
+        what ``DELETE`` is for.
+        """
+        donation = self.get_object()
+        if donation.can_delete_at is None:
+            donation.can_delete_at = timezone.now()
+            donation.save(update_fields=['can_delete_at'])
+        return Response({
+            'can_delete_at': donation.can_delete_at,
+            'delete_after_days': settings.CAN_DELETE_RETENTION_DAYS,
+        })
+
     @action(detail=True, methods=['get'], url_path='data')
     def data(self, request, pk=None):
         donation = self.get_object()
@@ -191,7 +210,14 @@ def api_docs(request):
                 'response_fields': _serializer_fields_info(DonationSerializer),
             },
             'DELETE /api/donations/{id}/': {
-                'description': 'Revoke and delete a donation.',
+                'description': 'Revoke and delete a donation immediately.',
+            },
+            'POST /api/donations/{id}/can-delete/': {
+                'description': (
+                    'Signal that a verified copy of the data is held and the donation may '
+                    'be released. Does not delete: it starts a shorter retention clock, '
+                    'after which the service deletes the donation itself.'
+                ),
             },
             'GET /api/donations/{id}/data/': {
                 'description': 'Query processed donation data. Without data_type parameter, returns available data types.',

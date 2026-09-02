@@ -3,13 +3,18 @@ import os
 import shutil
 import tempfile
 import time
+from datetime import timedelta
 from unittest.mock import patch
+
+from django.core import mail
+from django.utils import timezone
 
 from django.test import TestCase, override_settings
 
 from donations.models import Donation, GoogleDonation, TikTokDonation
 from donations.tasks import (
-    process_donation, check_pending_donations, remove_stale_archives, MAX_RETRIES,
+    process_donation, check_pending_donations, remove_stale_archives,
+    expire_donations, MAX_RETRIES,
 )
 
 
@@ -249,3 +254,215 @@ class RemoveStaleArchivesTests(TestCase):
     def test_missing_directory_is_not_an_error(self):
         with override_settings(ARCHIVE_DIR=os.path.join(self.archive_dir, "gone")):
             self.assertEqual(remove_stale_archives(), 0)
+
+
+@override_settings(
+    RETENTION_DAYS=14, CAN_DELETE_RETENTION_DAYS=2, RETENTION_WARNING_DAYS=3,
+    ADMIN_EMAILS=['admin@aalto.fi'],
+)
+class ExpireDonationsTests(TestCase):
+    """Two clocks: from arrival, and from the researcher's confirmation."""
+
+    def _donation(self, received_days_ago=None, can_delete_days_ago=None):
+        donation = GoogleDonation.objects.create()
+        if received_days_ago is not None:
+            donation.data_received_at = timezone.now() - timedelta(days=received_days_ago)
+        if can_delete_days_ago is not None:
+            donation.can_delete_at = timezone.now() - timedelta(days=can_delete_days_ago)
+        donation.save()
+        return donation
+
+    def test_deletes_after_the_retention_period(self):
+        donation = self._donation(received_days_ago=15)
+        self.assertEqual(expire_donations(), 1)
+        self.assertFalse(Donation.objects.filter(pk=donation.pk).exists())
+
+    def test_keeps_donations_within_the_retention_period(self):
+        donation = self._donation(received_days_ago=13)
+        self.assertEqual(expire_donations(), 0)
+        self.assertTrue(Donation.objects.filter(pk=donation.pk).exists())
+
+    def test_confirmation_shortens_the_clock(self):
+        donation = self._donation(received_days_ago=1, can_delete_days_ago=3)
+        self.assertEqual(expire_donations(), 1)
+        self.assertFalse(Donation.objects.filter(pk=donation.pk).exists())
+
+    def test_confirmation_alone_does_not_delete_at_once(self):
+        donation = self._donation(received_days_ago=1, can_delete_days_ago=0)
+        self.assertEqual(expire_donations(), 0)
+        self.assertTrue(Donation.objects.filter(pk=donation.pk).exists())
+
+    def test_donation_without_data_is_left_alone(self):
+        donation = GoogleDonation.objects.create()
+        self.assertEqual(expire_donations(), 0)
+        self.assertTrue(Donation.objects.filter(pk=donation.pk).exists())
+
+    def test_reports_deletions_and_upcoming_expiry(self):
+        self._donation(received_days_ago=15)
+        self._donation(received_days_ago=12)  # due in 2 days, inside the warning
+        expire_donations()
+
+        self.assertEqual(len(mail.outbox), 1)
+        message = mail.outbox[0]
+        self.assertEqual(message.to, ['admin@aalto.fi'])
+        self.assertIn('Deleted:', message.body)
+        self.assertIn('Expiring within 3 days:', message.body)
+
+    def test_no_mail_when_nothing_happened(self):
+        self._donation(received_days_ago=1)
+        expire_donations()
+        self.assertEqual(mail.outbox, [])
+
+
+class RequeueHeuristicTests(TestCase):
+    """A donation being processed is left alone while its archives are there."""
+
+    def setUp(self):
+        self.archive_dir = tempfile.mkdtemp(prefix="requeue-")
+        self.addCleanup(shutil.rmtree, self.archive_dir, ignore_errors=True)
+
+    def _archive(self, name="export.zip"):
+        path = os.path.join(self.archive_dir, name)
+        with open(path, "wb") as handle:
+            handle.write(b"archive")
+        return path
+
+    def _donation(self, archives, status='processing'):
+        donation = GoogleDonation.objects.create(status=status)
+        donation.downloaded_files = archives
+        donation.job_status = {'job-1': {'completed': True}}
+        donation.save()
+        return donation
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_processing_with_archives_is_left_alone(self, queue):
+        self._donation([self._archive()])
+        check_pending_donations()
+        queue.assert_not_called()
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_processing_without_archives_is_queued_again(self, queue):
+        donation = self._donation([os.path.join(self.archive_dir, "gone.zip")])
+        check_pending_donations()
+        queue.assert_called_once()
+
+        donation.refresh_from_db()
+        self.assertEqual(donation.downloaded_files, [], "missing archive is forgotten")
+        self.assertNotIn(
+            'completed', donation.job_status['job-1'],
+            "the job is downloaded again",
+        )
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_donation_waiting_for_its_export_is_queued(self, queue):
+        self._donation([])
+        check_pending_donations()
+        queue.assert_called_once()
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_authorized_donation_is_queued(self, queue):
+        GoogleDonation.objects.create(status='authorized')
+        check_pending_donations()
+        queue.assert_called_once()
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_partly_read_export_is_left_alone(self, queue):
+        # One archive consumed and deleted, the next still waiting.
+        self._donation([os.path.join(self.archive_dir, "done.zip"), self._archive("next.zip")])
+        check_pending_donations()
+        queue.assert_not_called()
+
+
+@override_settings(PROCESSING_CLAIM_TIMEOUT_SECONDS=1800)
+class RequeueHeuristicTests(TestCase):
+    """A claim, not a file, says whether a worker is still on the job."""
+
+    def setUp(self):
+        self.archive_dir = tempfile.mkdtemp(prefix="requeue-")
+        self.addCleanup(shutil.rmtree, self.archive_dir, ignore_errors=True)
+
+    def _archive(self, name="export.zip"):
+        path = os.path.join(self.archive_dir, name)
+        with open(path, "wb") as handle:
+            handle.write(b"archive")
+        return path
+
+    def _donation(self, archives=(), claimed_minutes_ago=None, status='processing'):
+        donation = GoogleDonation.objects.create(status=status)
+        donation.downloaded_files = list(archives)
+        donation.job_status = {'job-1': {'completed': True}}
+        if claimed_minutes_ago is not None:
+            donation.processing_claimed_at = timezone.now() - timedelta(minutes=claimed_minutes_ago)
+        donation.save()
+        return donation
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_live_claim_is_left_alone_even_with_nothing_on_disk(self, queue):
+        # A worker part-way through its first download looks exactly like this.
+        self._donation(archives=[], claimed_minutes_ago=5)
+        check_pending_donations()
+        queue.assert_not_called()
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_stale_claim_is_queued_again(self, queue):
+        self._donation(archives=[], claimed_minutes_ago=90)
+        check_pending_donations()
+        queue.assert_called_once()
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_unclaimed_processing_donation_is_queued(self, queue):
+        self._donation(archives=[])
+        check_pending_donations()
+        queue.assert_called_once()
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_missing_archives_are_forgotten_so_they_are_fetched_again(self, queue):
+        donation = self._donation(archives=[os.path.join(self.archive_dir, "gone.zip")])
+        check_pending_donations()
+
+        donation.refresh_from_db()
+        self.assertEqual(donation.downloaded_files, [])
+        self.assertNotIn('completed', donation.job_status['job-1'])
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_archives_still_on_disk_are_kept(self, queue):
+        archive = self._archive()
+        donation = self._donation(archives=[archive])
+        check_pending_donations()
+
+        donation.refresh_from_db()
+        self.assertEqual(donation.downloaded_files, [archive])
+        self.assertIn('completed', donation.job_status['job-1'])
+
+    @patch('donations.tasks.process_donation.apply_async')
+    def test_authorized_donation_is_queued(self, queue):
+        GoogleDonation.objects.create(status='authorized')
+        check_pending_donations()
+        queue.assert_called_once()
+
+
+class ProcessingClaimTests(TestCase):
+    """The claim is taken while working and given up afterwards."""
+
+    def test_claim_is_released_when_processing_finishes(self):
+        donation = GoogleDonation.objects.create(status='authorized')
+        with patch.object(GoogleDonation, '_process_data', _fake_process_data):
+            process_donation(donation.pk)
+        donation.refresh_from_db()
+        self.assertIsNone(donation.processing_claimed_at)
+
+    def test_claim_is_released_when_processing_fails(self):
+        donation = GoogleDonation.objects.create(status='authorized')
+        with patch.object(GoogleDonation, '_process_data', side_effect=RuntimeError('boom')):
+            process_donation(donation.pk)
+        donation.refresh_from_db()
+        self.assertIsNone(donation.processing_claimed_at)
+        self.assertEqual(donation.status, 'error')
+
+    def test_claim_goes_stale(self):
+        donation = GoogleDonation.objects.create()
+        donation.claim_processing()
+        self.assertTrue(donation.claim_is_live())
+
+        donation.processing_claimed_at = timezone.now() - timedelta(hours=2)
+        self.assertFalse(donation.claim_is_live())

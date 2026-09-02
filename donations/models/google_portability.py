@@ -501,8 +501,10 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
                     with open(path, 'wb') as handle:
                         handle.write(file_response.content)
                     self.downloaded_files.append(path)
+                    self.claim_processing()
                 self.processing_status = 'processing'
                 self.status = 'processing'
+                self.data_received_at = self.data_received_at or timezone.now()
 
                 job_status[job_id] = {
                     'completed': True,
@@ -547,6 +549,18 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
             self.processing_status = 'error'
             self.save()
 
+
+    def forget_archives(self):
+        super().forget_archives()
+        if not self.downloaded_files and self.job_status:
+            # The job's files are gone, so it is no longer 'completed' as far
+            # as this service is concerned; downloading it again is the only
+            # way back.
+            self.job_status = {
+                job_id: {k: v for k, v in status.items() if k != 'completed'}
+                for job_id, status in self.job_status.items()
+            }
+            self.save(update_fields=['job_status'])
 
     def _process_data(self):
         self.download_data_files()

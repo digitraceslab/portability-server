@@ -1,9 +1,12 @@
 """Data models for managing donations and data downloads."""
 import hashlib
+import logging
 import uuid
 
 from django.db import models
 from django.utils.crypto import get_random_string
+
+logger = logging.getLogger(__name__)
 
 
 def hash_token(raw):
@@ -80,6 +83,15 @@ class Donation(models.Model):
     processing_log = models.TextField(blank=True, default='')
     retry_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
+    #: When the donated data arrived, and so when its retention starts.
+    data_received_at = models.DateTimeField(null=True, blank=True)
+    #: When the researcher confirmed they hold a verified copy. Starts a
+    #: shorter clock: the data may be released, though not necessarily at once.
+    can_delete_at = models.DateTimeField(null=True, blank=True)
+    #: Refreshed by the worker while it is processing this donation. Work can
+    #: take hours and can leave nothing on disk to show for it mid-download,
+    #: so this is what separates work in progress from work abandoned.
+    processing_claimed_at = models.DateTimeField(null=True, blank=True)
     terms_accepted_at = models.DateTimeField(null=True, blank=True)
     terms_changed = models.BooleanField(default=False)
 
@@ -111,6 +123,44 @@ class Donation(models.Model):
 
     def __str__(self):
         return f"Donation {self.pk} ({self.source_type}, {self.status})"
+
+    def _record_claim(self, claimed_at):
+        """Store the claim, tolerating a failure to do so.
+
+        The claim only tells the periodic check whether to leave this donation
+        alone. Failing to record it risks duplicated work, which is recoverable;
+        letting the failure escape would abandon work already under way, which
+        is not.
+        """
+        self.processing_claimed_at = claimed_at
+        try:
+            self.save(update_fields=['processing_claimed_at'])
+        except Exception:
+            logger.warning("Could not record the processing claim on donation %s", self.pk)
+
+    def claim_processing(self):
+        """Mark this donation as being worked on, or refresh the mark."""
+        from django.utils import timezone
+
+        self._record_claim(timezone.now())
+
+    def release_processing(self):
+        """Give up the claim, so the donation can be picked up again."""
+        if self.processing_claimed_at is None:
+            return
+        self._record_claim(None)
+
+    def claim_is_live(self):
+        """Whether a worker is still saying it is working on this donation."""
+        from datetime import timedelta
+
+        from django.conf import settings
+        from django.utils import timezone
+
+        if self.processing_claimed_at is None:
+            return False
+        age = timezone.now() - self.processing_claimed_at
+        return age < timedelta(seconds=settings.PROCESSING_CLAIM_TIMEOUT_SECONDS)
 
     def get_subclass(self):
         """Return the most specific subclass instance (e.g. GoogleDonation)."""
