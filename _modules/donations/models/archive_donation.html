@@ -213,6 +213,7 @@
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">for</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="n">expected</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_touch_archive</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">claim_processing</span><span class="p">()</span>
                     <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_data_type</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">data_type</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">frame</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                         <span class="k">continue</span>
@@ -253,6 +254,32 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Could not queue donation </span><span class="si">%s</span><span class="s2"> for processing&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Processing could not be queued: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_log&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="ArchiveDonationMixin.has_archives">
+<a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.has_archives">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_archives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether any archive is still on disk to be read.</span>
+
+<span class="sd">        False covers two cases that look the same from outside: nothing has</span>
+<span class="sd">        been fetched yet, and what was fetched has since been removed - by the</span>
+<span class="sd">        worker that finished with it, or by the cleanup that collects what a</span>
+<span class="sd">        crash left behind.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_archives</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="ArchiveDonationMixin.forget_archives">
+<a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.forget_archives">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forget_archives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Forget archives that are no longer on disk, so they are fetched again.&quot;&quot;&quot;</span>
+        <span class="n">remaining</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span> <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_archives</span><span class="p">()</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">)]</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">archive_field</span><span class="p">,</span> <span class="n">remaining</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_status</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">path</span><span class="p">:</span> <span class="n">status</span> <span class="k">for</span> <span class="n">path</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_status</span> <span class="ow">or</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">remaining</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+
 
 <div class="viewcode-block" id="ArchiveDonationMixin.rejected_archives">
 <a class="viewcode-back" href="../../../api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.rejected_archives">[docs]</a>

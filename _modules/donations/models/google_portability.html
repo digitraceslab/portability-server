@@ -595,8 +595,10 @@
                     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handle</span><span class="p">:</span>
                         <span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">file_response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">downloaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">claim_processing</span><span class="p">()</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data_received_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_received_at</span> <span class="ow">or</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
 
                 <span class="n">job_status</span><span class="p">[</span><span class="n">job_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s1">&#39;completed&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -644,6 +646,21 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
 
+
+
+<div class="viewcode-block" id="GoogleDonation.forget_archives">
+<a class="viewcode-back" href="../../../api/donations.models.google_portability.html#donations.models.GoogleDonation.forget_archives">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forget_archives</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forget_archives</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">downloaded_files</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_status</span><span class="p">:</span>
+            <span class="c1"># The job&#39;s files are gone, so it is no longer &#39;completed&#39; as far</span>
+            <span class="c1"># as this service is concerned; downloading it again is the only</span>
+            <span class="c1"># way back.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">job_status</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">job_id</span><span class="p">:</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s1">&#39;completed&#39;</span><span class="p">}</span>
+                <span class="k">for</span> <span class="n">job_id</span><span class="p">,</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">job_status</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;job_status&#39;</span><span class="p">])</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_process_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

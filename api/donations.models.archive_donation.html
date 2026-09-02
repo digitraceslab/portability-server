@@ -48,6 +48,8 @@
 <li><a class="reference internal" href="#donations.models.archive_donation.ArchiveDonationMixin.archive_field"><code class="docutils literal notranslate"><span class="pre">ArchiveDonationMixin.archive_field</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.archive_donation.ArchiveDonationMixin.fetch_data"><code class="docutils literal notranslate"><span class="pre">ArchiveDonationMixin.fetch_data()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.archive_donation.ArchiveDonationMixin.count_rows"><code class="docutils literal notranslate"><span class="pre">ArchiveDonationMixin.count_rows()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.archive_donation.ArchiveDonationMixin.has_archives"><code class="docutils literal notranslate"><span class="pre">ArchiveDonationMixin.has_archives()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.archive_donation.ArchiveDonationMixin.forget_archives"><code class="docutils literal notranslate"><span class="pre">ArchiveDonationMixin.forget_archives()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.archive_donation.ArchiveDonationMixin.rejected_archives"><code class="docutils literal notranslate"><span class="pre">ArchiveDonationMixin.rejected_archives()</span></code></a></li>
 </ul>
 </li>
@@ -116,6 +118,22 @@ their contents are read.</p>
 <dt class="sig sig-object py" id="donations.models.archive_donation.ArchiveDonationMixin.count_rows">
 <span class="sig-name descname"><span class="pre">count_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/archive_donation.html#ArchiveDonationMixin.count_rows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.archive_donation.ArchiveDonationMixin.count_rows" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.archive_donation.ArchiveDonationMixin.has_archives">
+<span class="sig-name descname"><span class="pre">has_archives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/archive_donation.html#ArchiveDonationMixin.has_archives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.archive_donation.ArchiveDonationMixin.has_archives" title="Link to this definition"></a></dt>
+<dd><p>Whether any archive is still on disk to be read.</p>
+<p>False covers two cases that look the same from outside: nothing has
+been fetched yet, and what was fetched has since been removed - by the
+worker that finished with it, or by the cleanup that collects what a
+crash left behind.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.archive_donation.ArchiveDonationMixin.forget_archives">
+<span class="sig-name descname"><span class="pre">forget_archives</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/archive_donation.html#ArchiveDonationMixin.forget_archives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.archive_donation.ArchiveDonationMixin.forget_archives" title="Link to this definition"></a></dt>
+<dd><p>Forget archives that are no longer on disk, so they are fetched again.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.models.archive_donation.ArchiveDonationMixin.rejected_archives">

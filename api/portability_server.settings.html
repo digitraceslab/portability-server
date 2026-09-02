@@ -42,7 +42,11 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <!-- Local TOC -->
               <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">portability_server.settings module</a></li>
+<li><a class="reference internal" href="#">portability_server.settings module</a><ul>
+<li><a class="reference internal" href="#portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS"><code class="docutils literal notranslate"><span class="pre">PROCESSING_CLAIM_TIMEOUT_SECONDS</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.RETENTION_WARNING_DAYS"><code class="docutils literal notranslate"><span class="pre">RETENTION_WARNING_DAYS</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
         </div>
@@ -72,6 +76,19 @@
   <section id="module-portability_server.settings">
 <span id="portability-server-settings-module"></span><h1>portability_server.settings module<a class="headerlink" href="#module-portability_server.settings" title="Link to this heading"></a></h1>
 <p>Django settings for portability-server project.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">PROCESSING_CLAIM_TIMEOUT_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1800</span></span><a class="headerlink" href="#portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS" title="Link to this definition"></a></dt>
+<dd><p>How long a worker’s claim on a donation stands without being refreshed.
+Longer than the gap between refreshes, shorter than anyone’s patience.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.RETENTION_WARNING_DAYS">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">RETENTION_WARNING_DAYS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></span><a class="headerlink" href="#portability_server.settings.RETENTION_WARNING_DAYS" title="Link to this definition"></a></dt>
+<dd><p>Donations expiring within this many days are named in the daily mail.</p>
+</dd></dl>
+
 </section>
 
 

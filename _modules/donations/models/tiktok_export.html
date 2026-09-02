@@ -217,6 +217,7 @@
         <span class="c1"># An upload needs no authorization step: it is ready to read as soon</span>
         <span class="c1"># as it is stored.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">processing_status</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data_received_at</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_received_at</span> <span class="ow">or</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_queue_processing</span><span class="p">()</span>
         <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;File uploaded successfully&quot;</span></div>

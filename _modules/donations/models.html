@@ -68,10 +68,13 @@
   <h1>Source code for donations.models</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Data models for managing donations and data downloads.&quot;&quot;&quot;</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">models</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils.crypto</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_random_string</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">hash_token</span><span class="p">(</span><span class="n">raw</span><span class="p">):</span>
@@ -165,6 +168,15 @@
     <span class="n">processing_log</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">retry_count</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">PositiveIntegerField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: When the donated data arrived, and so when its retention starts.</span>
+    <span class="n">data_received_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: When the researcher confirmed they hold a verified copy. Starts a</span>
+    <span class="c1">#: shorter clock: the data may be released, though not necessarily at once.</span>
+    <span class="n">can_delete_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: Refreshed by the worker while it is processing this donation. Work can</span>
+    <span class="c1">#: take hours and can leave nothing on disk to show for it mid-download,</span>
+    <span class="c1">#: so this is what separates work in progress from work abandoned.</span>
+    <span class="n">processing_claimed_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">terms_accepted_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">terms_changed</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">BooleanField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -208,6 +220,53 @@
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Donation </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">source_type</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_record_claim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">claimed_at</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Store the claim, tolerating a failure to do so.</span>
+
+<span class="sd">        The claim only tells the periodic check whether to leave this donation</span>
+<span class="sd">        alone. Failing to record it risks duplicated work, which is recoverable;</span>
+<span class="sd">        letting the failure escape would abandon work already under way, which</span>
+<span class="sd">        is not.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processing_claimed_at</span> <span class="o">=</span> <span class="n">claimed_at</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_claimed_at&#39;</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not record the processing claim on donation </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Donation.claim_processing">
+<a class="viewcode-back" href="../../api/donations.models.html#donations.models.Donation.claim_processing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">claim_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Mark this donation as being worked on, or refresh the mark.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_claim</span><span class="p">(</span><span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="Donation.release_processing">
+<a class="viewcode-back" href="../../api/donations.models.html#donations.models.Donation.release_processing">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">release_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Give up the claim, so the donation can be picked up again.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_claimed_at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_record_claim</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Donation.claim_is_live">
+<a class="viewcode-back" href="../../api/donations.models.html#donations.models.Donation.claim_is_live">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">claim_is_live</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Whether a worker is still saying it is working on this donation.&quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_claimed_at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">age</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_claimed_at</span>
+        <span class="k">return</span> <span class="n">age</span> <span class="o">&lt;</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="n">settings</span><span class="o">.</span><span class="n">PROCESSING_CLAIM_TIMEOUT_SECONDS</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Donation.get_subclass">
 <a class="viewcode-back" href="../../api/donations.models.html#donations.models.Donation.get_subclass">[docs]</a>

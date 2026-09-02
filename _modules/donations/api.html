@@ -67,7 +67,9 @@
              
   <h1>Source code for donations.api</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;REST API for researcher donation management.&quot;&quot;&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.urls</span><span class="w"> </span><span class="kn">import</span> <span class="n">reverse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django_ratelimit.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">ratelimit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">serializers</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">viewsets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">action</span><span class="p">,</span> <span class="n">api_view</span><span class="p">,</span> <span class="n">permission_classes</span> <span class="k">as</span> <span class="n">perm_classes</span>
@@ -233,6 +235,26 @@
         <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="DonationViewSet.can_delete">
+<a class="viewcode-back" href="../../api/donations.api.html#donations.api.DonationViewSet.can_delete">[docs]</a>
+    <span class="nd">@action</span><span class="p">(</span><span class="n">detail</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;post&#39;</span><span class="p">],</span> <span class="n">url_path</span><span class="o">=</span><span class="s1">&#39;can-delete&#39;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">can_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">pk</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Signal that a verified copy exists and the donation may be released.</span>
+
+<span class="sd">        This does not delete anything: it starts a shorter retention clock,</span>
+<span class="sd">        after which the service deletes the donation itself. Deleting now is</span>
+<span class="sd">        what ``DELETE`` is for.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">donation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_object</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">can_delete_at</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">donation</span><span class="o">.</span><span class="n">can_delete_at</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+            <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;can_delete_at&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">({</span>
+            <span class="s1">&#39;can_delete_at&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="o">.</span><span class="n">can_delete_at</span><span class="p">,</span>
+            <span class="s1">&#39;delete_after_days&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">CAN_DELETE_RETENTION_DAYS</span><span class="p">,</span>
+        <span class="p">})</span></div>
+
+
 <div class="viewcode-block" id="DonationViewSet.data">
 <a class="viewcode-back" href="../../api/donations.api.html#donations.api.DonationViewSet.data">[docs]</a>
     <span class="nd">@action</span><span class="p">(</span><span class="n">detail</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">],</span> <span class="n">url_path</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
@@ -309,7 +331,14 @@
                 <span class="s1">&#39;response_fields&#39;</span><span class="p">:</span> <span class="n">_serializer_fields_info</span><span class="p">(</span><span class="n">DonationSerializer</span><span class="p">),</span>
             <span class="p">},</span>
             <span class="s1">&#39;DELETE /api/donations/</span><span class="si">{id}</span><span class="s1">/&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Revoke and delete a donation.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Revoke and delete a donation immediately.&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;POST /api/donations/</span><span class="si">{id}</span><span class="s1">/can-delete/&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="s1">&#39;Signal that a verified copy of the data is held and the donation may &#39;</span>
+                    <span class="s1">&#39;be released. Does not delete: it starts a shorter retention clock, &#39;</span>
+                    <span class="s1">&#39;after which the service deletes the donation itself.&#39;</span>
+                <span class="p">),</span>
             <span class="p">},</span>
             <span class="s1">&#39;GET /api/donations/</span><span class="si">{id}</span><span class="s1">/data/&#39;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Query processed donation data. Without data_type parameter, returns available data types.&#39;</span><span class="p">,</span>

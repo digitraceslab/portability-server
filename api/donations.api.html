@@ -70,6 +70,7 @@
 <li><a class="reference internal" href="#donations.api.DonationViewSet.create"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.create()</span></code></a></li>
 <li><a class="reference internal" href="#donations.api.DonationViewSet.retrieve"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.retrieve()</span></code></a></li>
 <li><a class="reference internal" href="#donations.api.DonationViewSet.destroy"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.destroy()</span></code></a></li>
+<li><a class="reference internal" href="#donations.api.DonationViewSet.can_delete"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.can_delete()</span></code></a></li>
 <li><a class="reference internal" href="#donations.api.DonationViewSet.data"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.data()</span></code></a></li>
 </ul>
 </li>
@@ -231,6 +232,15 @@ querysets depending on the incoming request.</p>
 <dt class="sig sig-object py" id="donations.api.DonationViewSet.destroy">
 <span class="sig-name descname"><span class="pre">destroy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/api.html#DonationViewSet.destroy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.api.DonationViewSet.destroy" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.api.DonationViewSet.can_delete">
+<span class="sig-name descname"><span class="pre">can_delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/api.html#DonationViewSet.can_delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.api.DonationViewSet.can_delete" title="Link to this definition"></a></dt>
+<dd><p>Signal that a verified copy exists and the donation may be released.</p>
+<p>This does not delete anything: it starts a shorter retention clock,
+after which the service deletes the donation itself. Deleting now is
+what <code class="docutils literal notranslate"><span class="pre">DELETE</span></code> is for.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.api.DonationViewSet.data">
