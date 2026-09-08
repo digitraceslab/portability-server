@@ -347,7 +347,7 @@ the dedicated user in one step.
 
 ```bash
 sudo apt update
-sudo apt install python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon
+sudo apt install python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon acl
 ```
 
 `nginx-extras` (rather than plain `nginx`) is required because it provides the

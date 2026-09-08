@@ -175,6 +175,19 @@ else
     pass "virus scanner settings"
 fi
 
+echo "==> System packages"
+# grep -c exits 1 on a zero count, which is not an error here.
+if upgrades="$(apt-get -s upgrade 2>/dev/null)"; then
+    pending="$(echo "$upgrades" | grep -c '^Inst.*security' || true)"
+    if [ "$pending" -gt 0 ]; then
+        note "$pending security update(s) pending; apply them through the operating system's update mechanism"
+    else
+        pass "no security updates pending"
+    fi
+else
+    note "could not determine pending updates"
+fi
+
 echo "==> Disk"
 df -h / "$APP_DIR" 2>/dev/null | awk 'NR==1 || !seen[$0]++'
 for filesystem in / "$APP_DIR"; do

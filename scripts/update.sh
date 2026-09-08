@@ -31,6 +31,8 @@ git pull --ff-only
 
 ensure_run_user
 
+install_packages
+
 echo "==> Installing dependencies"
 "$VENV/bin/pip" install -r requirements.txt
 

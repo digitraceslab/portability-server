@@ -42,6 +42,19 @@ _openbao_local_key_warning() {
 WARN
 }
 
+# System packages the service depends on. One list, used by deploy.sh and
+# update.sh alike: installing an already present package is a no-op, so an
+# update brings in anything added here. Upgrading packages is left to the
+# operating system's own update mechanism.
+SYSTEM_PACKAGES="python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon acl"
+
+install_packages() {
+    echo "==> Installing system packages"
+    sudo apt-get update
+    # shellcheck disable=SC2086
+    sudo apt-get install -y $SYSTEM_PACKAGES
+}
+
 validate_env() {
     echo "==> Validating environment configuration"
     "$VENV/bin/python" - <<'PYEOF'

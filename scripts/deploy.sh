@@ -20,9 +20,7 @@ INSTALL_CONFIGS="${INSTALL_CONFIGS:-yes}"  # first-time setup always installs th
 # shellcheck source=lib.sh
 source "$(dirname "$(readlink -f "$0")")/lib.sh"
 
-echo "==> Installing system packages"
-sudo apt-get update
-sudo apt-get install -y python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon acl
+install_packages
 
 cd "$APP_DIR"
 
