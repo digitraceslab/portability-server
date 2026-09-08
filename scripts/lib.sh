@@ -1,5 +1,5 @@
 # Shared helpers for deploy.sh, update.sh and verify.sh.
-# Expects APP_DIR, VENV, RUN_USER, SERVICES and INSTALL_CONFIGS to already be set by the caller.
+# Expects APP_DIR, VENV, RUN_USER, DEPLOY_USER, SERVICES and INSTALL_CONFIGS to already be set by the caller.
 # install_credentials() and check_credentials() also expect the caller to
 # define _env_get() (deploy.sh, update.sh and verify.sh all do).
 
@@ -20,6 +20,11 @@ NGINX_CHECKED=${NGINX_CHECKED:-0}
 # missing, wrongly owned or wrongly permissioned. Only meaningful after
 # check_credentials has run; verify.sh reads it.
 CRED_PROBLEMS=${CRED_PROBLEMS:-0}
+
+# Service-user permission problems (can write code/settings, or cannot read
+# or write what it needs). Only meaningful after check_permissions has run;
+# verify.sh reads it.
+PERM_PROBLEMS=${PERM_PROBLEMS:-0}
 
 CREDSTORE=/etc/credstore
 
@@ -194,6 +199,125 @@ check_credentials() {
     if [ -z "$openbao_addr" ]; then
         _openbao_local_key_warning
         CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+    fi
+}
+
+# Creates the dedicated service account the units run as, if it doesn't
+# already exist. Refuses to proceed if RUN_USER is the deploying account, so
+# the services can never end up running as whoever happens to deploy.
+ensure_run_user() {
+    if [ "$RUN_USER" = "$DEPLOY_USER" ]; then
+        echo "RUN_USER is '$RUN_USER', the same as the deploying account ($DEPLOY_USER). Services must run as a dedicated, unprivileged user; set RUN_USER to something else (default: portability)." >&2
+        exit 1
+    fi
+    if id -u "$RUN_USER" >/dev/null 2>&1; then
+        return
+    fi
+    echo "==> Creating service user $RUN_USER"
+    sudo adduser --system --group --no-create-home --shell /usr/sbin/nologin "$RUN_USER"
+}
+
+# Resolves ARCHIVE_DIR from .env (default data/archives, relative to APP_DIR).
+_archive_dir() {
+    local archive_dir
+    archive_dir="$(_env_get ARCHIVE_DIR)"
+    archive_dir="${archive_dir:-data/archives}"
+    case "$archive_dir" in
+        /*) echo "$archive_dir" ;;
+        *) echo "$APP_DIR/$archive_dir" ;;
+    esac
+}
+
+# Gives RUN_USER exactly what it needs and nothing more: read access to the
+# checkout and venv via ACLs (so git and the deployer's own permissions are
+# left untouched), and ownership of the data directories it writes to.
+# Idempotent; uses sudo; prints what it changes.
+install_permissions() {
+    echo "==> Setting up service user permissions"
+    local archive_dir dir
+
+    archive_dir="$(_archive_dir)"
+
+    # Home directories are typically 0750, so the service user needs execute
+    # (traverse) permission on every parent directory up to the checkout.
+    dir="$(dirname "$APP_DIR")"
+    while [ "$dir" != "/" ]; do
+        sudo setfacl -m "u:$RUN_USER:x" "$dir"
+        dir="$(dirname "$dir")"
+    done
+
+    # Read-only ACLs on the checkout and venv, with a default ACL so files
+    # created later by git pull and pip install stay readable. No write bit.
+    sudo setfacl -R -m "u:$RUN_USER:rX" -m "d:u:$RUN_USER:rX" "$APP_DIR"
+    case "$VENV" in
+        "$APP_DIR"/*) ;;
+        *) sudo setfacl -R -m "u:$RUN_USER:rX" -m "d:u:$RUN_USER:rX" "$VENV" ;;
+    esac
+
+    # .env: readable to the service, writable only by the deployer.
+    sudo chown "$DEPLOY_USER:$RUN_USER" "$APP_DIR/.env"
+    sudo chmod 640 "$APP_DIR/.env"
+
+    # Writable data locations, taken over from whoever ran the services
+    # before (chown -R runs after the read-only ACL above, so the owner
+    # bits on these directories win over the ACL's read-only default).
+    sudo install -d -o "$RUN_USER" -g "$RUN_USER" -m 0700 "$APP_DIR/data" "$archive_dir"
+    sudo chown -R "$RUN_USER:$RUN_USER" "$APP_DIR/data" "$archive_dir"
+
+    # The beat schedule now lives under /var/lib/portability (StateDirectory=
+    # in the beat unit); remove any leftover copy in the checkout.
+    if compgen -G "$APP_DIR/celerybeat-schedule*" >/dev/null 2>&1; then
+        sudo rm -f "$APP_DIR"/celerybeat-schedule*
+        echo "removed leftover $APP_DIR/celerybeat-schedule* (the schedule now lives under /var/lib/portability)"
+    fi
+}
+
+# Read-only counterpart of install_permissions, used by verify.sh. Reports
+# findings via PERM_PROBLEMS; performs every check as RUN_USER via
+# non-interactive sudo, so it can tell what the service can actually do.
+check_permissions() {
+    if [ "$RUN_USER" = "$DEPLOY_USER" ]; then
+        echo "Warning: RUN_USER is $DEPLOY_USER, the deploying account; services must run as a dedicated user, not the account used to deploy." >&2
+        PERM_PROBLEMS=$((PERM_PROBLEMS + 1))
+        return
+    fi
+    if ! id -u "$RUN_USER" >/dev/null 2>&1; then
+        echo "Warning: service user $RUN_USER does not exist" >&2
+        PERM_PROBLEMS=$((PERM_PROBLEMS + 1))
+        return
+    fi
+    if ! sudo -n true 2>/dev/null; then
+        echo "Warning: cannot verify $RUN_USER's permissions (needs root, and passwordless sudo is unavailable)." >&2
+        PERM_PROBLEMS=$((PERM_PROBLEMS + 1))
+        return
+    fi
+
+    local archive_dir path
+    archive_dir="$(_archive_dir)"
+
+    for path in "$APP_DIR" "$APP_DIR/portability_server/settings.py" "$APP_DIR/.env" "$VENV/bin/python"; do
+        if sudo -n -u "$RUN_USER" test -w "$path" 2>/dev/null; then
+            echo "Warning: $RUN_USER can write $path; the service user must not be able to modify application code or settings." >&2
+            PERM_PROBLEMS=$((PERM_PROBLEMS + 1))
+        fi
+    done
+
+    for path in "$APP_DIR/.env" "$APP_DIR/manage.py"; do
+        if ! sudo -n -u "$RUN_USER" test -r "$path" 2>/dev/null; then
+            echo "Warning: $RUN_USER cannot read $path" >&2
+            PERM_PROBLEMS=$((PERM_PROBLEMS + 1))
+        fi
+    done
+
+    for path in "$APP_DIR/data" "$archive_dir"; do
+        if ! sudo -n -u "$RUN_USER" test -w "$path" 2>/dev/null; then
+            echo "Warning: $RUN_USER cannot write $path" >&2
+            PERM_PROBLEMS=$((PERM_PROBLEMS + 1))
+        fi
+    done
+
+    if [ "$PERM_PROBLEMS" -eq 0 ]; then
+        echo "$RUN_USER has the expected read/write split: read-only on the checkout and venv, write-only on data directories"
     fi
 }
 

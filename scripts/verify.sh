@@ -26,7 +26,8 @@ APP_DIR="${APP_DIR:-$REPO_DIR}"
 VENV="${VENV:-$(_env_get VENV_PATH)}"
 VENV="${VENV:-$APP_DIR/venv}"
 SERVICES="portability-gunicorn portability-celery-worker portability-celery-beat"
-RUN_USER="${RUN_USER:-$(id -un)}"
+DEPLOY_USER="$(id -un)"
+RUN_USER="${RUN_USER:-portability}"
 DOMAINS="${DOMAINS:-$(_env_get DOMAINS)}"   # comma-separated; see .env.example
 INSTALL_CONFIGS=no   # lib.sh only reports differences in this mode
 
@@ -61,8 +62,15 @@ if [ ! -f "$APP_DIR/.env" ]; then
     fail ".env is missing"
 else
     mode="$(stat -c %a "$APP_DIR/.env")"
+    group="$(stat -c %G "$APP_DIR/.env")"
     case "$mode" in
         600|400) pass ".env is owner-only (mode $mode)" ;;
+        640) if [ "$group" = "$RUN_USER" ]; then
+                 pass ".env is readable by its owner and the service user's group (mode $mode, group $group)"
+             else
+                 fail ".env is mode 640 but owned by group '$group', not the service user '$RUN_USER'"
+             fi
+             ;;
         *) fail ".env is readable beyond its owner (mode $mode); it still holds the OAuth client secrets" ;;
     esac
     # .env is not version-controlled, so only its set of keys can be compared
@@ -83,6 +91,14 @@ if [ "$CRED_PROBLEMS" -gt 0 ]; then
     fail "$CRED_PROBLEMS credential problem(s) found (see warnings above)"
 else
     pass "root-delivered credentials in place"
+fi
+
+echo "==> Service user and permissions"
+check_permissions
+if [ "$PERM_PROBLEMS" -gt 0 ]; then
+    fail "$PERM_PROBLEMS service user permission problem(s) found (see warnings above)"
+else
+    pass "service user permissions"
 fi
 
 echo "==> Database"

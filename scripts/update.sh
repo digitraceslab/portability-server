@@ -10,7 +10,8 @@ APP_DIR="${APP_DIR:-$REPO_DIR}"
 VENV="${VENV:-$(_env_get VENV_PATH)}"
 VENV="${VENV:-$APP_DIR/venv}"
 SERVICES="portability-gunicorn portability-celery-worker portability-celery-beat"
-RUN_USER="${RUN_USER:-$(id -un)}"
+DEPLOY_USER="$(id -un)"
+RUN_USER="${RUN_USER:-portability}"
 DOMAINS="${DOMAINS:-$(_env_get DOMAINS)}"   # comma-separated; see .env.example
 INSTALL_CONFIGS="${INSTALL_CONFIGS:-no}"  # yes = apply rendered systemd/nginx configs; no = report drift only
 
@@ -28,10 +29,13 @@ fi
 echo "==> Pulling latest changes"
 git pull --ff-only
 
+ensure_run_user
+
 echo "==> Installing dependencies"
 "$VENV/bin/pip" install -r requirements.txt
 
 install_credentials
+install_permissions
 validate_env
 
 echo "==> Running deployment checks"

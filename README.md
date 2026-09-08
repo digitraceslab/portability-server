@@ -337,6 +337,12 @@ overridden as an environment variable for a single run.
 ./scripts/update.sh
 ```
 
+**Permissions.** `scripts/update.sh` also creates the service user (`RUN_USER`, default
+`portability`) if it doesn't exist yet and applies the read/write split described in "Create the
+service user" below: read-only ACLs on the checkout and venv, ownership of `data/` and the archive
+directory. Running `INSTALL_CONFIGS=yes scripts/update.sh` on an existing deployment migrates it to
+the dedicated user in one step.
+
 ### System packages
 
 ```bash
@@ -366,6 +372,20 @@ python manage.py collectstatic --noinput
 python manage.py create_researcher_token
 ```
 
+### Create the service user
+
+The units below run as a dedicated, unprivileged system account, not the account used to deploy:
+
+```bash
+sudo adduser --system --group --no-create-home --shell /usr/sbin/nologin portability
+```
+
+It owns only `data/` and the archive directory — the locations the services actually write to.
+Everything else (the checkout, the venv, `.env`) is read via POSIX ACLs granted to this account, so
+it cannot modify application code or settings even if a service process is compromised. The Celery
+beat schedule file lives under `/var/lib/portability`, managed by systemd's `StateDirectory=`, not
+inside the checkout.
+
 ### Gunicorn service
 
 `scripts/deploy.sh` and `scripts/update.sh` render this from `deploy/portability-gunicorn.service`
@@ -377,8 +397,8 @@ Description=portability-server gunicorn
 After=network.target
 
 [Service]
-User=USERNAME
-Group=USERNAME
+User=portability
+Group=portability
 UMask=077
 ImportCredential=portability.*
 WorkingDirectory=/opt/portability-server
@@ -401,8 +421,8 @@ Description=portability-server celery worker
 After=network.target redis-server.service
 
 [Service]
-User=USERNAME
-Group=USERNAME
+User=portability
+Group=portability
 UMask=077
 ImportCredential=portability.*
 WorkingDirectory=/opt/portability-server
@@ -425,12 +445,13 @@ Description=portability-server celery beat
 After=network.target redis-server.service
 
 [Service]
-User=USERNAME
-Group=USERNAME
+User=portability
+Group=portability
 UMask=077
 ImportCredential=portability.*
+StateDirectory=portability
 WorkingDirectory=/opt/portability-server
-ExecStart=/opt/portability-server/venv/bin/celery -A portability_server beat -l info --schedule=/opt/portability-server/celerybeat-schedule
+ExecStart=/opt/portability-server/venv/bin/celery -A portability_server beat -l info --schedule=/var/lib/portability/celerybeat-schedule
 Restart=always
 
 [Install]

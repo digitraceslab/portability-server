@@ -10,7 +10,8 @@ APP_DIR="${APP_DIR:-$REPO_DIR}"
 VENV="${VENV:-$(_env_get VENV_PATH)}"
 VENV="${VENV:-$APP_DIR/venv}"
 SERVICES="portability-gunicorn portability-celery-worker portability-celery-beat"
-RUN_USER="${RUN_USER:-$(id -un)}"
+DEPLOY_USER="$(id -un)"
+RUN_USER="${RUN_USER:-portability}"
 DOMAINS="${DOMAINS:-$(_env_get DOMAINS)}"   # comma-separated; see .env.example
 SETUP_DB="${SETUP_DB:-auto}"        # auto | yes | no — database provisioning
 DB_ADMIN_USER="${DB_ADMIN_USER:-postgres}"
@@ -21,7 +22,7 @@ source "$(dirname "$(readlink -f "$0")")/lib.sh"
 
 echo "==> Installing system packages"
 sudo apt-get update
-sudo apt-get install -y python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon
+sudo apt-get install -y python3 python3.12-venv postgresql nginx-extras redis-server clamav clamav-daemon acl
 
 cd "$APP_DIR"
 
@@ -30,6 +31,8 @@ if [ ! -d "$VENV" ]; then
     python3 -m venv venv
 fi
 "$VENV/bin/pip" install -r requirements.txt
+
+ensure_run_user
 
 if [ ! -f .env ]; then
     echo "==> Creating .env from .env.example"
@@ -102,6 +105,7 @@ PYEOF
 fi
 
 install_credentials
+install_permissions
 validate_env
 
 echo "==> Running migrations and collecting static files"
