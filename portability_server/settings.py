@@ -209,6 +209,9 @@ LOGGING = {
     },
     "loggers": {
         "donations": {"handlers": ["console"], "level": "INFO"},
+        # Django's own request errors (tracebacks behind 500 responses) are
+        # not logged anywhere in production unless routed explicitly.
+        "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},
     },
 }
 
