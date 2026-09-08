@@ -7,8 +7,8 @@ a date filter skips groups whose recorded timestamp range cannot match.
 
 Encryption is Parquet Modular Encryption with an encrypted footer, so metadata
 and statistics are unreadable without the key and nothing is parsed before it
-has been authenticated. Parquet's data keys are wrapped with the service's own
-``ENCRYPTION_KEY``; no key management service is involved.
+has been authenticated. Parquet's data keys are wrapped by the configured
+keystore: OpenBao transit, or a local key if no vault is configured.
 """
 from datetime import timedelta
 
@@ -16,9 +16,8 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.parquet.encryption as pe
-from cryptography.fernet import Fernet
 
-from donations.utils import crypto
+from donations.utils import keystore
 
 #: Target size of a row group. The row count is derived from this and the
 #: observed row width, so types with wide rows get fewer rows per group.
@@ -33,29 +32,23 @@ _KEY_CACHE_LIFETIME = timedelta(minutes=5)
 TIMESTAMP_COLUMN = "timestamp"
 
 
-class _LocalKms(pe.KmsClient):
-    """Wraps Parquet's data keys with the service's own encryption key."""
-
-    def __init__(self, config):
-        pe.KmsClient.__init__(self)
-        self._fernet = Fernet(config.custom_kms_conf[_FOOTER_KEY_ID])
+class _KeystoreKms(pe.KmsClient):
+    """Wraps Parquet's data keys through the configured keystore backend."""
 
     def wrap_key(self, key_bytes, master_key_id):
-        return self._fernet.encrypt(key_bytes).decode()
+        return keystore.get_backend().wrap(key_bytes)
 
     def unwrap_key(self, wrapped_key, master_key_id):
-        return self._fernet.decrypt(wrapped_key.encode())
+        return keystore.backend_for(wrapped_key).unwrap(wrapped_key)
 
 
 def _factory():
-    return pe.CryptoFactory(lambda config: _LocalKms(config))
+    return pe.CryptoFactory(lambda config: _KeystoreKms())
 
 
 def _kms_config():
-    """Hands the master key to the client; it never leaves the process."""
-    return pe.KmsConnectionConfig(
-        custom_kms_conf={_FOOTER_KEY_ID: crypto._resolve_key().decode()}
-    )
+    """No key is handed over: the client calls the keystore directly."""
+    return pe.KmsConnectionConfig()
 
 
 def _encryption_properties():

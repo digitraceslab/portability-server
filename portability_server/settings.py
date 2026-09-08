@@ -123,8 +123,13 @@ ADMIN_EMAILS = [
 
 CLAMAV_ENABLED = env.bool("CLAMAV_ENABLED", default=not DEBUG) and not TESTING
 
-# Encryption
-ENCRYPTION_KEY = env("ENCRYPTION_KEY", default=None)
+# Key management. Secrets (OpenBao AppRole ids, or the local key) are not
+# settings: they are read from the systemd credentials directory, see
+# donations/utils/keystore/credentials.py.
+OPENBAO_ADDR = env("OPENBAO_ADDR", default="")
+OPENBAO_MOUNT = env("OPENBAO_MOUNT", default="transit")
+OPENBAO_KEY_NAME = env("OPENBAO_KEY_NAME", default="portability")
+OPENBAO_CACERT = env("OPENBAO_CACERT", default="")
 
 WSGI_APPLICATION = "portability_server.wsgi.application"
 

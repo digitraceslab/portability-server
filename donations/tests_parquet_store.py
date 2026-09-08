@@ -5,8 +5,9 @@ import tempfile
 
 import pandas as pd
 from cryptography.fernet import Fernet
-from django.test import SimpleTestCase, override_settings
+from django.test import SimpleTestCase
 
+from donations.testing import override_encryption_key
 from donations.utils import parquet_store as store
 
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
@@ -20,7 +21,7 @@ def _frame(start, rows, freq="h"):
     })
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class ParquetStoreTest(SimpleTestCase):
     def setUp(self):
         self.workdir = tempfile.mkdtemp(prefix="store-")
@@ -41,7 +42,7 @@ class ParquetStoreTest(SimpleTestCase):
         store.write_frames(path, [_frame("2024-01-01", 3)])
         with open(path, "rb") as handle:
             self.assertNotIn(b"still", handle.read())
-        with override_settings(ENCRYPTION_KEY=Fernet.generate_key().decode()):
+        with override_encryption_key(Fernet.generate_key().decode()):
             with self.assertRaises(Exception):
                 store.read_rows([path])
 

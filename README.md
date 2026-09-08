@@ -379,6 +379,8 @@ After=network.target
 [Service]
 User=USERNAME
 Group=USERNAME
+UMask=077
+ImportCredential=portability.*
 WorkingDirectory=/opt/portability-server
 ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --timeout 120 --bind unix:/run/portability/portability-server.sock portability_server.wsgi:application
 RuntimeDirectory=portability
@@ -401,6 +403,8 @@ After=network.target redis-server.service
 [Service]
 User=USERNAME
 Group=USERNAME
+UMask=077
+ImportCredential=portability.*
 WorkingDirectory=/opt/portability-server
 ExecStart=/opt/portability-server/venv/bin/celery -A portability_server worker -l info
 Restart=always
@@ -423,6 +427,8 @@ After=network.target redis-server.service
 [Service]
 User=USERNAME
 Group=USERNAME
+UMask=077
+ImportCredential=portability.*
 WorkingDirectory=/opt/portability-server
 ExecStart=/opt/portability-server/venv/bin/celery -A portability_server beat -l info --schedule=/opt/portability-server/celerybeat-schedule
 Restart=always
@@ -547,6 +553,136 @@ A scheduled task checks twice a day, deletes what has expired - revoking the
 platform grant first, where there is one - and mails the administrators what it
 deleted and what is due within `RETENTION_WARNING_DAYS`.
 
+### Key management with OpenBao
+
+The encryption key that wraps Parquet data keys and OAuth tokens should not
+sit on the application host. In production it is held by an
+[OpenBao](https://openbao.org/) transit engine running on a separate,
+university-managed host; the application only ever holds short-lived AppRole
+credentials, delivered as root-only files by systemd.
+
+**1. Set up the vault host.** Use a separate VM (e.g. an Aalto VM) with
+inbound access denied to everything except TCP 8200 from the application
+host.
+
+```bash
+# Install OpenBao (verify the checksum against the release page)
+curl -LO https://github.com/openbao/openbao/releases/download/<version>/bao_<version>_linux_amd64.deb
+sha256sum bao_<version>_linux_amd64.deb   # compare against the published checksum
+sudo dpkg -i bao_<version>_linux_amd64.deb
+```
+
+`/etc/openbao/openbao.hcl`:
+
+```hcl
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_cert_file = "/etc/openbao/tls/cert.pem"
+  tls_key_file  = "/etc/openbao/tls/key.pem"
+}
+
+storage "file" {
+  path = "/var/lib/openbao"
+}
+
+disable_mlock = false  # the openbao unit needs CAP_IPC_LOCK
+```
+
+Initialize with a single key share, since this is not a multi-operator
+setup:
+
+```bash
+bao operator init -key-shares=1 -key-threshold=1
+```
+
+Store the unseal key at `/etc/openbao/unseal.key`, root-owned, mode 0400, and
+the root token in the university password manager. OpenBao seals itself on
+every restart, so auto-unseal it with a small systemd unit:
+
+```ini
+# /etc/systemd/system/openbao-unseal.service
+[Unit]
+Description=Unseal OpenBao
+After=openbao.service
+
+[Service]
+Type=oneshot
+Environment=BAO_ADDR=https://127.0.0.1:8200
+Environment=BAO_CACERT=/etc/openbao/tls/cert.pem
+ExecStart=/bin/sh -c 'bao operator unseal "$(cat /etc/openbao/unseal.key)"'
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable it with `systemctl enable openbao-unseal.service` so it runs on every
+boot after the vault itself.
+
+This is a file-based unseal: whoever can read the vault host's disk or its
+backups holds the unseal key. There is no TPM available on this host to do
+better, so the vault host's isolation (no inbound access beyond the transit
+port) is what actually protects the key.
+
+**2. Configure the transit engine and an AppRole for the application.**
+
+```bash
+bao secrets enable transit
+bao write -f transit/keys/portability
+```
+
+A policy restricting access to just this key's encrypt/decrypt operations,
+`portability-policy.hcl`:
+
+```hcl
+path "transit/encrypt/portability" {
+  capabilities = ["update"]
+}
+path "transit/decrypt/portability" {
+  capabilities = ["update"]
+}
+```
+
+```bash
+bao policy write portability portability-policy.hcl
+bao auth enable approle
+bao write auth/approle/role/portability \
+    token_policies=portability \
+    token_ttl=1h \
+    token_max_ttl=24h \
+    secret_id_bound_cidrs=<app-host-ip>/32 \
+    token_bound_cidrs=<app-host-ip>/32 \
+    secret_id_num_uses=0
+
+bao read auth/approle/role/portability/role-id
+bao write -f auth/approle/role/portability/secret-id
+```
+
+**3. Enable audit logging**, so every wrap/unwrap is recorded:
+
+```bash
+bao audit enable file file_path=/var/log/openbao/audit.log
+```
+
+**4. Configure the application host.** Set `OPENBAO_ADDR` (and
+`OPENBAO_CACERT` if the vault uses an internal CA) in `.env`, then run
+`scripts/update.sh`. It prompts for the role id and secret id and writes them
+to `/etc/credstore/portability.openbao_role_id` and
+`/etc/credstore/portability.openbao_secret_id`; the systemd units pick them
+up via `ImportCredential=portability.*`.
+
+- **Rotation:** `bao write -f transit/keys/portability/rotate` — OpenBao
+  keeps old key versions for decrypting existing ciphertexts, so no
+  re-encryption of stored data is needed.
+- **Revocation:** `bao write -f auth/approle/role/portability/secret-id-accessor/destroy`
+  (or delete the role entirely) immediately invalidates the application's
+  access.
+
+**Fallback without a vault.** With `OPENBAO_ADDR` left empty, the service
+runs on a Fernet key held in `/etc/credstore/portability.encryption_key`
+instead — still root-only and delivered by systemd, but not isolated from
+the application host. `scripts/deploy.sh`, `scripts/update.sh` and
+`scripts/verify.sh` all report this loudly on every run.
+
 ## How data is stored
 
 An archive - a Google export or a participant's upload - is written to
@@ -560,10 +696,14 @@ into a single `combined.parquet` in timestamp order.
 
 Encryption is Parquet Modular Encryption (AES-GCM) with an encrypted footer, so
 metadata and column statistics are unreadable without the key and tampering is
-detected on read. Parquet's data keys are wrapped with `ENCRYPTION_KEY`, which
-remains the only secret. Row groups bound the cost of a request: a page decrypts
-only the group holding it, and a date filter skips groups whose recorded
-timestamp range cannot match.
+detected on read. Parquet's per-file data keys are wrapped and unwrapped by an
+OpenBao transit engine on a separate host (see "Key management with OpenBao"
+below); OAuth tokens are encrypted through the same engine. The application
+never holds the master key. When no vault is configured the service falls
+back to a locally held Fernet key, still delivered as a root-only file by
+systemd rather than kept in `.env`. Row groups bound the cost of a request: a
+page decrypts only the group holding it, and a date filter skips groups whose
+recorded timestamp range cannot match.
 
 Archives are not encrypted during processing. They exist only during processing, and a scheduled task removes stale files left over
 for example from a crash during processing.
@@ -582,7 +722,10 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `GOOGLE_OAUTH_CLIENT_SECRET` | Google OAuth 2.0 client secret | |
 | `TIKTOK_CLIENT_KEY` | TikTok API client key | |
 | `TIKTOK_CLIENT_SECRET` | TikTok API client secret | |
-| `ENCRYPTION_KEY` | Base64 urlsafe Fernet key for data at rest; falls back to `SECRET_KEY` if empty | |
+| `OPENBAO_ADDR` | Address of the OpenBao server holding the encryption key; empty runs on a locally held, root-delivered key instead | `https://vault.example:8200` |
+| `OPENBAO_MOUNT` | Mount path of the transit secrets engine | `transit` |
+| `OPENBAO_KEY_NAME` | Name of the transit key used to wrap data keys and OAuth tokens | `portability` |
+| `OPENBAO_CACERT` | Path to a CA certificate for the vault's TLS, if not publicly trusted | |
 | `CELERY_BROKER_URL` | Redis URL for Celery task broker | `redis://localhost:6379/1` |
 | `CELERY_RESULT_BACKEND` | Redis URL for Celery result storage | `redis://localhost:6379/1` |
 | `CACHE_URL` | Redis URL for the Django cache (rate-limit counters) | `redis://localhost:6379/2` |

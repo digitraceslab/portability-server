@@ -31,6 +31,7 @@ git pull --ff-only
 echo "==> Installing dependencies"
 "$VENV/bin/pip" install -r requirements.txt
 
+install_credentials
 validate_env
 
 echo "==> Running deployment checks"

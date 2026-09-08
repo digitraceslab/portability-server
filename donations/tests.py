@@ -12,6 +12,8 @@ import requests
 
 from cryptography.fernet import Fernet
 from django.test import TestCase, Client, override_settings
+
+from donations.testing import override_encryption_key
 from rest_framework.test import APIRequestFactory
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken, Participant, hash_token
@@ -25,7 +27,7 @@ from donations.utils.crypto import (
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class CryptoTests(TestCase):
     """Tests for encryption and decryption utilities."""
     def test_text_roundtrip(self):
@@ -121,7 +123,7 @@ class ResearcherTokenAuthTests(TestCase):
         self.assertIsNone(result)
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class GoogleDonationModelTests(TestCase):
     """Tests for GoogleDonation model behavior."""
 
@@ -259,7 +261,7 @@ class GoogleDonationModelTests(TestCase):
                 pass
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TikTokDonationModelTests(TestCase):
     """Tests for TikTokDonation model behavior."""
 
@@ -326,7 +328,7 @@ class TikTokDonationModelTests(TestCase):
         self.assertEqual(td.get_data_types(), ['tiktok_portability'])
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TikTokExportDonationModelTests(TestCase):
     """Tests for TikTokExportDonation model behavior (file upload flow)."""
 

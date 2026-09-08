@@ -20,9 +20,10 @@ import zipfile
 import numpy as np
 import pandas as pd
 from cryptography.fernet import Fernet
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from donations.models import GoogleDonation, ResearcherToken
+from donations.testing import override_encryption_key
 from donations.utils import crypto
 
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
@@ -85,7 +86,7 @@ def _reader_for(expected_columns):
     return read
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class RoundTripTest(TestCase):
     """Source data in, per-type storage, paged reads out, compared to the original."""
 
@@ -248,7 +249,7 @@ class RoundTripTest(TestCase):
         self.assertEqual(page[0]["timestamp"], int(start.value // 10**6))
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class MultipleArchiveTest(TestCase):
     """A data type continued across archives, delivered as zips.
 

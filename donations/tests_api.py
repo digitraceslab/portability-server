@@ -3,8 +3,10 @@ import uuid
 from unittest.mock import patch, MagicMock
 
 from cryptography.fernet import Fernet
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from rest_framework.test import APIClient
+
+from donations.testing import override_encryption_key
 
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
@@ -105,7 +107,7 @@ class TestRetrieveDonation(DonationAPITestCase):
         self.assertEqual(response.status_code, 404)
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TestDeleteDonation(DonationAPITestCase):
     def test_delete_own_donation(self):
         donation = GoogleDonation.objects.create(researcher=self.researcher)

@@ -1,6 +1,6 @@
 """Donations app configuration."""
 from django.apps import AppConfig
-from django.core.checks import Error, register
+from django.core.checks import Warning, register
 
 
 class DonationsConfig(AppConfig):
@@ -12,14 +12,15 @@ class DonationsConfig(AppConfig):
 @register()
 def check_encryption_key(app_configs, **kwargs):
     from django.conf import settings
-    errors = []
-    if not getattr(settings, 'ENCRYPTION_KEY', None):
-        errors.append(Error(
-            'ENCRYPTION_KEY is not set.',
+    warnings = []
+    if not settings.DEBUG and not settings.OPENBAO_ADDR:
+        warnings.append(Warning(
+            'Encryption key is held locally by the application; no OpenBao '
+            'vault is configured.',
             hint=(
-                'Set ENCRYPTION_KEY in your .env file. Generate one with: '
-                'python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"'
+                'Set OPENBAO_ADDR (and the AppRole credential files) so key '
+                'material stays in the vault.'
             ),
-            id='donations.E001',
+            id='donations.W001',
         ))
-    return errors
+    return warnings

@@ -5,6 +5,9 @@ After=network.target redis-server.service
 [Service]
 User=@RUN_USER@
 Group=@RUN_USER@
+UMask=077
+# Secrets come from /etc/credstore/portability.* (root-only), never from .env
+ImportCredential=portability.*
 WorkingDirectory=@APP_DIR@
 ExecStart=@APP_DIR@/venv/bin/celery -A portability_server beat -l info --schedule=@APP_DIR@/celerybeat-schedule
 Restart=always

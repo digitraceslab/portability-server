@@ -9,12 +9,13 @@ import tempfile
 
 import pandas as pd
 from cryptography.fernet import Fernet
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
 
 from donations.models import GoogleDonation, ResearcherToken, TikTokExportDonation
+from donations.testing import override_encryption_key
 from donations.utils import crypto, parquet_store
 
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
@@ -55,7 +56,7 @@ class StepTestCase(TestCase):
         return path
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TestEncryptionStep(StepTestCase):
     def test_file_round_trips_through_encryption(self):
         payload = b"timestamp,activity\n2024-01-01 00:00:00,still\n"
@@ -75,12 +76,12 @@ class TestEncryptionStep(StepTestCase):
     def test_wrong_key_cannot_read(self):
         path = os.path.join(self._workdir, "part")
         crypto.write_encrypted_bytes(path, b"secret")
-        with override_settings(ENCRYPTION_KEY=Fernet.generate_key().decode()):
+        with override_encryption_key(Fernet.generate_key().decode()):
             with self.assertRaises(Exception):
                 crypto.decrypt_file_to_temp(path)
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TestExtractionStep(StepTestCase):
     def setUp(self):
         super().setUp()
@@ -126,7 +127,7 @@ class TestExtractionStep(StepTestCase):
         self.assertEqual(self.donation.count_rows("activity_log"), 7)
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TestReadStep(StepTestCase):
     def setUp(self):
         super().setUp()
@@ -162,7 +163,7 @@ class TestReadStep(StepTestCase):
         self.assertEqual(rows[0]["timestamp"], expected)
 
 
-@override_settings(ENCRYPTION_KEY=TEST_ENCRYPTION_KEY)
+@override_encryption_key(TEST_ENCRYPTION_KEY)
 class TestUploadStep(StepTestCase):
     """An upload needs no authorization step, so it is ready to read at once."""
 

@@ -42,6 +42,8 @@ Created .env from .env.example. Fill in the per-deployment values before continu
   - CSRF_TRUSTED_ORIGINS
   - OAuth credentials (GOOGLE_OAUTH_CLIENT_ID/SECRET, TIKTOK_CLIENT_KEY/SECRET, etc.)
   - DEBUG=False
+  - OPENBAO_ADDR (optional but recommended; see README, "Key management with
+    OpenBao" - without it the encryption key is held locally on this host)
 Then rerun this script.
 MSG
     exit 1
@@ -99,6 +101,7 @@ PYEOF
     fi
 fi
 
+install_credentials
 validate_env
 
 echo "==> Running migrations and collecting static files"

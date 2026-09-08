@@ -63,7 +63,7 @@ else
     mode="$(stat -c %a "$APP_DIR/.env")"
     case "$mode" in
         600|400) pass ".env is owner-only (mode $mode)" ;;
-        *) fail ".env is readable beyond its owner (mode $mode); it holds the OAuth secrets and the encryption key" ;;
+        *) fail ".env is readable beyond its owner (mode $mode); it still holds the OAuth client secrets" ;;
     esac
     # .env is not version-controlled, so only its set of keys can be compared
     # against the template; the values themselves have no baseline.
@@ -75,6 +75,14 @@ else
     if [ -n "${extra// /}" ]; then
         note "keys in .env but not in .env.example: $extra"
     fi
+fi
+
+echo "==> Credentials"
+check_credentials
+if [ "$CRED_PROBLEMS" -gt 0 ]; then
+    fail "$CRED_PROBLEMS credential problem(s) found (see warnings above)"
+else
+    pass "root-delivered credentials in place"
 fi
 
 echo "==> Database"

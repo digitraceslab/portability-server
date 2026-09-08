@@ -1,5 +1,7 @@
 # Shared helpers for deploy.sh, update.sh and verify.sh.
 # Expects APP_DIR, VENV, RUN_USER, SERVICES and INSTALL_CONFIGS to already be set by the caller.
+# install_credentials() and check_credentials() also expect the caller to
+# define _env_get() (deploy.sh, update.sh and verify.sh all do).
 
 # Number of installed configs found to differ from the version-controlled
 # source. Only meaningful when INSTALL_CONFIGS=no; verify.sh reads it.
@@ -13,6 +15,27 @@ CERT_PROBLEMS=${CERT_PROBLEMS:-0}
 # Scanner settings that differ from what this service requires.
 CLAMD_PROBLEMS=${CLAMD_PROBLEMS:-0}
 NGINX_CHECKED=${NGINX_CHECKED:-0}
+
+# Root-delivered credentials (OpenBao AppRole ids, or the local key) that are
+# missing, wrongly owned or wrongly permissioned. Only meaningful after
+# check_credentials has run; verify.sh reads it.
+CRED_PROBLEMS=${CRED_PROBLEMS:-0}
+
+CREDSTORE=/etc/credstore
+
+_openbao_local_key_warning() {
+    cat >&2 <<'WARN'
+####################################################################
+# WARNING: no OPENBAO_ADDR is configured. The encryption key is
+# held locally on this host (root-only file under /etc/credstore),
+# not isolated in a separate vault. This does not meet the
+# key-isolation requirement.
+#
+# Configure OPENBAO_ADDR and the OpenBao AppRole credentials; see
+# README.md, "Key management with OpenBao".
+####################################################################
+WARN
+}
 
 validate_env() {
     echo "==> Validating environment configuration"
@@ -35,6 +58,143 @@ if problems:
     raise SystemExit("Environment validation failed:\n  - " + "\n  - ".join(problems))
 print("Environment validation OK")
 PYEOF
+
+    local openbao_addr
+    openbao_addr="$(_env_get OPENBAO_ADDR)"
+    if [ -n "$openbao_addr" ]; then
+        local openbao_cacert curl_opts=() code
+        openbao_cacert="$(_env_get OPENBAO_CACERT)"
+        [ -n "$openbao_cacert" ] && curl_opts+=(--cacert "$openbao_cacert")
+        code="$(curl -sS --max-time 10 "${curl_opts[@]}" -o /dev/null -w '%{http_code}' "$openbao_addr/v1/sys/health" || true)"
+        case "$code" in
+            200|429|472|473)
+                echo "OpenBao at $openbao_addr is reachable (HTTP $code)"
+                ;;
+            503)
+                echo "OpenBao at $openbao_addr is sealed (HTTP 503)" >&2
+                return 1
+                ;;
+            *)
+                echo "OpenBao at $openbao_addr did not respond as expected (HTTP ${code:-none})" >&2
+                return 1
+                ;;
+        esac
+    fi
+}
+
+# Ensures the root-only credential files the systemd units import
+# (ImportCredential=portability.*) are in place: the OpenBao AppRole ids when
+# OPENBAO_ADDR is configured, otherwise a locally held Fernet key. Prompts
+# interactively for anything missing; never prints a secret value.
+install_credentials() {
+    echo "==> Installing credentials"
+    sudo install -d -m 0700 -o root -g root "$CREDSTORE"
+
+    local openbao_addr
+    openbao_addr="$(_env_get OPENBAO_ADDR)"
+
+    if [ -n "$openbao_addr" ]; then
+        local name prompt value tmp
+        for name in openbao_role_id openbao_secret_id; do
+            if sudo test -f "$CREDSTORE/portability.$name"; then
+                continue
+            fi
+            case "$name" in
+                openbao_role_id) prompt="OpenBao role id: " ;;
+                openbao_secret_id) prompt="OpenBao secret id: " ;;
+            esac
+            read -rs -p "$prompt" value
+            echo
+            tmp="$(mktemp)"
+            chmod 0600 "$tmp"
+            printf '%s' "$value" > "$tmp"
+            sudo install -m 0400 -o root -g root "$tmp" "$CREDSTORE/portability.$name"
+            rm -f "$tmp"
+            unset value
+            echo "$name stored in $CREDSTORE/portability.$name (from the OpenBao AppRole; see README, \"Key management with OpenBao\")"
+        done
+    else
+        if ! sudo test -f "$CREDSTORE/portability.encryption_key"; then
+            local env_key tmp
+            env_key="$(_env_get ENCRYPTION_KEY)"
+            tmp="$(mktemp)"
+            chmod 0600 "$tmp"
+            if [ -n "$env_key" ]; then
+                printf '%s' "$env_key" > "$tmp"
+                sudo install -m 0400 -o root -g root "$tmp" "$CREDSTORE/portability.encryption_key"
+                sed -i '/^ENCRYPTION_KEY=/d' "$REPO_DIR/.env"
+                echo "moved ENCRYPTION_KEY out of .env into $CREDSTORE/portability.encryption_key"
+            else
+                "$VENV/bin/python" -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" > "$tmp"
+                sudo install -m 0400 -o root -g root "$tmp" "$CREDSTORE/portability.encryption_key"
+                echo "generated a new key at $CREDSTORE/portability.encryption_key"
+            fi
+            rm -f "$tmp"
+            unset env_key
+        elif grep -q '^ENCRYPTION_KEY=' "$REPO_DIR/.env" 2>/dev/null; then
+            sed -i '/^ENCRYPTION_KEY=/d' "$REPO_DIR/.env"
+            echo "removed leftover ENCRYPTION_KEY line from .env ($CREDSTORE/portability.encryption_key is already in place)"
+        fi
+        _openbao_local_key_warning
+    fi
+}
+
+# Read-only counterpart of install_credentials, used by verify.sh. Reports
+# findings via CRED_PROBLEMS; prints nothing secret.
+check_credentials() {
+    local owner_mode
+
+    if sudo -n test -d "$CREDSTORE" 2>/dev/null; then
+        owner_mode="$(sudo -n stat -c '%U %a' "$CREDSTORE" 2>/dev/null)"
+        if [ "$owner_mode" = "root 700" ]; then
+            echo "$CREDSTORE is present, root-owned, mode 700"
+        else
+            echo "Warning: $CREDSTORE is ${owner_mode:-in an unexpected state}, expected 'root 700'" >&2
+            CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+        fi
+    elif sudo -n true 2>/dev/null; then
+        echo "Warning: $CREDSTORE does not exist" >&2
+        CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+    else
+        echo "Warning: cannot verify $CREDSTORE (needs root)" >&2
+        CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+    fi
+
+    local openbao_addr expected name path
+    openbao_addr="$(_env_get OPENBAO_ADDR)"
+    if [ -n "$openbao_addr" ]; then
+        expected="portability.openbao_role_id portability.openbao_secret_id"
+    else
+        expected="portability.encryption_key"
+    fi
+    for name in $expected; do
+        path="$CREDSTORE/$name"
+        if sudo -n test -f "$path" 2>/dev/null; then
+            owner_mode="$(sudo -n stat -c '%U %a' "$path" 2>/dev/null)"
+            if [ "$owner_mode" = "root 400" ]; then
+                echo "$name is present, root-owned, mode 400"
+            else
+                echo "Warning: $name is ${owner_mode:-in an unexpected state}, expected 'root 400'" >&2
+                CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+            fi
+        elif sudo -n true 2>/dev/null; then
+            echo "Warning: $name is missing from $CREDSTORE" >&2
+            CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+        else
+            echo "Warning: cannot verify $name (needs root)" >&2
+            CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+        fi
+    done
+
+    if grep -qE '^ENCRYPTION_KEY=.+' "$REPO_DIR/.env" 2>/dev/null; then
+        echo "Warning: .env still contains an ENCRYPTION_KEY value; it must live only in $CREDSTORE" >&2
+        CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+    fi
+
+    if [ -z "$openbao_addr" ]; then
+        _openbao_local_key_warning
+        CRED_PROBLEMS=$((CRED_PROBLEMS + 1))
+    fi
 }
 
 # Compares a rendered config against the installed one; applies it when

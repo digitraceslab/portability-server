@@ -1,34 +1,22 @@
-from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
+"""Encryption facade used by callers throughout the app.
+
+Delegates to the configured keystore backend (OpenBao transit, or a local
+key): encrypt/write use ``get_backend()``, decrypt/read dispatch by
+ciphertext prefix via ``backend_for()``, so data written before a backend
+change stays readable. See ``donations.utils.keystore``.
+"""
 import os
 import tempfile
-from cryptography.fernet import Fernet
 
-def _resolve_key():
-    key = getattr(settings, 'ENCRYPTION_KEY', None)
-    if not key:
-        raise ImproperlyConfigured(
-            "ENCRYPTION_KEY must be set. Generate one with: "
-            "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
-        )
-    if isinstance(key, str):
-        return key.encode()
-    return key
-
-
-def _get_fernet():
-    key = _resolve_key()
-    return Fernet(key)
+from donations.utils import keystore
 
 
 def encrypt_bytes(data: bytes) -> bytes:
-    f = _get_fernet()
-    return f.encrypt(data)
+    return keystore.get_backend().encrypt_bytes(data)
 
 
 def decrypt_bytes(data: bytes) -> bytes:
-    f = _get_fernet()
-    return f.decrypt(data)
+    return keystore.backend_for(data).decrypt_bytes(data)
 
 
 def encrypt_file_inplace(path: str):
@@ -60,8 +48,8 @@ def decrypt_file_to_temp(path: str) -> str:
 
 
 def encrypt_text(text: str) -> str:
-    return encrypt_bytes(text.encode()).decode()
+    return keystore.get_backend().encrypt_text(text)
 
 
 def decrypt_text(text: str) -> str:
-    return decrypt_bytes(text.encode()).decode()
+    return keystore.backend_for(text).decrypt_text(text)
