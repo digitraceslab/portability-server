@@ -159,6 +159,10 @@ if not DEBUG:
 
     CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])
 
+    # Requests reach gunicorn over a Unix socket, so REMOTE_ADDR is empty;
+    # nginx (proxy_params) sets X-Real-IP from the actual connection.
+    RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
+
     CONTENT_SECURITY_POLICY = {
         "DIRECTIVES": {
             "default-src": ["'self'"],
