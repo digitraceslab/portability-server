@@ -304,8 +304,9 @@ def data_preview(request):
     donation = _get_session_donation(request)
     data_types = donation.get_data_types()
     selected_type = request.GET.get('data_type', data_types[0] if data_types else '')
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    # The form submits empty strings for unset dates; treat them as absent.
+    start_date = request.GET.get('start_date') or None
+    end_date = request.GET.get('end_date') or None
     page_number = request.GET.get('page', 1)
 
     rows = []

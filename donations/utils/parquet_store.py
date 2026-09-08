@@ -128,13 +128,32 @@ def _groups(paths):
             yield path, index, group.num_rows, low, high
 
 
+def _bound(value, like):
+    """A filter bound as a Timestamp comparable with ``like``, or None.
+
+    Empty and missing values mean "no bound". Stored timestamps may or may
+    not carry a timezone, and pandas refuses to compare aware with naive, so
+    the bound takes whichever form ``like`` has (naive bounds are read as UTC).
+    """
+    if value is None or value == "":
+        return None
+    bound = pd.Timestamp(value)
+    like_tz = getattr(like, "tzinfo", None) or getattr(like, "tz", None)
+    if like_tz is not None and bound.tzinfo is None:
+        return bound.tz_localize("UTC").tz_convert(like_tz)
+    if like_tz is None and bound.tzinfo is not None:
+        return bound.tz_convert("UTC").tz_localize(None)
+    return bound
+
+
 def _overlaps(low, high, start, end):
     """Whether a group's timestamp range can contain a matching row."""
     if low is None or high is None:
         return True
-    if start is not None and high < pd.Timestamp(start):
+    start, end = _bound(start, low), _bound(end, low)
+    if start is not None and high < start:
         return False
-    if end is not None and low > pd.Timestamp(end):
+    if end is not None and low > end:
         return False
     return True
 
@@ -143,18 +162,21 @@ def _within(low, high, start, end):
     """Whether every row in the group matches, so it need not be read."""
     if low is None or high is None:
         return False
-    if start is not None and low < pd.Timestamp(start):
+    start, end = _bound(start, low), _bound(end, low)
+    if start is not None and low < start:
         return False
-    if end is not None and high > pd.Timestamp(end):
+    if end is not None and high > end:
         return False
     return True
 
 
 def _filtered(frame, start, end):
+    like = frame[TIMESTAMP_COLUMN].dt
+    start, end = _bound(start, like), _bound(end, like)
     if start is not None:
-        frame = frame[frame[TIMESTAMP_COLUMN] >= pd.Timestamp(start)]
+        frame = frame[frame[TIMESTAMP_COLUMN] >= start]
     if end is not None:
-        frame = frame[frame[TIMESTAMP_COLUMN] <= pd.Timestamp(end)]
+        frame = frame[frame[TIMESTAMP_COLUMN] <= end]
     return frame
 
 
