@@ -8,6 +8,7 @@ read back a page at a time.
 import logging
 import os
 
+import pandas as pd
 from django.utils import timezone
 
 from donations.utils import parquet_store
@@ -76,7 +77,8 @@ class ArchiveDonationMixin:
             return []
         # Milliseconds
         frame = frame.copy()
-        frame['timestamp'] = frame['timestamp'].astype('datetime64[ms]').astype('int64')
+        timestamps = pd.to_datetime(frame['timestamp'], utc=True).dt.tz_localize(None)
+        frame['timestamp'] = timestamps.astype('datetime64[ms]').astype('int64')
         return frame.to_dict('records')
 
     def count_rows(self, data_type, start_date=None, end_date=None):
