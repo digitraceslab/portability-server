@@ -89,8 +89,8 @@ be decrypted to answer a request: a page reads the one group that holds it, and
 a date filter skips groups whose recorded timestamp range cannot match.</p>
 <p>Encryption is Parquet Modular Encryption with an encrypted footer, so metadata
 and statistics are unreadable without the key and nothing is parsed before it
-has been authenticated. Parquet’s data keys are wrapped with the service’s own
-<code class="docutils literal notranslate"><span class="pre">ENCRYPTION_KEY</span></code>; no key management service is involved.</p>
+has been authenticated. Parquet’s data keys are wrapped by the configured
+keystore: OpenBao transit, or a local key if no vault is configured.</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES">
 <span class="sig-prename descclassname"><span class="pre">donations.utils.parquet_store.</span></span><span class="sig-name descname"><span class="pre">ROW_GROUP_TARGET_BYTES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4194304</span></span><a class="headerlink" href="#donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES" title="Link to this definition"></a></dt>

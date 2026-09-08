@@ -75,8 +75,8 @@
 
 <span class="sd">Encryption is Parquet Modular Encryption with an encrypted footer, so metadata</span>
 <span class="sd">and statistics are unreadable without the key and nothing is parsed before it</span>
-<span class="sd">has been authenticated. Parquet&#39;s data keys are wrapped with the service&#39;s own</span>
-<span class="sd">``ENCRYPTION_KEY``; no key management service is involved.</span>
+<span class="sd">has been authenticated. Parquet&#39;s data keys are wrapped by the configured</span>
+<span class="sd">keystore: OpenBao transit, or a local key if no vault is configured.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
 
@@ -84,9 +84,8 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet.encryption</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pe</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">cryptography.fernet</span><span class="w"> </span><span class="kn">import</span> <span class="n">Fernet</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">crypto</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">keystore</span>
 
 <span class="c1">#: Target size of a row group. The row count is derived from this and the</span>
 <span class="c1">#: observed row width, so types with wide rows get fewer rows per group.</span>
@@ -101,29 +100,23 @@
 <span class="n">TIMESTAMP_COLUMN</span> <span class="o">=</span> <span class="s2">&quot;timestamp&quot;</span>
 
 
-<span class="k">class</span><span class="w"> </span><span class="nc">_LocalKms</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">KmsClient</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps Parquet&#39;s data keys with the service&#39;s own encryption key.&quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
-        <span class="n">pe</span><span class="o">.</span><span class="n">KmsClient</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span> <span class="o">=</span> <span class="n">Fernet</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">custom_kms_conf</span><span class="p">[</span><span class="n">_FOOTER_KEY_ID</span><span class="p">])</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_KeystoreKms</span><span class="p">(</span><span class="n">pe</span><span class="o">.</span><span class="n">KmsClient</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps Parquet&#39;s data keys through the configured keystore backend.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">wrap_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_bytes</span><span class="p">,</span> <span class="n">master_key_id</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span><span class="o">.</span><span class="n">encrypt</span><span class="p">(</span><span class="n">key_bytes</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">keystore</span><span class="o">.</span><span class="n">get_backend</span><span class="p">()</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">key_bytes</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">unwrap_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">wrapped_key</span><span class="p">,</span> <span class="n">master_key_id</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fernet</span><span class="o">.</span><span class="n">decrypt</span><span class="p">(</span><span class="n">wrapped_key</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">keystore</span><span class="o">.</span><span class="n">backend_for</span><span class="p">(</span><span class="n">wrapped_key</span><span class="p">)</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(</span><span class="n">wrapped_key</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_factory</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">CryptoFactory</span><span class="p">(</span><span class="k">lambda</span> <span class="n">config</span><span class="p">:</span> <span class="n">_LocalKms</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">CryptoFactory</span><span class="p">(</span><span class="k">lambda</span> <span class="n">config</span><span class="p">:</span> <span class="n">_KeystoreKms</span><span class="p">())</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_kms_config</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hands the master key to the client; it never leaves the process.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">KmsConnectionConfig</span><span class="p">(</span>
-        <span class="n">custom_kms_conf</span><span class="o">=</span><span class="p">{</span><span class="n">_FOOTER_KEY_ID</span><span class="p">:</span> <span class="n">crypto</span><span class="o">.</span><span class="n">_resolve_key</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">()}</span>
-    <span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;No key is handed over: the client calls the keystore directly.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pe</span><span class="o">.</span><span class="n">KmsConnectionConfig</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_encryption_properties</span><span class="p">():</span>

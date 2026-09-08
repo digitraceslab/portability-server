@@ -1,0 +1,7 @@
+donations.testing module
+========================
+
+.. automodule:: donations.testing
+   :members:
+   :show-inheritance:
+   :undoc-members:

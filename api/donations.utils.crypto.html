@@ -80,6 +80,11 @@
              
   <section id="module-donations.utils.crypto">
 <span id="donations-utils-crypto-module"></span><h1>donations.utils.crypto module<a class="headerlink" href="#module-donations.utils.crypto" title="Link to this heading"></a></h1>
+<p>Encryption facade used by callers throughout the app.</p>
+<p>Delegates to the configured keystore backend (OpenBao transit, or a local
+key): encrypt/write use <code class="docutils literal notranslate"><span class="pre">get_backend()</span></code>, decrypt/read dispatch by
+ciphertext prefix via <code class="docutils literal notranslate"><span class="pre">backend_for()</span></code>, so data written before a backend
+change stays readable. See <code class="docutils literal notranslate"><span class="pre">donations.utils.keystore</span></code>.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.utils.crypto.encrypt_bytes">
 <span class="sig-prename descclassname"><span class="pre">donations.utils.crypto.</span></span><span class="sig-name descname"><span class="pre">encrypt_bytes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bytes</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bytes</span></span></span><a class="reference internal" href="../_modules/donations/utils/crypto.html#encrypt_bytes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.crypto.encrypt_bytes" title="Link to this definition"></a></dt>

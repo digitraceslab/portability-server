@@ -22,6 +22,7 @@ Submodules
    donations.apps
    donations.authentication
    donations.tasks
+   donations.testing
    donations.views
 
 Module contents
