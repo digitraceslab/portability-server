@@ -8,7 +8,6 @@ credential.
 import logging
 import uuid
 
-from coverage import data
 from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
