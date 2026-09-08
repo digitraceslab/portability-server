@@ -1,0 +1,7 @@
+donations.utils.paging module
+=============================
+
+.. automodule:: donations.utils.paging
+   :members:
+   :show-inheritance:
+   :undoc-members:

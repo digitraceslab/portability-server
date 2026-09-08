@@ -76,7 +76,6 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">coverage</span><span class="w"> </span><span class="kn">import</span> <span class="n">data</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.paginator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Paginator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Http404</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.shortcuts</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_object_or_404</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render</span>
@@ -90,6 +89,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">Participant</span><span class="p">,</span> <span class="n">hash_token</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="n">process_donation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils.paging</span><span class="w"> </span><span class="kn">import</span> <span class="n">DonationRows</span>
 
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -404,25 +404,19 @@
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="n">data_types</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">get_data_types</span><span class="p">()</span>
     <span class="n">selected_type</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_type&#39;</span><span class="p">,</span> <span class="n">data_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">data_types</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="n">start_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">)</span>
-    <span class="n">end_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;end_date&#39;</span><span class="p">)</span>
+    <span class="c1"># The form submits empty strings for unset dates; treat them as absent.</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
+    <span class="n">end_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;end_date&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
     <span class="n">page_number</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
-    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">total_count</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="n">columns</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="n">selected_type</span> <span class="ow">and</span> <span class="n">selected_type</span> <span class="ow">in</span> <span class="n">data_types</span><span class="p">:</span>
-        <span class="n">total_count</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">count_rows</span><span class="p">(</span><span class="n">selected_type</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">)</span>
-        <span class="n">all_rows</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">(</span><span class="n">selected_type</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">all_rows</span><span class="p">:</span>
-            <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-        <span class="n">paginator</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">(</span><span class="n">all_rows</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
-        <span class="n">page_obj</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">get_page</span><span class="p">(</span><span class="n">page_number</span><span class="p">)</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">page_obj</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">DonationRows</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="n">selected_type</span><span class="p">,</span> <span class="n">start_date</span><span class="o">=</span><span class="n">start_date</span><span class="p">,</span> <span class="n">end_date</span><span class="o">=</span><span class="n">end_date</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">paginator</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">([],</span> <span class="mi">50</span><span class="p">)</span>
-        <span class="n">page_obj</span> <span class="o">=</span> <span class="n">paginator</span><span class="o">.</span><span class="n">get_page</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">page_obj</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># Only the rows of the requested page are read; the count comes from the</span>
+    <span class="c1"># row group metadata.</span>
+    <span class="n">page_obj</span> <span class="o">=</span> <span class="n">Paginator</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span><span class="o">.</span><span class="n">get_page</span><span class="p">(</span><span class="n">page_number</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">page_obj</span><span class="o">.</span><span class="n">object_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">if</span> <span class="n">page_obj</span><span class="o">.</span><span class="n">object_list</span> <span class="k">else</span> <span class="p">[]</span>
 
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/data_preview.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
@@ -430,10 +424,10 @@
         <span class="s1">&#39;selected_type&#39;</span><span class="p">:</span> <span class="n">selected_type</span><span class="p">,</span>
         <span class="s1">&#39;start_date&#39;</span><span class="p">:</span> <span class="n">start_date</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
         <span class="s1">&#39;end_date&#39;</span><span class="p">:</span> <span class="n">end_date</span> <span class="ow">or</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;rows&#39;</span><span class="p">:</span> <span class="n">rows</span><span class="p">,</span>
+        <span class="s1">&#39;rows&#39;</span><span class="p">:</span> <span class="n">page_obj</span><span class="p">,</span>
         <span class="s1">&#39;columns&#39;</span><span class="p">:</span> <span class="n">columns</span><span class="p">,</span>
-        <span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="n">total_count</span><span class="p">,</span>
-        <span class="s1">&#39;page_obj&#39;</span><span class="p">:</span> <span class="n">page_obj</span> <span class="k">if</span> <span class="s1">&#39;page_obj&#39;</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">()</span> <span class="k">else</span> <span class="n">rows</span><span class="p">,</span>
+        <span class="s1">&#39;total_count&#39;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">),</span>
+        <span class="s1">&#39;page_obj&#39;</span><span class="p">:</span> <span class="n">page_obj</span><span class="p">,</span>
     <span class="p">})</span></div>
 
 
