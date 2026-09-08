@@ -425,6 +425,17 @@ PYEOF
 
     local changed=0 missing_certs=0 cert_state tmp_site
     tmp_site="$(mktemp)"
+
+    # Networks allowed to reach /admin/, comma-separated CIDRs in .env. With
+    # none configured the admin is unreachable through nginx, which is the
+    # safe default; say so, since it is easy to miss.
+    local admin_allow="" cidr
+    for cidr in $(_env_get ADMIN_ALLOWED_CIDRS | tr ',' ' '); do
+        admin_allow="${admin_allow:+$admin_allow\n}        allow $cidr;"
+    done
+    if [ -z "$admin_allow" ]; then
+        echo "Warning: ADMIN_ALLOWED_CIDRS is empty; /admin/ is not reachable through nginx." >&2
+    fi
     # Certificate paths are substituted into the template as text, so a missing
     # certificate does not stop the config being rendered and compared. It only
     # stops it being installed: nginx would refuse to load it.
@@ -444,7 +455,7 @@ PYEOF
             CERT_PROBLEMS=$((CERT_PROBLEMS + 1))
         fi
         sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" -e "s|@APP_DIR@|$APP_DIR|g" \
-            "$APP_DIR/deploy/nginx-site.conf" >> "$tmp_site"
+            -e "s|^@ADMIN_ALLOW@$|$admin_allow|" "$APP_DIR/deploy/nginx-site.conf" >> "$tmp_site"
         echo >> "$tmp_site"
     done
 
