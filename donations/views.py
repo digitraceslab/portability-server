@@ -21,6 +21,7 @@ PARTICIPANT_TOKEN_MIN_LENGTH = 32
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, Participant, hash_token
 from donations.tasks import process_donation
+from donations.utils.paging import DonationRows
 
 
 logger = logging.getLogger(__name__)
@@ -308,21 +309,14 @@ def data_preview(request):
     end_date = request.GET.get('end_date') or None
     page_number = request.GET.get('page', 1)
 
-    rows = []
-    total_count = 0
-    columns = []
     if selected_type and selected_type in data_types:
-        total_count = donation.count_rows(selected_type, start_date=start_date, end_date=end_date)
-        all_rows = donation.fetch_data(selected_type, limit=10000, start_date=start_date, end_date=end_date)
-        if all_rows:
-            columns = list(all_rows[0].keys())
-        paginator = Paginator(all_rows, 50)
-        page_obj = paginator.get_page(page_number)
-        rows = page_obj
+        source = DonationRows(donation, selected_type, start_date=start_date, end_date=end_date)
     else:
-        paginator = Paginator([], 50)
-        page_obj = paginator.get_page(1)
-        rows = page_obj
+        source = []
+    # Only the rows of the requested page are read; the count comes from the
+    # row group metadata.
+    page_obj = Paginator(source, 50).get_page(page_number)
+    columns = list(page_obj.object_list[0].keys()) if page_obj.object_list else []
 
     return render(request, 'donations/data_preview.html', {
         'donation': donation,
@@ -330,10 +324,10 @@ def data_preview(request):
         'selected_type': selected_type,
         'start_date': start_date or '',
         'end_date': end_date or '',
-        'rows': rows,
+        'rows': page_obj,
         'columns': columns,
-        'total_count': total_count,
-        'page_obj': page_obj if 'page_obj' in dir() else rows,
+        'total_count': len(source),
+        'page_obj': page_obj,
     })
 
 
