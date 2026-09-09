@@ -1,7 +1,7 @@
 """Admin configuration for donation models."""
 from django.contrib import admin, messages
 
-from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, Participant
+from donations.models import Donation, GoogleDonation, TikTokDonation, ResearcherToken, ResearcherSession, Participant
 from donations.models.tiktok_export import TikTokExportDonation
 
 
@@ -48,7 +48,7 @@ class DonationAdmin(admin.ModelAdmin):
 @admin.register(ResearcherToken)
 class ResearcherTokenAdmin(admin.ModelAdmin):
     """Admin interface for managing researcher tokens."""
-    list_display = ('name', 'created_at')
+    list_display = ('name', 'created_at', 'expires_at')
     readonly_fields = ('key', 'created_at')
     actions = ['regenerate_token']
 
@@ -64,6 +64,19 @@ class ResearcherTokenAdmin(admin.ModelAdmin):
             f"New token for '{token_obj.name or token_obj.pk}': {raw_key} — Save this now, it will not be shown again.",
             messages.SUCCESS,
         )
+
+
+@admin.register(ResearcherSession)
+class ResearcherSessionAdmin(admin.ModelAdmin):
+    """Read-only admin interface for inspecting and killing researcher sessions."""
+    list_display = ('token', 'created_at', 'expires_at')
+    readonly_fields = ('token', 'created_at', 'expires_at')
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(GoogleDonation)

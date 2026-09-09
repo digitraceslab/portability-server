@@ -3,6 +3,7 @@ import os
 import shutil
 import tempfile
 import uuid
+from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -13,12 +14,14 @@ import requests
 from cryptography.fernet import Fernet
 from django.contrib.sessions.models import Session
 from django.test import TestCase, Client, override_settings
+from django.utils import timezone
 
 from donations.testing import override_encryption_key
 from rest_framework.test import APIRequestFactory
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken, Participant, hash_token
 from donations.authentication import ResearcherTokenAuthentication
+from donations.researcher_auth.sessions import create_session
 from donations.utils import parquet_store
 from donations.utils.crypto import (
     encrypt_text, decrypt_text, encrypt_bytes, decrypt_bytes,
@@ -105,12 +108,27 @@ class ResearcherTokenAuthTests(TestCase):
         self.auth = ResearcherTokenAuthentication()
         self.factory = APIRequestFactory()
         self.token = ResearcherToken.objects.create(name='test-auth')
+        self.raw_session_key, self.session = create_session(self.token)
 
-    def test_valid_token(self):
-        request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.token._raw_key}')
+    def test_valid_session(self):
+        request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.raw_session_key}')
         user, auth_token = self.auth.authenticate(request)
         self.assertIsNone(user)
         self.assertEqual(auth_token.key, self.token.key)
+
+    def test_static_researcher_key_is_rejected(self):
+        request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.token._raw_key}')
+        from rest_framework.exceptions import AuthenticationFailed
+        with self.assertRaises(AuthenticationFailed):
+            self.auth.authenticate(request)
+
+    def test_expired_session_is_rejected(self):
+        self.session.expires_at = timezone.now() - timedelta(seconds=1)
+        self.session.save()
+        request = self.factory.get('/', HTTP_AUTHORIZATION=f'Token {self.raw_session_key}')
+        from rest_framework.exceptions import AuthenticationFailed
+        with self.assertRaises(AuthenticationFailed):
+            self.auth.authenticate(request)
 
     def test_invalid_token(self):
         request = self.factory.get('/', HTTP_AUTHORIZATION='Token invalidkey123')

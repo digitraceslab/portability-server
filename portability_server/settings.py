@@ -104,6 +104,12 @@ PROCESSING_CLAIM_TIMEOUT_SECONDS = env.int(
     "PROCESSING_CLAIM_TIMEOUT_SECONDS", default=30 * 60
 )
 
+#: How long a researcher API session lasts once issued, capped at the
+#: researcher token's own expiry.
+RESEARCHER_SESSION_LIFETIME_SECONDS = env.int(
+    "RESEARCHER_SESSION_LIFETIME_SECONDS", default=12 * 60 * 60
+)
+
 RETENTION_DAYS = env.int("RETENTION_DAYS", default=14)
 CAN_DELETE_RETENTION_DAYS = env.int("CAN_DELETE_RETENTION_DAYS", default=2)
 #: Donations expiring within this many days are named in the daily mail,

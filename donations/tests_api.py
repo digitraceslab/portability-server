@@ -7,11 +7,12 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 
 from donations.testing import override_encryption_key
+from donations.researcher_auth.sessions import create_session
 
 TEST_ENCRYPTION_KEY = Fernet.generate_key().decode()
 
 from donations.models import (
-    Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken, Participant,
+    Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken,
 )
 
 
@@ -19,8 +20,9 @@ class DonationAPITestCase(TestCase):
     """Base test case with researcher token authentication."""
     def setUp(self):
         self.researcher = ResearcherToken.objects.create(name='test-researcher')
+        self.session_key, self.session = create_session(self.researcher)
         self.client = APIClient()
-        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.researcher._raw_key}')
+        self.client.credentials(HTTP_AUTHORIZATION=f'Token {self.session_key}')
 
 
 class TestCreateDonation(DonationAPITestCase):
@@ -203,7 +205,8 @@ class TestCanDeleteSignal(DonationAPITestCase):
 
     def test_another_researcher_cannot_signal(self):
         other = ResearcherToken.objects.create(name='other-researcher')
+        other_session_key, _ = create_session(other)
         client = APIClient()
-        client.credentials(HTTP_AUTHORIZATION=f'Token {other._raw_key}')
+        client.credentials(HTTP_AUTHORIZATION=f'Token {other_session_key}')
         response = client.post(f'/api/donations/{self.donation_id}/can-delete/')
         self.assertEqual(response.status_code, 404)

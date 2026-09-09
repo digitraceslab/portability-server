@@ -47,16 +47,35 @@ Data types we currently support
 
 ## Researcher API
 
-All API requests require a researcher token in the header:
-
-```
-Authorization: Token <researcher_token>
-```
-
-The researcher token is created by an administrator using the management command:
+The researcher token is created by an administrator using the management command,
+with a mandatory expiry date:
 
 ```bash
-python manage.py create_researcher_token
+python manage.py create_researcher_token --expires 2026-12-31
+```
+
+The researcher token itself is never sent to the API directly. Exchange it for a
+short-lived session token first:
+
+```
+POST /api/session/
+{"token": "<researcher_token>"}
+```
+
+Returns `{"session_token": "...", "expires_at": "..."}`. All other requests carry
+the session token in the header:
+
+```
+Authorization: Token <session_token>
+```
+
+Sessions expire after `RESEARCHER_SESSION_LIFETIME_SECONDS` (default 12 hours),
+capped at the researcher token's own expiry; log in again for a new one. To end a
+session immediately:
+
+```
+DELETE /api/session/
+Authorization: Token <session_token>
 ```
 
 
@@ -80,7 +99,7 @@ Returns a donation object including a `donation_url` — an absolute URL to send
 Example
 ``` bash
 curl -X POST http://localhost:8000/api/donations/ \
-  -H "Authorization: Token <researcher_token>" \
+  -H "Authorization: Token <session_token>" \
    -H "Content-Type: application/json" \
    -d '{
      "source_type": "google_portability",
@@ -101,7 +120,7 @@ Returns all donations created by the researcher.
 Example
 ``` bash
 curl -X GET http://localhost:8000/api/donations/ \
-  -H "Authorization: Token <researcher_token>"
+  -H "Authorization: Token <session_token>"
 ```
 
 ### Get donation status
@@ -115,7 +134,7 @@ Returns donation details including `status`: `pending`, `authorized`, `processin
 Example
 ``` bash
 curl -X GET http://localhost:8000/api/donations/<id>/ \
-   -H "Authorization: Token <researcher_token>"
+   -H "Authorization: Token <session_token>"
 ```
 
 ### Query donation data
@@ -138,7 +157,7 @@ Example
 ``` bash
 curl -X GET "http://localhost:8000/api/donations/<id>/data/?data_type=youtube_history&start_date=2023-01-01&end_date=2023-12-31
 &limit=100&offset=0" \
-   -H "Authorization: Token <researcher_token>"
+   -H "Authorization: Token <session_token>"
 ```
 
 ### Signal that a donation may be deleted
@@ -154,7 +173,7 @@ donation itself. Repeating the call keeps the first time.
 Example
 ``` bash
 curl -X POST http://localhost:8000/api/donations/<id>/can-delete/ \
-   -H "Authorization: Token <researcher_token>"
+   -H "Authorization: Token <session_token>"
 ```
 
 ### Delete a donation
@@ -168,7 +187,7 @@ Revokes OAuth access and deletes the donation and its data.
 Example
 ``` bash
 curl -X DELETE http://localhost:8000/api/donations/<id>/ \
-   -H "Authorization: Token <researcher_token>"
+   -H "Authorization: Token <session_token>"
 ```
 
 
@@ -259,7 +278,7 @@ Before deploying to production, you must:
 
 6. **Create a researcher API token**
    ```bash
-   python manage.py create_researcher_token
+   python manage.py create_researcher_token --expires 2026-12-31
    ```
 
 ## Running
@@ -369,7 +388,7 @@ cp .env.example .env
 
 python manage.py migrate
 python manage.py collectstatic --noinput
-python manage.py create_researcher_token
+python manage.py create_researcher_token --expires 2026-12-31
 ```
 
 ### Create the service user
@@ -760,6 +779,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `RETENTION_DAYS` | Days donated data is kept after it arrives (default 14) | |
 | `CAN_DELETE_RETENTION_DAYS` | Days kept after the researcher confirms a verified copy (default 2) | |
 | `RETENTION_WARNING_DAYS` | Unflagged donations expiring within this many days are named in the daily mail (default 2) | |
+| `RESEARCHER_SESSION_LIFETIME_SECONDS` | How long a researcher API session lasts, capped at the researcher token's own expiry (default 43200, 12 hours) | |
 | `EMAIL_FROM` | Sender for administrator mail; must be an `aalto.fi` address | `portability@aalto.fi` |
 | `ADMIN_EMAILS` | Comma-separated recipients of the daily retention mail | |
 

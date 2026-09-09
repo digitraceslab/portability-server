@@ -7,7 +7,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from donations import views
-from donations.api import DonationViewSet, api_docs
+from donations.api import DonationViewSet, api_docs, session_view
 from portability_server.views import home
 
 router = DefaultRouter()
@@ -45,5 +45,6 @@ urlpatterns = [
     path('oauth/tiktok/callback/', views.tiktok_auth_callback, name='tiktok-auth-callback'),
     # API
     path('api/docs/', api_docs, name='api-docs'),
+    path('api/session/', session_view, name='api-session'),
     path('api/', include(router.urls)),
 ]

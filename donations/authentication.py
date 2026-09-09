@@ -1,6 +1,12 @@
+"""DRF authentication backend for the researcher API.
+
+Accepts only session keys (see ``donations.researcher_auth.sessions``); a
+static researcher token in the header is rejected. Sessions are obtained by
+exchanging a researcher token at ``POST /api/session/``.
+"""
 from rest_framework import authentication, exceptions
 
-from donations.models import ResearcherToken
+from donations.researcher_auth.sessions import resolve_session
 
 
 class ResearcherTokenAuthentication(authentication.BaseAuthentication):
@@ -19,9 +25,7 @@ class ResearcherTokenAuthentication(authentication.BaseAuthentication):
         return self.authenticate_credentials(token_key)
 
     def authenticate_credentials(self, key):
-        key_hash = ResearcherToken.hash_key(key)
-        try:
-            token = ResearcherToken.objects.get(key=key_hash)
-        except ResearcherToken.DoesNotExist:
+        session = resolve_session(key)
+        if session is None:
             raise exceptions.AuthenticationFailed('Invalid token.')
-        return (None, token)
+        return (None, session.token)

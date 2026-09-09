@@ -3,12 +3,16 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 from django_ratelimit.decorators import ratelimit
-from rest_framework import serializers, status, viewsets
-from rest_framework.decorators import action, api_view, permission_classes as perm_classes
+from rest_framework import authentication as drf_authentication, serializers, status, viewsets
+from rest_framework.decorators import (
+    action, api_view, authentication_classes, permission_classes as perm_classes,
+)
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
 
 from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken
+from donations.researcher_auth.sessions import create_session, resolve_session, revoke_session
+from donations.researcher_auth.tokens import resolve_researcher_token
 
 
 SOURCE_TYPE_MODEL_MAP = {
@@ -172,6 +176,50 @@ class DonationViewSet(viewsets.GenericViewSet):
         return Response({'count': count, 'data': rows})
 
 
+class SessionLoginSerializer(serializers.Serializer):
+    """Parameters for exchanging a researcher token for a session."""
+    token = serializers.CharField(help_text="The researcher's static API token.")
+
+
+def _session_login(request):
+    """POST /api/session/: exchange a researcher token for a session token."""
+    serializer = SessionLoginSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    token = resolve_researcher_token(serializer.validated_data['token'])
+    if token is None:
+        return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
+    raw_key, session = create_session(token)
+    return Response({'session_token': raw_key, 'expires_at': session.expires_at})
+
+
+def _session_logout(request):
+    """DELETE /api/session/: end the session named in the Authorization header."""
+    auth_header = drf_authentication.get_authorization_header(request).split()
+    if len(auth_header) != 2:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    session = resolve_session(auth_header[1].decode())
+    if session is None:
+        return Response(status=status.HTTP_401_UNAUTHORIZED)
+    revoke_session(session)
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@ratelimit(key="ip", rate="10/m", block=True)
+@api_view(['POST', 'DELETE'])
+@authentication_classes([])
+@perm_classes([AllowAny])
+def session_view(request):
+    """Issue (POST) or revoke (DELETE) a researcher API session.
+
+    No DRF authentication class runs here: POST authenticates by exchanging
+    the researcher token in the request body, and DELETE resolves the
+    session itself from the Authorization header.
+    """
+    if request.method == 'POST':
+        return _session_login(request)
+    return _session_logout(request)
+
+
 def _serializer_fields_info(serializer_class):
     """Extract field info from a serializer class for documentation."""
     fields = []
@@ -193,10 +241,23 @@ def api_docs(request):
     return Response({
         'authentication': {
             'method': 'Token',
-            'header': 'Authorization: Token <researcher_token>',
-            'description': 'All endpoints except this one require a researcher API token.',
+            'header': 'Authorization: Token <session_token>',
+            'description': (
+                'Exchange your researcher API token for a session token at '
+                'POST /api/session/, then send it as this header on every '
+                'other endpoint. The researcher token itself is never accepted '
+                'as credentials. Sessions expire; log in again to get a new one.'
+            ),
         },
         'endpoints': {
+            'POST /api/session/': {
+                'description': 'Exchange a researcher token for a session token.',
+                'parameters': _serializer_fields_info(SessionLoginSerializer),
+                'response': "{'session_token': ..., 'expires_at': ...}",
+            },
+            'DELETE /api/session/': {
+                'description': 'End the session named in the Authorization header.',
+            },
             'POST /api/donations/': {
                 'description': 'Create a new donation.',
                 'parameters': _serializer_fields_info(DonationCreateSerializer),

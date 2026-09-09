@@ -2,16 +2,28 @@
 import hashlib
 import logging
 import uuid
+from datetime import timedelta
 
 from django.db import models
+from django.utils import timezone
 from django.utils.crypto import get_random_string
 
 logger = logging.getLogger(__name__)
+
+#: Default lifetime for a researcher token that isn't given an explicit
+#: expiry (e.g. created directly through the ORM rather than the
+#: `create_researcher_token` management command).
+DEFAULT_RESEARCHER_TOKEN_LIFETIME_DAYS = 365
 
 
 def hash_token(raw):
     """SHA-256 hash a raw UUID/string token for storage."""
     return hashlib.sha256(str(raw).encode()).hexdigest()
+
+
+def default_researcher_token_expiry():
+    """One default researcher token lifetime from now."""
+    return timezone.now() + timedelta(days=DEFAULT_RESEARCHER_TOKEN_LIFETIME_DAYS)
 
 
 class Participant(models.Model):
@@ -188,6 +200,10 @@ class ResearcherToken(models.Model):
     key = models.CharField(max_length=64, unique=True)
     name = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    #: When this token stops working. Mandatory: researcher access is tied to
+    #: a study's duration. Sessions issued from this token are additionally
+    #: capped at this expiry, however long their own lifetime setting is.
+    expires_at = models.DateTimeField(default=default_researcher_token_expiry)
 
     def save(self, *args, **kwargs):
         """Auto-generate token key and store its SHA-256 hash."""
@@ -202,18 +218,45 @@ class ResearcherToken(models.Model):
         return hashlib.sha256(raw_key.encode()).hexdigest()
 
     def regenerate_key(self):
-        """Generate a new token key, replacing the old one. Returns the raw key."""
+        """Generate a new token key, replacing the old one and its sessions.
+
+        Returns the raw key.
+        """
         raw_key = get_random_string(40)
         self.key = hashlib.sha256(raw_key.encode()).hexdigest()
         self.save()
+        self.sessions.all().delete()
         return raw_key
 
     def __str__(self):
         return self.name or 'unnamed'
 
 
+class ResearcherSession(models.Model):
+    """A short-lived credential exchanged for a researcher token.
+
+    All ``/api/`` endpoints other than the token exchange authenticate with a
+    session key rather than the researcher's static token.
+    """
+
+    key = models.CharField(max_length=64, unique=True)
+    token = models.ForeignKey('ResearcherToken', on_delete=models.CASCADE, related_name='sessions')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    @staticmethod
+    def hash_key(raw_key):
+        return hashlib.sha256(raw_key.encode()).hexdigest()
+
+    def __str__(self):
+        return f"session for {self.token} (expires {self.expires_at:%Y-%m-%d %H:%M})"
+
+
 from donations.models.google_portability import GoogleDonation
 from donations.models.tiktok_portability import TikTokDonation
 from donations.models.tiktok_export import TikTokExportDonation
 
-__all__ = ['Participant', 'Donation', 'ResearcherToken', 'GoogleDonation', 'TikTokDonation', 'TikTokExportDonation']
+__all__ = [
+    'Participant', 'Donation', 'ResearcherToken', 'ResearcherSession',
+    'GoogleDonation', 'TikTokDonation', 'TikTokExportDonation',
+]

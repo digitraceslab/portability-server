@@ -9,6 +9,7 @@ from django.core.mail import send_mail
 from django.utils import timezone
 
 from donations.models import Donation
+from donations.researcher_auth.sessions import purge_expired_sessions
 from celery import shared_task
 
 logger = logging.getLogger(__name__)
@@ -173,6 +174,10 @@ def expire_donations():
     if deleted or expiring:
         _report_expiry(deleted, expiring)
     logger.info("Expired %s donation(s); %s approaching expiry.", len(deleted), len(expiring))
+
+    purged_sessions = purge_expired_sessions()
+    logger.info("Purged %s expired researcher session(s).", purged_sessions)
+
     return len(deleted)
 
 
