@@ -746,7 +746,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `OPENBAO_ADDR` | Address of the OpenBao server holding the encryption key; empty runs on a locally held, root-delivered key instead | `https://vault.example:8200` |
 | `OPENBAO_MOUNT` | Mount path of the transit secrets engine | `transit` |
 | `OPENBAO_KEY_NAME` | Name of the transit key used to wrap data keys and OAuth tokens | `portability` |
-| `ADMIN_ALLOWED_CIDRS` | Comma-separated networks allowed to reach `/admin/`; empty makes it unreachable through nginx | `130.233.0.0/16,10.0.0.0/8` |
+| `ADMIN_ALLOWED_CIDRS` | Comma-separated networks allowed to reach `/admin/` and the researcher API under `/api/`; empty makes both unreachable through nginx | `130.233.0.0/16,10.0.0.0/8` |
 | `OPENBAO_CACERT` | Path to a CA certificate for the vault's TLS, if not publicly trusted | |
 | `CELERY_BROKER_URL` | Redis URL for Celery task broker | `redis://localhost:6379/1` |
 | `CELERY_RESULT_BACKEND` | Redis URL for Celery result storage | `redis://localhost:6379/1` |
