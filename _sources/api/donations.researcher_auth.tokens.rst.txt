@@ -1,0 +1,7 @@
+donations.researcher\_auth.tokens module
+========================================
+
+.. automodule:: donations.researcher_auth.tokens
+   :members:
+   :show-inheritance:
+   :undoc-members:

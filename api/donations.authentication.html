@@ -79,6 +79,10 @@
              
   <section id="module-donations.authentication">
 <span id="donations-authentication-module"></span><h1>donations.authentication module<a class="headerlink" href="#module-donations.authentication" title="Link to this heading"></a></h1>
+<p>DRF authentication backend for the researcher API.</p>
+<p>Accepts only session keys (see <code class="docutils literal notranslate"><span class="pre">donations.researcher_auth.sessions</span></code>); a
+static researcher token in the header is rejected. Sessions are obtained by
+exchanging a researcher token at <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/api/session/</span></code>.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="donations.authentication.ResearcherTokenAuthentication">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.authentication.</span></span><span class="sig-name descname"><span class="pre">ResearcherTokenAuthentication</span></span><a class="reference internal" href="../_modules/donations/authentication.html#ResearcherTokenAuthentication"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.authentication.ResearcherTokenAuthentication" title="Link to this definition"></a></dt>

@@ -1,0 +1,7 @@
+donations.researcher\_auth.sessions module
+==========================================
+
+.. automodule:: donations.researcher_auth.sessions
+   :members:
+   :show-inheritance:
+   :undoc-members:

@@ -71,12 +71,16 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.urls</span><span class="w"> </span><span class="kn">import</span> <span class="n">reverse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django_ratelimit.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">ratelimit</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">serializers</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">viewsets</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">action</span><span class="p">,</span> <span class="n">api_view</span><span class="p">,</span> <span class="n">permission_classes</span> <span class="k">as</span> <span class="n">perm_classes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework</span><span class="w"> </span><span class="kn">import</span> <span class="n">authentication</span> <span class="k">as</span> <span class="n">drf_authentication</span><span class="p">,</span> <span class="n">serializers</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">viewsets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">action</span><span class="p">,</span> <span class="n">api_view</span><span class="p">,</span> <span class="n">authentication_classes</span><span class="p">,</span> <span class="n">permission_classes</span> <span class="k">as</span> <span class="n">perm_classes</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.permissions</span><span class="w"> </span><span class="kn">import</span> <span class="n">AllowAny</span><span class="p">,</span> <span class="n">BasePermission</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.response</span><span class="w"> </span><span class="kn">import</span> <span class="n">Response</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span><span class="p">,</span> <span class="n">GoogleDonation</span><span class="p">,</span> <span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">TikTokExportDonation</span><span class="p">,</span> <span class="n">ResearcherToken</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.researcher_auth.sessions</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_session</span><span class="p">,</span> <span class="n">resolve_session</span><span class="p">,</span> <span class="n">revoke_session</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.researcher_auth.tokens</span><span class="w"> </span><span class="kn">import</span> <span class="n">resolve_researcher_token</span>
 
 
 <span class="n">SOURCE_TYPE_MODEL_MAP</span> <span class="o">=</span> <span class="p">{</span>
@@ -291,6 +295,56 @@
 
 
 
+<div class="viewcode-block" id="SessionLoginSerializer">
+<a class="viewcode-back" href="../../api/donations.api.html#donations.api.SessionLoginSerializer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SessionLoginSerializer</span><span class="p">(</span><span class="n">serializers</span><span class="o">.</span><span class="n">Serializer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Parameters for exchanging a researcher token for a session.&quot;&quot;&quot;</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">serializers</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">help_text</span><span class="o">=</span><span class="s2">&quot;The researcher&#39;s static API token.&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_session_login</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;POST /api/session/: exchange a researcher token for a session token.&quot;&quot;&quot;</span>
+    <span class="n">serializer</span> <span class="o">=</span> <span class="n">SessionLoginSerializer</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">serializer</span><span class="o">.</span><span class="n">is_valid</span><span class="p">(</span><span class="n">raise_exception</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">resolve_researcher_token</span><span class="p">(</span><span class="n">serializer</span><span class="o">.</span><span class="n">validated_data</span><span class="p">[</span><span class="s1">&#39;token&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">({</span><span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39;Invalid or expired token.&#39;</span><span class="p">},</span> <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">)</span>
+    <span class="n">raw_key</span><span class="p">,</span> <span class="n">session</span> <span class="o">=</span> <span class="n">create_session</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">({</span><span class="s1">&#39;session_token&#39;</span><span class="p">:</span> <span class="n">raw_key</span><span class="p">,</span> <span class="s1">&#39;expires_at&#39;</span><span class="p">:</span> <span class="n">session</span><span class="o">.</span><span class="n">expires_at</span><span class="p">})</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_session_logout</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;DELETE /api/session/: end the session named in the Authorization header.&quot;&quot;&quot;</span>
+    <span class="n">auth_header</span> <span class="o">=</span> <span class="n">drf_authentication</span><span class="o">.</span><span class="n">get_authorization_header</span><span class="p">(</span><span class="n">request</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">auth_header</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">)</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">resolve_session</span><span class="p">(</span><span class="n">auth_header</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
+    <span class="k">if</span> <span class="n">session</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_401_UNAUTHORIZED</span><span class="p">)</span>
+    <span class="n">revoke_session</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">HTTP_204_NO_CONTENT</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="session_view">
+<a class="viewcode-back" href="../../api/donations.api.html#donations.api.session_view">[docs]</a>
+<span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;10/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@api_view</span><span class="p">([</span><span class="s1">&#39;POST&#39;</span><span class="p">,</span> <span class="s1">&#39;DELETE&#39;</span><span class="p">])</span>
+<span class="nd">@authentication_classes</span><span class="p">([])</span>
+<span class="nd">@perm_classes</span><span class="p">([</span><span class="n">AllowAny</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">session_view</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Issue (POST) or revoke (DELETE) a researcher API session.</span>
+
+<span class="sd">    No DRF authentication class runs here: POST authenticates by exchanging</span>
+<span class="sd">    the researcher token in the request body, and DELETE resolves the</span>
+<span class="sd">    session itself from the Authorization header.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_session_login</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_session_logout</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_serializer_fields_info</span><span class="p">(</span><span class="n">serializer_class</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract field info from a serializer class for documentation.&quot;&quot;&quot;</span>
     <span class="n">fields</span> <span class="o">=</span> <span class="p">[]</span>
@@ -314,10 +368,23 @@
     <span class="k">return</span> <span class="n">Response</span><span class="p">({</span>
         <span class="s1">&#39;authentication&#39;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;Token&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="s1">&#39;Authorization: Token &lt;researcher_token&gt;&#39;</span><span class="p">,</span>
-            <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;All endpoints except this one require a researcher API token.&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="s1">&#39;Authorization: Token &lt;session_token&gt;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="p">(</span>
+                <span class="s1">&#39;Exchange your researcher API token for a session token at &#39;</span>
+                <span class="s1">&#39;POST /api/session/, then send it as this header on every &#39;</span>
+                <span class="s1">&#39;other endpoint. The researcher token itself is never accepted &#39;</span>
+                <span class="s1">&#39;as credentials. Sessions expire; log in again to get a new one.&#39;</span>
+            <span class="p">),</span>
         <span class="p">},</span>
         <span class="s1">&#39;endpoints&#39;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">&#39;POST /api/session/&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Exchange a researcher token for a session token.&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;parameters&#39;</span><span class="p">:</span> <span class="n">_serializer_fields_info</span><span class="p">(</span><span class="n">SessionLoginSerializer</span><span class="p">),</span>
+                <span class="s1">&#39;response&#39;</span><span class="p">:</span> <span class="s2">&quot;{&#39;session_token&#39;: ..., &#39;expires_at&#39;: ...}&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s1">&#39;DELETE /api/session/&#39;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;End the session named in the Authorization header.&#39;</span><span class="p">,</span>
+            <span class="p">},</span>
             <span class="s1">&#39;POST /api/donations/&#39;</span><span class="p">:</span> <span class="p">{</span>
                 <span class="s1">&#39;description&#39;</span><span class="p">:</span> <span class="s1">&#39;Create a new donation.&#39;</span><span class="p">,</span>
                 <span class="s1">&#39;parameters&#39;</span><span class="p">:</span> <span class="n">_serializer_fields_info</span><span class="p">(</span><span class="n">DonationCreateSerializer</span><span class="p">),</span>

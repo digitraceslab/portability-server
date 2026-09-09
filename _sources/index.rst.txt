@@ -77,15 +77,30 @@ Each row contains a timestamp column, which is converted to unix time in seconds
 Researcher API
 --------------
 
-All API requests require a researcher token in the header::
-
-   Authorization: Token <researcher_token>
-
-The researcher token is created by an administrator using the management command:
+The researcher token is created by an administrator using the management command,
+with a mandatory expiry date:
 
 .. code-block:: bash
 
-   python manage.py create_researcher_token
+   python manage.py create_researcher_token --expires 2026-12-31
+
+The researcher token itself is never sent to the API directly. Exchange it for a
+short-lived session token first::
+
+   POST /api/session/
+   {"token": "<researcher_token>"}
+
+Returns ``{"session_token": "...", "expires_at": "..."}``. All other requests
+carry the session token in the header::
+
+   Authorization: Token <session_token>
+
+Sessions expire after ``RESEARCHER_SESSION_LIFETIME_SECONDS`` (default 12 hours),
+capped at the researcher token's own expiry; log in again for a new one. To end a
+session immediately::
+
+   DELETE /api/session/
+   Authorization: Token <session_token>
 
 
 Create a donation
@@ -131,7 +146,7 @@ Example:
 .. code-block:: bash
 
    curl -X POST http://localhost:8000/api/donations/ \
-     -H "Authorization: Token <researcher_token>" \
+     -H "Authorization: Token <session_token>" \
      -H "Content-Type: application/json" \
      -d '{
        "source_type": "google_portability",
@@ -155,7 +170,7 @@ Example:
 .. code-block:: bash
 
    curl -X GET http://localhost:8000/api/donations/ \
-     -H "Authorization: Token <researcher_token>"
+     -H "Authorization: Token <session_token>"
 
 
 Get donation status
@@ -173,7 +188,7 @@ Example:
 .. code-block:: bash
 
    curl -X GET http://localhost:8000/api/donations/<id>/ \
-     -H "Authorization: Token <researcher_token>"
+     -H "Authorization: Token <session_token>"
 
 
 Query donation data
@@ -219,7 +234,7 @@ Example:
 .. code-block:: bash
 
    curl -X GET "http://localhost:8000/api/donations/<id>/data/?data_type=youtube_history&start_date=2023-01-01&end_date=2023-12-31&limit=100&offset=0" \
-     -H "Authorization: Token <researcher_token>"
+     -H "Authorization: Token <session_token>"
 
 
 Delete a donation
@@ -236,7 +251,7 @@ Example:
 .. code-block:: bash
 
    curl -X DELETE http://localhost:8000/api/donations/<id>/ \
-     -H "Authorization: Token <researcher_token>"
+     -H "Authorization: Token <session_token>"
 
 
 Generating documentation
@@ -354,7 +369,7 @@ Installation
 
    .. code-block:: bash
 
-      python manage.py create_researcher_token
+      python manage.py create_researcher_token --expires 2026-12-31
 
 
 Running
@@ -464,7 +479,7 @@ Application setup
 
    python manage.py migrate
    python manage.py collectstatic --noinput
-   python manage.py create_researcher_token
+   python manage.py create_researcher_token --expires 2026-12-31
 
 
 Gunicorn service
@@ -669,6 +684,9 @@ All configuration is done via ``.env`` (copy from ``.env.example``):
    * - ``CLAMAV_ENABLED``
      - Scan ingested files with ClamAV (clamdscan); default enabled when ``DEBUG=False``
      - ``True`` / ``False``
+   * - ``RESEARCHER_SESSION_LIFETIME_SECONDS``
+     - How long a researcher API session lasts, capped at the researcher token's own expiry (default 43200, 12 hours)
+     -
 
 
 Testing

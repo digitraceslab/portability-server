@@ -70,16 +70,28 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.db</span><span class="w"> </span><span class="kn">import</span> <span class="n">models</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils.crypto</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_random_string</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#: Default lifetime for a researcher token that isn&#39;t given an explicit</span>
+<span class="c1">#: expiry (e.g. created directly through the ORM rather than the</span>
+<span class="c1">#: `create_researcher_token` management command).</span>
+<span class="n">DEFAULT_RESEARCHER_TOKEN_LIFETIME_DAYS</span> <span class="o">=</span> <span class="mi">365</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">hash_token</span><span class="p">(</span><span class="n">raw</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;SHA-256 hash a raw UUID/string token for storage.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">default_researcher_token_expiry</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;One default researcher token lifetime from now.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">DEFAULT_RESEARCHER_TOKEN_LIFETIME_DAYS</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Participant">
@@ -300,6 +312,10 @@
     <span class="n">key</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">blank</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1">#: When this token stops working. Mandatory: researcher access is tied to</span>
+    <span class="c1">#: a study&#39;s duration. Sessions issued from this token are additionally</span>
+    <span class="c1">#: capped at this expiry, however long their own lifetime setting is.</span>
+    <span class="n">expires_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_researcher_token_expiry</span><span class="p">)</span>
 
 <div class="viewcode-block" id="ResearcherToken.save">
 <a class="viewcode-back" href="../../api/donations.models.html#donations.models.ResearcherToken.save">[docs]</a>
@@ -322,10 +338,14 @@
 <div class="viewcode-block" id="ResearcherToken.regenerate_key">
 <a class="viewcode-back" href="../../api/donations.models.html#donations.models.ResearcherToken.regenerate_key">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">regenerate_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a new token key, replacing the old one. Returns the raw key.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a new token key, replacing the old one and its sessions.</span>
+
+<span class="sd">        Returns the raw key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">raw_key</span> <span class="o">=</span> <span class="n">get_random_string</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">raw_key</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">all</span><span class="p">()</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">raw_key</span></div>
 
 
@@ -334,11 +354,40 @@
 
 
 
+<div class="viewcode-block" id="ResearcherSession">
+<a class="viewcode-back" href="../../api/donations.models.html#donations.models.ResearcherSession">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ResearcherSession</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A short-lived credential exchanged for a researcher token.</span>
+
+<span class="sd">    All ``/api/`` endpoints other than the token exchange authenticate with a</span>
+<span class="sd">    session key rather than the researcher&#39;s static token.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">token</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;ResearcherToken&#39;</span><span class="p">,</span> <span class="n">on_delete</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">CASCADE</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;sessions&#39;</span><span class="p">)</span>
+    <span class="n">created_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">(</span><span class="n">auto_now_add</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">expires_at</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ResearcherSession.hash_key">
+<a class="viewcode-back" href="../../api/donations.models.html#donations.models.ResearcherSession.hash_key">[docs]</a>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hash_key</span><span class="p">(</span><span class="n">raw_key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="n">raw_key</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;session for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="si">}</span><span class="s2"> (expires </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">expires_at</span><span class="si">:</span><span class="s2">%Y-%m-%d %H:%M</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.google_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">GoogleDonation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_portability</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokDonation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.tiktok_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">TikTokExportDonation</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Participant&#39;</span><span class="p">,</span> <span class="s1">&#39;Donation&#39;</span><span class="p">,</span> <span class="s1">&#39;ResearcherToken&#39;</span><span class="p">,</span> <span class="s1">&#39;GoogleDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokExportDonation&#39;</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;Participant&#39;</span><span class="p">,</span> <span class="s1">&#39;Donation&#39;</span><span class="p">,</span> <span class="s1">&#39;ResearcherToken&#39;</span><span class="p">,</span> <span class="s1">&#39;ResearcherSession&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;GoogleDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokDonation&#39;</span><span class="p">,</span> <span class="s1">&#39;TikTokExportDonation&#39;</span><span class="p">,</span>
+<span class="p">]</span>
 </pre></div>
 
            </div>

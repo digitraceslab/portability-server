@@ -1,0 +1,19 @@
+donations.researcher\_auth package
+==================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   donations.researcher_auth.sessions
+   donations.researcher_auth.tokens
+
+Module contents
+---------------
+
+.. automodule:: donations.researcher_auth
+   :members:
+   :show-inheritance:
+   :undoc-members:

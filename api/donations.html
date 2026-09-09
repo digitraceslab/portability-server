@@ -176,6 +176,7 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.key"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.key</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.name"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.name</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.created_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.expires_at</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.save"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.save()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.hash_key"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.hash_key()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.regenerate_key"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.regenerate_key()</span></code></a></li>
@@ -183,9 +184,29 @@
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.MultipleObjectsReturned</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.donations"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.donations</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.get_next_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_next_by_created_at()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.get_next_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_next_by_expires_at()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.get_previous_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_previous_by_created_at()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.get_previous_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_previous_by_expires_at()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.id"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.id</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.objects"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.objects</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherToken.sessions"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.sessions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession"><code class="docutils literal notranslate"><span class="pre">ResearcherSession</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.key"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.key</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.token"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.token</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.created_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.expires_at</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.hash_key"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.hash_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.DoesNotExist</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.MultipleObjectsReturned</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.get_next_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_next_by_created_at()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.get_next_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_next_by_expires_at()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.get_previous_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_previous_by_created_at()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.get_previous_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_previous_by_expires_at()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.id"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.objects"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.objects</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.models.html#donations.models.ResearcherSession.token_id"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.token_id</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.html#donations.models.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a><ul>
@@ -279,6 +300,24 @@
 </li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="donations.researcher_auth.html">donations.researcher_auth package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="donations.researcher_auth.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="donations.researcher_auth.sessions.html">donations.researcher_auth.sessions module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.create_session"><code class="docutils literal notranslate"><span class="pre">create_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.resolve_session"><code class="docutils literal notranslate"><span class="pre">resolve_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.revoke_session"><code class="docutils literal notranslate"><span class="pre">revoke_session()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.purge_expired_sessions"><code class="docutils literal notranslate"><span class="pre">purge_expired_sessions()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="donations.researcher_auth.tokens.html">donations.researcher_auth.tokens module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="donations.researcher_auth.tokens.html#donations.researcher_auth.tokens.resolve_researcher_token"><code class="docutils literal notranslate"><span class="pre">resolve_researcher_token()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="donations.researcher_auth.html#module-donations.researcher_auth">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="donations.templatetags.html">donations.templatetags package</a><ul>
@@ -377,6 +416,8 @@
 <li class="toctree-l3"><a class="reference internal" href="donations.api.html#donations.api.DonationViewSet.data"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.data()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="donations.api.html#donations.api.SessionLoginSerializer"><code class="docutils literal notranslate"><span class="pre">SessionLoginSerializer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="donations.api.html#donations.api.session_view"><code class="docutils literal notranslate"><span class="pre">session_view()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="donations.api.html#donations.api.api_docs"><code class="docutils literal notranslate"><span class="pre">api_docs()</span></code></a></li>
 </ul>
 </li>

@@ -107,6 +107,7 @@
 <li><a class="reference internal" href="#donations.models.ResearcherToken.key"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.key</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.name"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.name</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.created_at</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherToken.expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.expires_at</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.save"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.save()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.hash_key"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.hash_key()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.regenerate_key"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.regenerate_key()</span></code></a></li>
@@ -114,9 +115,29 @@
 <li><a class="reference internal" href="#donations.models.ResearcherToken.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.MultipleObjectsReturned</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.donations"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.donations</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.get_next_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_next_by_created_at()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherToken.get_next_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_next_by_expires_at()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.get_previous_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_previous_by_created_at()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherToken.get_previous_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.get_previous_by_expires_at()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.id"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.id</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.ResearcherToken.objects"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.objects</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherToken.sessions"><code class="docutils literal notranslate"><span class="pre">ResearcherToken.sessions</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession"><code class="docutils literal notranslate"><span class="pre">ResearcherSession</span></code></a><ul>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.key"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.key</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.token"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.token</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.created_at</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.expires_at</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.hash_key"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.hash_key()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.DoesNotExist</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.MultipleObjectsReturned</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.get_next_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_next_by_created_at()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.get_next_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_next_by_expires_at()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.get_previous_by_created_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_previous_by_created_at()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.get_previous_by_expires_at"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.get_previous_by_expires_at()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.id"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.id</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.objects"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.objects</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.ResearcherSession.token_id"><code class="docutils literal notranslate"><span class="pre">ResearcherSession.token_id</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#donations.models.GoogleDonation"><code class="docutils literal notranslate"><span class="pre">GoogleDonation</span></code></a><ul>
@@ -771,6 +792,19 @@ object the first time, the query is executed.</p>
 object the first time, the query is executed.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.expires_at">
+<span class="sig-name descname"><span class="pre">expires_at</span></span><a class="headerlink" href="#donations.models.ResearcherToken.expires_at" title="Link to this definition"></a></dt>
+<dd><p>researcher access is tied to
+a study’s duration. Sessions issued from this token are additionally
+capped at this expiry, however long their own lifetime setting is.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>When this token stops working. Mandatory</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models.html#ResearcherToken.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.save" title="Link to this definition"></a></dt>
@@ -785,7 +819,8 @@ object the first time, the query is executed.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.regenerate_key">
 <span class="sig-name descname"><span class="pre">regenerate_key</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models.html#ResearcherToken.regenerate_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherToken.regenerate_key" title="Link to this definition"></a></dt>
-<dd><p>Generate a new token key, replacing the old one. Returns the raw key.</p>
+<dd><p>Generate a new token key, replacing the old one and its sessions.</p>
+<p>Returns the raw key.</p>
 </dd></dl>
 
 <dl class="py exception">
@@ -821,8 +856,18 @@ class built by <code class="docutils literal notranslate"><span class="pre">crea
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.get_next_by_expires_at">
+<span class="sig-name descname"><span class="pre">get_next_by_expires_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">expires_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherToken.get_next_by_expires_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.get_previous_by_created_at">
 <span class="sig-name descname"><span class="pre">get_previous_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherToken.get_previous_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.get_previous_by_expires_at">
+<span class="sig-name descname"><span class="pre">get_previous_by_expires_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">expires_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherToken.get_previous_by_expires_at" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -835,6 +880,118 @@ object the first time, the query is executed.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="donations.models.ResearcherToken.objects">
 <span class="sig-name descname"><span class="pre">objects</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#donations.models.ResearcherToken.objects" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherToken.sessions">
+<span class="sig-name descname"><span class="pre">sessions</span></span><a class="headerlink" href="#donations.models.ResearcherToken.sessions" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related objects manager on the reverse side of a
+many-to-one relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Parent.children</span></code> is a <code class="docutils literal notranslate"><span class="pre">ReverseManyToOneDescriptor</span></code> instance.</p>
+<p>Most of the implementation is delegated to a dynamically defined manager
+class built by <code class="docutils literal notranslate"><span class="pre">create_forward_many_to_many_manager()</span></code> defined below.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.models.</span></span><span class="sig-name descname"><span class="pre">ResearcherSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models.html#ResearcherSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherSession" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></p>
+<p>A short-lived credential exchanged for a researcher token.</p>
+<p>All <code class="docutils literal notranslate"><span class="pre">/api/</span></code> endpoints other than the token exchange authenticate with a
+session key rather than the researcher’s static token.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.key">
+<span class="sig-name descname"><span class="pre">key</span></span><a class="headerlink" href="#donations.models.ResearcherSession.key" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.token">
+<span class="sig-name descname"><span class="pre">token</span></span><a class="headerlink" href="#donations.models.ResearcherSession.token" title="Link to this definition"></a></dt>
+<dd><p>Accessor to the related object on the forward side of a many-to-one or
+one-to-one (via ForwardOneToOneDescriptor subclass) relation.</p>
+<p>In the example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Child</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">ForeignKey</span><span class="p">(</span><span class="n">Parent</span><span class="p">,</span> <span class="n">related_name</span><span class="o">=</span><span class="s1">&#39;children&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Child.parent</span></code> is a <code class="docutils literal notranslate"><span class="pre">ForwardManyToOneDescriptor</span></code> instance.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.created_at">
+<span class="sig-name descname"><span class="pre">created_at</span></span><a class="headerlink" href="#donations.models.ResearcherSession.created_at" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.expires_at">
+<span class="sig-name descname"><span class="pre">expires_at</span></span><a class="headerlink" href="#donations.models.ResearcherSession.expires_at" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.hash_key">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hash_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw_key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models.html#ResearcherSession.hash_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.ResearcherSession.hash_key" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.DoesNotExist">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#donations.models.ResearcherSession.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ObjectDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.MultipleObjectsReturned">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">MultipleObjectsReturned</span></span><a class="headerlink" href="#donations.models.ResearcherSession.MultipleObjectsReturned" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">MultipleObjectsReturned</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.get_next_by_created_at">
+<span class="sig-name descname"><span class="pre">get_next_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherSession.get_next_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.get_next_by_expires_at">
+<span class="sig-name descname"><span class="pre">get_next_by_expires_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">expires_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherSession.get_next_by_expires_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.get_previous_by_created_at">
+<span class="sig-name descname"><span class="pre">get_previous_by_created_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">created_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherSession.get_previous_by_created_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.get_previous_by_expires_at">
+<span class="sig-name descname"><span class="pre">get_previous_by_expires_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">&lt;django.db.models.fields.DateTimeField:</span> <span class="pre">expires_at&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_next</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#donations.models.ResearcherSession.get_previous_by_expires_at" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#donations.models.ResearcherSession.id" title="Link to this definition"></a></dt>
+<dd><p>A wrapper for a deferred-loading field. When the value is read from this
+object the first time, the query is executed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.objects">
+<span class="sig-name descname"><span class="pre">objects</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;django.db.models.manager.Manager</span> <span class="pre">object&gt;</span></span><a class="headerlink" href="#donations.models.ResearcherSession.objects" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="donations.models.ResearcherSession.token_id">
+<span class="sig-name descname"><span class="pre">token_id</span></span><a class="headerlink" href="#donations.models.ResearcherSession.token_id" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>

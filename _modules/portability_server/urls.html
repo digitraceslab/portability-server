@@ -75,7 +75,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rest_framework.routers</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultRouter</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations</span><span class="w"> </span><span class="kn">import</span> <span class="n">views</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">donations.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">DonationViewSet</span><span class="p">,</span> <span class="n">api_docs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.api</span><span class="w"> </span><span class="kn">import</span> <span class="n">DonationViewSet</span><span class="p">,</span> <span class="n">api_docs</span><span class="p">,</span> <span class="n">session_view</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">portability_server.views</span><span class="w"> </span><span class="kn">import</span> <span class="n">home</span>
 
 <span class="n">router</span> <span class="o">=</span> <span class="n">DefaultRouter</span><span class="p">()</span>
@@ -116,6 +116,7 @@
     <span class="n">path</span><span class="p">(</span><span class="s1">&#39;oauth/tiktok/callback/&#39;</span><span class="p">,</span> <span class="n">views</span><span class="o">.</span><span class="n">tiktok_auth_callback</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;tiktok-auth-callback&#39;</span><span class="p">),</span>
     <span class="c1"># API</span>
     <span class="n">path</span><span class="p">(</span><span class="s1">&#39;api/docs/&#39;</span><span class="p">,</span> <span class="n">api_docs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;api-docs&#39;</span><span class="p">),</span>
+    <span class="n">path</span><span class="p">(</span><span class="s1">&#39;api/session/&#39;</span><span class="p">,</span> <span class="n">session_view</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;api-session&#39;</span><span class="p">),</span>
     <span class="n">path</span><span class="p">(</span><span class="s1">&#39;api/&#39;</span><span class="p">,</span> <span class="n">include</span><span class="p">(</span><span class="n">router</span><span class="o">.</span><span class="n">urls</span><span class="p">)),</span>
 <span class="p">]</span>
 </pre></div>

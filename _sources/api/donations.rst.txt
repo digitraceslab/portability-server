@@ -9,6 +9,7 @@ Subpackages
 
    donations.management
    donations.models
+   donations.researcher_auth
    donations.templatetags
    donations.utils
 

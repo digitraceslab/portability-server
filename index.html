@@ -172,12 +172,27 @@ Each row contains a timestamp column, which is converted to unix time in seconds
 </section>
 <section id="researcher-api">
 <h2>Researcher API<a class="headerlink" href="#researcher-api" title="Link to this heading"></a></h2>
-<p>All API requests require a researcher token in the header:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Authorization</span><span class="p">:</span> <span class="n">Token</span> <span class="o">&lt;</span><span class="n">researcher_token</span><span class="o">&gt;</span>
+<p>The researcher token is created by an administrator using the management command,
+with a mandatory expiry date:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher_token<span class="w"> </span>--expires<span class="w"> </span><span class="m">2026</span>-12-31
 </pre></div>
 </div>
-<p>The researcher token is created by an administrator using the management command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher_token
+<p>The researcher token itself is never sent to the API directly. Exchange it for a
+short-lived session token first:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">POST</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">session</span><span class="o">/</span>
+<span class="p">{</span><span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="s2">&quot;&lt;researcher_token&gt;&quot;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Returns <code class="docutils literal notranslate"><span class="pre">{&quot;session_token&quot;:</span> <span class="pre">&quot;...&quot;,</span> <span class="pre">&quot;expires_at&quot;:</span> <span class="pre">&quot;...&quot;}</span></code>. All other requests
+carry the session token in the header:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Authorization</span><span class="p">:</span> <span class="n">Token</span> <span class="o">&lt;</span><span class="n">session_token</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Sessions expire after <code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code> (default 12 hours),
+capped at the researcher token’s own expiry; log in again for a new one. To end a
+session immediately:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DELETE</span> <span class="o">/</span><span class="n">api</span><span class="o">/</span><span class="n">session</span><span class="o">/</span>
+<span class="n">Authorization</span><span class="p">:</span> <span class="n">Token</span> <span class="o">&lt;</span><span class="n">session_token</span><span class="o">&gt;</span>
 </pre></div>
 </div>
 <section id="create-a-donation">
@@ -228,7 +243,7 @@ Each row contains a timestamp column, which is converted to unix time in seconds
 the participant to begin the OAuth flow.</p>
 <p>Example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/api/donations/<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;researcher_token&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;session_token&gt;&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 <span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
 <span class="s1">    &quot;source_type&quot;: &quot;google_portability&quot;,</span>
@@ -247,7 +262,7 @@ the participant to begin the OAuth flow.</p>
 <p>Returns all donations created by the researcher.</p>
 <p>Example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>http://localhost:8000/api/donations/<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;researcher_token&gt;&quot;</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;session_token&gt;&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -260,7 +275,7 @@ the participant to begin the OAuth flow.</p>
 <code class="docutils literal notranslate"><span class="pre">processed</span></code>, or <code class="docutils literal notranslate"><span class="pre">error</span></code>.</p>
 <p>Example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span>http://localhost:8000/api/donations/&lt;id&gt;/<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;researcher_token&gt;&quot;</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;session_token&gt;&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -314,7 +329,7 @@ the participant to begin the OAuth flow.</p>
 </table>
 <p>Example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>GET<span class="w"> </span><span class="s2">&quot;http://localhost:8000/api/donations/&lt;id&gt;/data/?data_type=youtube_history&amp;start_date=2023-01-01&amp;end_date=2023-12-31&amp;limit=100&amp;offset=0&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;researcher_token&gt;&quot;</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;session_token&gt;&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -326,7 +341,7 @@ the participant to begin the OAuth flow.</p>
 <p>Revokes OAuth access and deletes the donation and its data.</p>
 <p>Example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>DELETE<span class="w"> </span>http://localhost:8000/api/donations/&lt;id&gt;/<span class="w"> </span><span class="se">\</span>
-<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;researcher_token&gt;&quot;</span>
+<span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Authorization: Token &lt;session_token&gt;&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -437,7 +452,7 @@ sudo<span class="w"> </span>-u<span class="w"> </span>postgres<span class="w"> <
 </div>
 </li>
 <li><p><strong>Create a researcher API token</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher_token
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher_token<span class="w"> </span>--expires<span class="w"> </span><span class="m">2026</span>-12-31
 </pre></div>
 </div>
 </li>
@@ -531,7 +546,7 @@ cp<span class="w"> </span>.env.example<span class="w"> </span>.env
 
 python<span class="w"> </span>manage.py<span class="w"> </span>migrate
 python<span class="w"> </span>manage.py<span class="w"> </span>collectstatic<span class="w"> </span>--noinput
-python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher_token
+python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher_token<span class="w"> </span>--expires<span class="w"> </span><span class="m">2026</span>-12-31
 </pre></div>
 </div>
 </section>
@@ -733,6 +748,10 @@ sudo<span class="w"> </span>nginx<span class="w"> </span>-t<span class="w"> </sp
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLAMAV_ENABLED</span></code></p></td>
 <td><p>Scan ingested files with ClamAV (clamdscan); default enabled when <code class="docutils literal notranslate"><span class="pre">DEBUG=False</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> / <code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code></p></td>
+<td><p>How long a researcher API session lasts, capped at the researcher token’s own expiry (default 43200, 12 hours)</p></td>
+<td></td>
 </tr>
 </tbody>
 </table>

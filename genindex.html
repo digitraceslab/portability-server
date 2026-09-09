@@ -204,10 +204,10 @@
       </ul></li>
       <li><a href="api/donations.utils.parquet_store.html#donations.utils.parquet_store.combine">combine() (in module donations.utils.parquet_store)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/donations.management.commands.create_researcher_token.html#donations.management.commands.create_researcher_token.Command">Command (class in donations.management.commands.create_researcher_token)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.count_rows">count_rows() (donations.models.archive_donation.ArchiveDonationMixin method)</a>
 
       <ul>
@@ -226,10 +226,14 @@
         <li><a href="api/donations.models.html#donations.models.GoogleDonation.create_archive_job">(donations.models.GoogleDonation method)</a>
 </li>
       </ul></li>
+      <li><a href="api/donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.create_session">create_session() (in module donations.researcher_auth.sessions)</a>
+</li>
       <li><a href="api/donations.models.html#donations.models.Donation.created_at">created_at (donations.models.Donation attribute)</a>
 
       <ul>
         <li><a href="api/donations.models.html#donations.models.Participant.created_at">(donations.models.Participant attribute)</a>
+</li>
+        <li><a href="api/donations.models.html#donations.models.ResearcherSession.created_at">(donations.models.ResearcherSession attribute)</a>
 </li>
         <li><a href="api/donations.models.html#donations.models.ResearcherToken.created_at">(donations.models.ResearcherToken attribute)</a>
 </li>
@@ -389,8 +393,6 @@
         <li><a href="api/donations.apps.html#module-donations.apps">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     donations.authentication
 
@@ -398,6 +400,8 @@
         <li><a href="api/donations.authentication.html#module-donations.authentication">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     donations.management
 
@@ -452,6 +456,27 @@
 
       <ul>
         <li><a href="api/donations.models.tiktok_portability.html#module-donations.models.tiktok_portability">module</a>
+</li>
+      </ul></li>
+      <li>
+    donations.researcher_auth
+
+      <ul>
+        <li><a href="api/donations.researcher_auth.html#module-donations.researcher_auth">module</a>
+</li>
+      </ul></li>
+      <li>
+    donations.researcher_auth.sessions
+
+      <ul>
+        <li><a href="api/donations.researcher_auth.sessions.html#module-donations.researcher_auth.sessions">module</a>
+</li>
+      </ul></li>
+      <li>
+    donations.researcher_auth.tokens
+
+      <ul>
+        <li><a href="api/donations.researcher_auth.tokens.html#module-donations.researcher_auth.tokens">module</a>
 </li>
       </ul></li>
       <li>
@@ -623,6 +648,12 @@
         <li><a href="api/donations.models.html#donations.models.TikTokExportDonation.EXPECTED_DATA_TYPES">(donations.models.TikTokExportDonation attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.expires_at">expires_at (donations.models.ResearcherSession attribute)</a>
+
+      <ul>
+        <li><a href="api/donations.models.html#donations.models.ResearcherToken.expires_at">(donations.models.ResearcherToken attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.extract_and_process">extract_and_process() (donations.models.google_portability.GoogleDonation method)</a>
 
       <ul>
@@ -724,7 +755,15 @@
       <ul>
         <li><a href="api/donations.models.html#donations.models.Participant.get_next_by_created_at">(donations.models.Participant method)</a>
 </li>
+        <li><a href="api/donations.models.html#donations.models.ResearcherSession.get_next_by_created_at">(donations.models.ResearcherSession method)</a>
+</li>
         <li><a href="api/donations.models.html#donations.models.ResearcherToken.get_next_by_created_at">(donations.models.ResearcherToken method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.get_next_by_expires_at">get_next_by_expires_at() (donations.models.ResearcherSession method)</a>
+
+      <ul>
+        <li><a href="api/donations.models.html#donations.models.ResearcherToken.get_next_by_expires_at">(donations.models.ResearcherToken method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -734,7 +773,15 @@
       <ul>
         <li><a href="api/donations.models.html#donations.models.Participant.get_previous_by_created_at">(donations.models.Participant method)</a>
 </li>
+        <li><a href="api/donations.models.html#donations.models.ResearcherSession.get_previous_by_created_at">(donations.models.ResearcherSession method)</a>
+</li>
         <li><a href="api/donations.models.html#donations.models.ResearcherToken.get_previous_by_created_at">(donations.models.ResearcherToken method)</a>
+</li>
+      </ul></li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.get_previous_by_expires_at">get_previous_by_expires_at() (donations.models.ResearcherSession method)</a>
+
+      <ul>
+        <li><a href="api/donations.models.html#donations.models.ResearcherToken.get_previous_by_expires_at">(donations.models.ResearcherToken method)</a>
 </li>
       </ul></li>
       <li><a href="api/donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.get_processing_status_display">get_processing_status_display() (donations.models.google_portability.GoogleDonation method)</a>
@@ -805,14 +852,18 @@
         <li><a href="api/donations.models.html#donations.models.TikTokExportDonation.handle_file_upload">(donations.models.TikTokExportDonation method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.has_archives">has_archives() (donations.models.archive_donation.ArchiveDonationMixin method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/donations.api.html#donations.api.IsResearcherAuthenticated.has_permission">has_permission() (donations.api.IsResearcherAuthenticated method)</a>
 </li>
-      <li><a href="api/donations.models.html#donations.models.ResearcherToken.hash_key">hash_key() (donations.models.ResearcherToken static method)</a>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.hash_key">hash_key() (donations.models.ResearcherSession static method)</a>
+
+      <ul>
+        <li><a href="api/donations.models.html#donations.models.ResearcherToken.hash_key">(donations.models.ResearcherToken static method)</a>
 </li>
+      </ul></li>
       <li><a href="api/donations.models.html#donations.models.Donation.hash_token">hash_token() (donations.models.Donation static method)</a>
 
       <ul>
@@ -835,6 +886,8 @@
 
       <ul>
         <li><a href="api/donations.models.html#donations.models.Participant.id">(donations.models.Participant attribute)</a>
+</li>
+        <li><a href="api/donations.models.html#donations.models.ResearcherSession.id">(donations.models.ResearcherSession attribute)</a>
 </li>
         <li><a href="api/donations.models.html#donations.models.ResearcherToken.id">(donations.models.ResearcherToken attribute)</a>
 </li>
@@ -863,8 +916,12 @@
 <h2 id="K">K</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/donations.models.html#donations.models.ResearcherToken.key">key (donations.models.ResearcherToken attribute)</a>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.key">key (donations.models.ResearcherSession attribute)</a>
+
+      <ul>
+        <li><a href="api/donations.models.html#donations.models.ResearcherToken.key">(donations.models.ResearcherToken attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/donations.utils.keystore.errors.html#donations.utils.keystore.errors.KeystoreError">KeystoreError</a>
@@ -932,6 +989,12 @@
         <li><a href="api/donations.models.tiktok_export.html#module-donations.models.tiktok_export">donations.models.tiktok_export</a>
 </li>
         <li><a href="api/donations.models.tiktok_portability.html#module-donations.models.tiktok_portability">donations.models.tiktok_portability</a>
+</li>
+        <li><a href="api/donations.researcher_auth.html#module-donations.researcher_auth">donations.researcher_auth</a>
+</li>
+        <li><a href="api/donations.researcher_auth.sessions.html#module-donations.researcher_auth.sessions">donations.researcher_auth.sessions</a>
+</li>
+        <li><a href="api/donations.researcher_auth.tokens.html#module-donations.researcher_auth.tokens">donations.researcher_auth.tokens</a>
 </li>
         <li><a href="api/donations.tasks.html#module-donations.tasks">donations.tasks</a>
 </li>
@@ -1014,6 +1077,8 @@
 
       <ul>
         <li><a href="api/donations.models.html#donations.models.Participant.objects">(donations.models.Participant attribute)</a>
+</li>
+        <li><a href="api/donations.models.html#donations.models.ResearcherSession.objects">(donations.models.ResearcherSession attribute)</a>
 </li>
         <li><a href="api/donations.models.html#donations.models.ResearcherToken.objects">(donations.models.ResearcherToken attribute)</a>
 </li>
@@ -1126,6 +1191,8 @@
         <li><a href="api/donations.models.html#donations.models.TikTokExportDonation.PROCESSING_STATUS_CHOICES">(donations.models.TikTokExportDonation attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.purge_expired_sessions">purge_expired_sessions() (in module donations.researcher_auth.sessions)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1170,8 +1237,6 @@
       </ul></li>
       <li><a href="api/donations.models.archive_donation.html#donations.models.archive_donation.ArchiveDonationMixin.rejected_archives">rejected_archives() (donations.models.archive_donation.ArchiveDonationMixin method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/donations.models.html#donations.models.Donation.release_processing">release_processing() (donations.models.Donation method)</a>
 </li>
       <li><a href="api/donations.models.html#donations.models.Donation.requested_data_types">requested_data_types (donations.models.Donation attribute)</a>
@@ -1179,6 +1244,16 @@
       <li><a href="api/donations.models.html#donations.models.Donation.researcher">researcher (donations.models.Donation attribute)</a>
 </li>
       <li><a href="api/donations.models.html#donations.models.Donation.researcher_id">researcher_id (donations.models.Donation attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/portability_server.settings.html#portability_server.settings.RESEARCHER_SESSION_LIFETIME_SECONDS">RESEARCHER_SESSION_LIFETIME_SECONDS (in module portability_server.settings)</a>
+</li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession">ResearcherSession (class in donations.models)</a>
+</li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.DoesNotExist">ResearcherSession.DoesNotExist</a>
+</li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.MultipleObjectsReturned">ResearcherSession.MultipleObjectsReturned</a>
 </li>
       <li><a href="api/donations.models.html#donations.models.ResearcherToken">ResearcherToken (class in donations.models)</a>
 </li>
@@ -1189,6 +1264,10 @@
       <li><a href="api/donations.authentication.html#donations.authentication.ResearcherTokenAuthentication">ResearcherTokenAuthentication (class in donations.authentication)</a>
 </li>
       <li><a href="api/donations.utils.keystore.html#donations.utils.keystore.reset_backend">reset_backend() (in module donations.utils.keystore)</a>
+</li>
+      <li><a href="api/donations.researcher_auth.tokens.html#donations.researcher_auth.tokens.resolve_researcher_token">resolve_researcher_token() (in module donations.researcher_auth.tokens)</a>
+</li>
+      <li><a href="api/donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.resolve_session">resolve_session() (in module donations.researcher_auth.sessions)</a>
 </li>
       <li><a href="api/portability_server.settings.html#portability_server.settings.RETENTION_WARNING_DAYS">RETENTION_WARNING_DAYS (in module portability_server.settings)</a>
 </li>
@@ -1203,6 +1282,8 @@
 </li>
       </ul></li>
       <li><a href="api/donations.views.html#donations.views.revoke_donation">revoke_donation() (in module donations.views)</a>
+</li>
+      <li><a href="api/donations.researcher_auth.sessions.html#donations.researcher_auth.sessions.revoke_session">revoke_session() (in module donations.researcher_auth.sessions)</a>
 </li>
       <li><a href="api/donations.utils.parquet_store.html#donations.utils.parquet_store.ROW_GROUP_TARGET_BYTES">ROW_GROUP_TARGET_BYTES (in module donations.utils.parquet_store)</a>
 </li>
@@ -1242,10 +1323,16 @@
 </li>
       <li><a href="api/donations.api.html#donations.api.DonationViewSet.serializer_class">serializer_class (donations.api.DonationViewSet attribute)</a>
 </li>
-      <li><a href="api/donations.models.html#donations.models.Donation.source_type">source_type (donations.models.Donation attribute)</a>
+      <li><a href="api/donations.api.html#donations.api.session_view">session_view() (in module donations.api)</a>
+</li>
+      <li><a href="api/donations.api.html#donations.api.SessionLoginSerializer">SessionLoginSerializer (class in donations.api)</a>
+</li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherToken.sessions">sessions (donations.models.ResearcherToken attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/donations.models.html#donations.models.Donation.source_type">source_type (donations.models.Donation attribute)</a>
+</li>
       <li><a href="api/donations.models.html#donations.models.Donation.source_type_display">source_type_display (donations.models.Donation property)</a>
 
       <ul>
@@ -1331,6 +1418,8 @@
       <ul>
         <li><a href="api/donations.models.html#donations.models.Participant.token">(donations.models.Participant attribute)</a>
 </li>
+        <li><a href="api/donations.models.html#donations.models.ResearcherSession.token">(donations.models.ResearcherSession attribute)</a>
+</li>
       </ul></li>
       <li><a href="api/donations.models.google_portability.html#donations.models.google_portability.GoogleDonation.token_expiry">token_expiry (donations.models.google_portability.GoogleDonation attribute)</a>
 
@@ -1342,6 +1431,8 @@
         <li><a href="api/donations.models.html#donations.models.TikTokDonation.token_expiry">(donations.models.TikTokDonation attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/donations.models.html#donations.models.ResearcherSession.token_id">token_id (donations.models.ResearcherSession attribute)</a>
+</li>
       <li><a href="api/donations.models.html#donations.models.Donation.type">type (donations.models.Donation property)</a>
 
       <ul>

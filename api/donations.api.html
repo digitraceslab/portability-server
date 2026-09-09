@@ -74,6 +74,8 @@
 <li><a class="reference internal" href="#donations.api.DonationViewSet.data"><code class="docutils literal notranslate"><span class="pre">DonationViewSet.data()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#donations.api.SessionLoginSerializer"><code class="docutils literal notranslate"><span class="pre">SessionLoginSerializer</span></code></a></li>
+<li><a class="reference internal" href="#donations.api.session_view"><code class="docutils literal notranslate"><span class="pre">session_view()</span></code></a></li>
 <li><a class="reference internal" href="#donations.api.api_docs"><code class="docutils literal notranslate"><span class="pre">api_docs()</span></code></a></li>
 </ul>
 </li>
@@ -247,6 +249,22 @@ what <code class="docutils literal notranslate"><span class="pre">DELETE</span><
 <span class="sig-name descname"><span class="pre">data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pk</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/api.html#DonationViewSet.data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.api.DonationViewSet.data" title="Link to this definition"></a></dt>
 <dd></dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="donations.api.SessionLoginSerializer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">donations.api.</span></span><span class="sig-name descname"><span class="pre">SessionLoginSerializer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/api.html#SessionLoginSerializer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.api.SessionLoginSerializer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Serializer</span></code></p>
+<p>Parameters for exchanging a researcher token for a session.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="donations.api.session_view">
+<span class="sig-prename descclassname"><span class="pre">donations.api.</span></span><span class="sig-name descname"><span class="pre">session_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/api.html#session_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.api.session_view" title="Link to this definition"></a></dt>
+<dd><p>Issue (POST) or revoke (DELETE) a researcher API session.</p>
+<p>No DRF authentication class runs here: POST authenticates by exchanging
+the researcher token in the request body, and DELETE resolves the
+session itself from the Authorization header.</p>
 </dd></dl>
 
 <dl class="py function">
