@@ -91,12 +91,16 @@ def _set_donation_session(request, donation, raw_token=None):
     request.session[SESSION_DONATION_PK_KEY] = donation.pk
     if raw_token is not None:
         request.session[SESSION_DONATION_KEY] = str(raw_token)
+        # New credential: retire the pre-login session id (fixation defence).
+        request.session.cycle_key()
     else:
         request.session.pop(SESSION_DONATION_KEY, None)
 
 
 def _set_participant_session(request, raw_token):
     request.session[SESSION_PARTICIPANT_KEY] = str(raw_token)
+    # New credential: retire the pre-login session id (fixation defence).
+    request.session.cycle_key()
 
 
 def _set_return_url(request, url):
@@ -144,8 +148,10 @@ def select_donation(request, donation_pk):
 
 @require_http_methods(["POST"])
 def logout_participant(request):
-    """Clear the participant token from session. Donation session is preserved."""
+    """Clear the participant token from session. Donation session is preserved,
+    but the session id is rotated so the pre-logout id no longer resolves."""
     request.session.pop(SESSION_PARTICIPANT_KEY, None)
+    request.session.cycle_key()
     if request.session.get(SESSION_DONATION_PK_KEY):
         return redirect('donation-landing')
     return redirect('terms-of-service')

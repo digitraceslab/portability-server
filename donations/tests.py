@@ -11,6 +11,7 @@ import pandas as pd
 import requests
 
 from cryptography.fernet import Fernet
+from django.contrib.sessions.models import Session
 from django.test import TestCase, Client, override_settings
 
 from donations.testing import override_encryption_key
@@ -1051,6 +1052,25 @@ class ParticipantHomeViewTests(TestCase):
         # Session stores the raw token; lookups hash on the fly.
         self.assertEqual(
             client.session.get('participant_token'), self.participant._raw_token)
+
+    def test_participant_entry_rotates_session_key(self):
+        client = Client()
+        client.get('/terms/')  # establish a pre-login session
+        session = client.session
+        session['pre_login'] = True
+        session.save()
+        old_key = session.session_key
+        client.get(f'/participant/{self.participant._raw_token}/')
+        self.assertNotEqual(client.session.session_key, old_key)
+        self.assertFalse(Session.objects.filter(session_key=old_key).exists())
+
+    def test_logout_rotates_session_key_and_drops_participant(self):
+        old_key = self.client.session.session_key
+        response = self.client.post('/participant/logout/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIsNone(self.client.session.get('participant_token'))
+        self.assertNotEqual(self.client.session.session_key, old_key)
+        self.assertFalse(Session.objects.filter(session_key=old_key).exists())
 
     def test_select_donation_switches_session_donation(self):
         original_hash = self.donation1.token
