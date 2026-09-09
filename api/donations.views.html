@@ -114,7 +114,8 @@ credential.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.logout_participant">
 <span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">logout_participant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/views.html#logout_participant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.logout_participant" title="Link to this definition"></a></dt>
-<dd><p>Clear the participant token from session. Donation session is preserved.</p>
+<dd><p>Clear the participant token from session. Donation session is preserved,
+but the session id is rotated so the pre-logout id no longer resolves.</p>
 </dd></dl>
 
 <dl class="py function">

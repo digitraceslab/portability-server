@@ -159,12 +159,16 @@
     <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">pk</span>
     <span class="k">if</span> <span class="n">raw_token</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw_token</span><span class="p">)</span>
+        <span class="c1"># New credential: retire the pre-login session id (fixation defence).</span>
+        <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">cycle_key</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">raw_token</span><span class="p">):</span>
     <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">raw_token</span><span class="p">)</span>
+    <span class="c1"># New credential: retire the pre-login session id (fixation defence).</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">cycle_key</span><span class="p">()</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_set_return_url</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
@@ -223,8 +227,10 @@
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.logout_participant">[docs]</a>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">logout_participant</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear the participant token from session. Donation session is preserved.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear the participant token from session. Donation session is preserved,</span>
+<span class="sd">    but the session id is rotated so the pre-logout id no longer resolves.&quot;&quot;&quot;</span>
     <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">cycle_key</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;terms-of-service&#39;</span><span class="p">)</span></div>
