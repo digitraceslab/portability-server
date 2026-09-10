@@ -15,6 +15,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   donations.utils.archive_limits
    donations.utils.archive_names
    donations.utils.crypto
    donations.utils.download_urls

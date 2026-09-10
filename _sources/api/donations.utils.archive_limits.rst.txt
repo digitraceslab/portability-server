@@ -1,0 +1,7 @@
+donations.utils.archive\_limits module
+======================================
+
+.. automodule:: donations.utils.archive_limits
+   :members:
+   :show-inheritance:
+   :undoc-members:
