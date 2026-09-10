@@ -223,6 +223,7 @@
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.save()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.get_data_types()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.extract_and_process()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokExportDonation.pending_archive_count"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.pending_archive_count()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.handle_file_upload"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.handle_file_upload()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.cleanup_files()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokExportDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DoesNotExist</span></code></a></li>
@@ -340,6 +341,7 @@
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.save"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.save()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.get_data_types"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.get_data_types()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.extract_and_process"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.extract_and_process()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.pending_archive_count"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.pending_archive_count()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.handle_file_upload"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.handle_file_upload()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.cleanup_files"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.cleanup_files()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_export.html#donations.models.tiktok_export.TikTokExportDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokExportDonation.DoesNotExist</span></code></a></li>
@@ -1482,6 +1484,12 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dt class="sig sig-object py" id="donations.models.TikTokExportDonation.extract_and_process">
 <span class="sig-name descname"><span class="pre">extract_and_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.extract_and_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.extract_and_process" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokExportDonation.pending_archive_count">
+<span class="sig-name descname"><span class="pre">pending_archive_count</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_export.html#TikTokExportDonation.pending_archive_count"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokExportDonation.pending_archive_count" title="Link to this definition"></a></dt>
+<dd><p>Uploaded archives still on disk, i.e. not yet processed.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="donations.models.TikTokExportDonation.handle_file_upload">

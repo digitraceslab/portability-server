@@ -43,7 +43,13 @@
               <!-- Local TOC -->
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">portability_server.settings module</a><ul>
+<li><a class="reference internal" href="#portability_server.settings.AUTHENTICATION_BACKENDS"><code class="docutils literal notranslate"><span class="pre">AUTHENTICATION_BACKENDS</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.AXES_FAILURE_LIMIT"><code class="docutils literal notranslate"><span class="pre">AXES_FAILURE_LIMIT</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.AXES_COOLOFF_TIME"><code class="docutils literal notranslate"><span class="pre">AXES_COOLOFF_TIME</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.AXES_LOCKOUT_PARAMETERS"><code class="docutils literal notranslate"><span class="pre">AXES_LOCKOUT_PARAMETERS</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.AXES_RESET_ON_SUCCESS"><code class="docutils literal notranslate"><span class="pre">AXES_RESET_ON_SUCCESS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.ARCHIVE_MAX_MEMBERS"><code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBERS</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.UPLOAD_MAX_PENDING_ARCHIVES"><code class="docutils literal notranslate"><span class="pre">UPLOAD_MAX_PENDING_ARCHIVES</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS"><code class="docutils literal notranslate"><span class="pre">PROCESSING_CLAIM_TIMEOUT_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.RESEARCHER_SESSION_LIFETIME_SECONDS"><code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.SESSION_COOKIE_AGE"><code class="docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a></li>
@@ -80,10 +86,51 @@
 <span id="portability-server-settings-module"></span><h1>portability_server.settings module<a class="headerlink" href="#module-portability_server.settings" title="Link to this heading"></a></h1>
 <p>Django settings for portability-server project.</p>
 <dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.AUTHENTICATION_BACKENDS">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">AUTHENTICATION_BACKENDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['axes.backends.AxesStandaloneBackend',</span> <span class="pre">'django.contrib.auth.backends.ModelBackend']</span></span><a class="headerlink" href="#portability_server.settings.AUTHENTICATION_BACKENDS" title="Link to this definition"></a></dt>
+<dd><p>axes.backends.AxesStandaloneBackend must come first so a locked-out
+account is rejected before Django’s own backend checks the password.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.AXES_FAILURE_LIMIT">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">AXES_FAILURE_LIMIT</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#portability_server.settings.AXES_FAILURE_LIMIT" title="Link to this definition"></a></dt>
+<dd><p>Failed admin logins per account before axes locks it out. Locking by
+username rather than address, since all operators share the university
+network and an address-based lock would lock everyone out at once.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.AXES_COOLOFF_TIME">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">AXES_COOLOFF_TIME</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.timedelta(seconds=900)</span></span><a class="headerlink" href="#portability_server.settings.AXES_COOLOFF_TIME" title="Link to this definition"></a></dt>
+<dd><p>How long a locked account stays locked before it can be tried again.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.AXES_LOCKOUT_PARAMETERS">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">AXES_LOCKOUT_PARAMETERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['username']</span></span><a class="headerlink" href="#portability_server.settings.AXES_LOCKOUT_PARAMETERS" title="Link to this definition"></a></dt>
+<dd><p>Lock the account, not the source address (see AXES_FAILURE_LIMIT above).</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.AXES_RESET_ON_SUCCESS">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">AXES_RESET_ON_SUCCESS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#portability_server.settings.AXES_RESET_ON_SUCCESS" title="Link to this definition"></a></dt>
+<dd><p>A successful login clears the account’s failure count immediately,
+rather than waiting out the cooloff period.</p>
+</dd></dl>
+
+<dl class="py data">
 <dt class="sig sig-object py" id="portability_server.settings.ARCHIVE_MAX_MEMBERS">
 <span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">ARCHIVE_MAX_MEMBERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000</span></span><a class="headerlink" href="#portability_server.settings.ARCHIVE_MAX_MEMBERS" title="Link to this definition"></a></dt>
 <dd><p>Most entries a zip archive may hold; a Google export has tens of
 thousands, a crafted archive can declare millions.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.UPLOAD_MAX_PENDING_ARCHIVES">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">UPLOAD_MAX_PENDING_ARCHIVES</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#portability_server.settings.UPLOAD_MAX_PENDING_ARCHIVES" title="Link to this definition"></a></dt>
+<dd><p>How many uploaded archives a donation may have waiting for processing;
+bounds the disk a single participant can fill before the worker catches up.</p>
 </dd></dl>
 
 <dl class="py data">

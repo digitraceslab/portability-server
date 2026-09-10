@@ -504,7 +504,8 @@ set one so the instance is not left with a passwordless superuser.</p>
 <p>The scripts never modify an existing <code class="docutils literal notranslate"><span class="pre">.env</span></code>, and per-deployment values such as the domain and
 credentials are never version-controlled — the nginx domain is derived from <code class="docutils literal notranslate"><span class="pre">ALLOWED_HOSTS</span></code> in
 <code class="docutils literal notranslate"><span class="pre">.env</span></code>, and TLS certificate paths default to the Let’s Encrypt layout, all overridable via the
-<code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>, <code class="docutils literal notranslate"><span class="pre">SSL_CERT</span></code> and <code class="docutils literal notranslate"><span class="pre">SSL_KEY</span></code> environment variables.</p>
+<code class="docutils literal notranslate"><span class="pre">DOMAIN</span></code>, <code class="docutils literal notranslate"><span class="pre">SSL_CERT</span></code>, <code class="docutils literal notranslate"><span class="pre">SSL_KEY</span></code> and <code class="docutils literal notranslate"><span class="pre">SSL_CHAIN</span></code> (the issuing chain used to verify
+OCSP staples) environment variables.</p>
 </section>
 <section id="updating">
 <h3>Updating<a class="headerlink" href="#updating" title="Link to this heading"></a></h3>
@@ -563,7 +564,7 @@ python<span class="w"> </span>manage.py<span class="w"> </span>create_researcher
 <span class="na">User</span><span class="o">=</span><span class="s">USERNAME</span>
 <span class="na">Group</span><span class="o">=</span><span class="s">USERNAME</span>
 <span class="na">WorkingDirectory</span><span class="o">=</span><span class="s">/opt/portability-server</span>
-<span class="na">ExecStart</span><span class="o">=</span><span class="s">/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application</span>
+<span class="na">ExecStart</span><span class="o">=</span><span class="s">/opt/portability-server/venv/bin/gunicorn --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application</span>
 <span class="na">RuntimeDirectory</span><span class="o">=</span><span class="s">portability-server</span>
 
 <span class="k">[Install]</span>
@@ -707,7 +708,7 @@ sudo<span class="w"> </span>nginx<span class="w"> </span>-t<span class="w"> </sp
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DATABASE_URL</span></code></p></td>
 <td><p>PostgreSQL connection string</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">postgres://portability_user:password&#64;localhost:5432/portability_db</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">postgres://portability_user:example-123&#64;localhost:5432/portability_db</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GOOGLE_OAUTH_CLIENT_ID</span></code></p></td>
 <td><p>Google OAuth 2.0 client ID</p></td>
@@ -745,12 +746,28 @@ sudo<span class="w"> </span>nginx<span class="w"> </span>-t<span class="w"> </sp
 <td><p>Maximum accepted upload size in bytes (default 55 GB)</p></td>
 <td></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CLAMAV_ENABLED</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBER_BYTES</span></code></p></td>
+<td><p>Largest uncompressed zip member the worker will read; larger archives are rejected (default: half of physical memory)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBERS</span></code></p></td>
+<td><p>Most entries a zip archive may contain; archives with more are rejected (default 1000000)</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UPLOAD_MAX_PENDING_ARCHIVES</span></code></p></td>
+<td><p>Uploaded archives one donation may have awaiting processing before further uploads are refused (default 5)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CLAMAV_ENABLED</span></code></p></td>
 <td><p>Scan ingested files with ClamAV (clamdscan); default enabled when <code class="docutils literal notranslate"><span class="pre">DEBUG=False</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">True</span></code> / <code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code></p></td>
 <td><p>How long a researcher API session lasts, capped at the researcher token’s own expiry (default 43200, 12 hours)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></p></td>
+<td><p>Maximum lifetime of a browser session (participant pages and admin) in seconds; sessions also end when the browser closes (default 14400, 4 hours)</p></td>
 <td></td>
 </tr>
 </tbody>
