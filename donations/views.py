@@ -19,6 +19,7 @@ from django_ratelimit.decorators import ratelimit
 
 PARTICIPANT_TOKEN_MIN_LENGTH = 32
 
+from donations.audit import audit
 from donations.models import Donation, GoogleDonation, TikTokDonation, Participant, hash_token
 from donations.tasks import process_donation
 from donations.utils.paging import DonationRows
@@ -296,6 +297,7 @@ def data_preview(request):
     donation = _get_session_donation(request)
     data_types = donation.get_data_types()
     selected_type = request.GET.get('data_type', data_types[0] if data_types else '')
+    audit('data_preview', request, donation, data_type=selected_type or None)
     # The form submits empty strings for unset dates; treat them as absent.
     start_date = request.GET.get('start_date') or None
     end_date = request.GET.get('end_date') or None
@@ -329,6 +331,7 @@ def revoke_donation(request):
     """Confirm and revoke a donation."""
     donation = _get_session_donation(request)
     if request.method == 'POST':
+        audit('donation_revoked', request, donation)
         if hasattr(donation, 'revoke'):
             success, message = donation.revoke()
             if not success:

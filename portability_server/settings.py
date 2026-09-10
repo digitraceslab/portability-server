@@ -241,6 +241,8 @@ LOGGING = {
     },
     "loggers": {
         "donations": {"handlers": ["console"], "level": "INFO"},
+        # Access audit trail (donations/audit.py): who touched which donation.
+        "donations.audit": {"handlers": ["console"], "level": "INFO", "propagate": False},
         # Django's own request errors (tracebacks behind 500 responses) are
         # not logged anywhere in production unless routed explicitly.
         "django.request": {"handlers": ["console"], "level": "ERROR", "propagate": False},

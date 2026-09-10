@@ -10,6 +10,7 @@ from rest_framework.decorators import (
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.response import Response
 
+from donations.audit import audit
 from donations.models import Donation, GoogleDonation, TikTokDonation, TikTokExportDonation, ResearcherToken
 from donations.researcher_auth.sessions import create_session, resolve_session, revoke_session
 from donations.researcher_auth.tokens import resolve_researcher_token
@@ -122,6 +123,7 @@ class DonationViewSet(viewsets.GenericViewSet):
     def destroy(self, request, pk=None):
         donation = self.get_object()
         donation = donation.get_subclass()
+        audit('donation_deleted', request, donation, actor=f"researcher:{request.auth.pk}")
         if hasattr(donation, 'revoke'):
             donation.revoke()
         donation.delete()
@@ -136,6 +138,7 @@ class DonationViewSet(viewsets.GenericViewSet):
         what ``DELETE`` is for.
         """
         donation = self.get_object()
+        audit('can_delete_confirmed', request, donation, actor=f"researcher:{request.auth.pk}")
         if donation.can_delete_at is None:
             donation.can_delete_at = timezone.now()
             donation.save(update_fields=['can_delete_at'])
@@ -154,6 +157,8 @@ class DonationViewSet(viewsets.GenericViewSet):
         params = query_serializer.validated_data
 
         data_type = params.get('data_type')
+        audit('data_read', request, donation, actor=f"researcher:{request.auth.pk}",
+              data_type=data_type or 'list', offset=params.get('offset'), limit=params.get('limit'))
         if not data_type:
             return Response({'data_types': donation.get_data_types()})
 
@@ -189,6 +194,7 @@ def _session_login(request):
     if token is None:
         return Response({'detail': 'Invalid or expired token.'}, status=status.HTTP_401_UNAUTHORIZED)
     raw_key, session = create_session(token)
+    audit('session_login', request, actor=f"researcher:{token.pk}")
     return Response({'session_token': raw_key, 'expires_at': session.expires_at})
 
 
