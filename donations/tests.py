@@ -503,6 +503,27 @@ class TikTokExportDonationModelTests(TestCase):
         types = ted.get_data_types()
         self.assertIn('watch_history', types)
 
+    @override_settings(UPLOAD_MAX_PENDING_ARCHIVES=2)
+    def test_upload_refused_while_earlier_uploads_pending(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        ted = TikTokExportDonation.objects.create()
+        try:
+            for _ in range(2):
+                ok, _msg = ted.handle_file_upload(SimpleUploadedFile('a.csv', b'x,y\n1,2\n'))
+                self.assertTrue(ok)
+            ok, message = ted.handle_file_upload(SimpleUploadedFile('a.csv', b'x,y\n1,2\n'))
+            self.assertFalse(ok)
+            self.assertIn('still being processed', message)
+            self.assertEqual(len(ted.uploaded_files), 2)
+            # Once one archive has been processed (deleted), an upload is accepted again.
+            os.remove(ted.uploaded_files[0])
+            ok, _msg = ted.handle_file_upload(SimpleUploadedFile('a.csv', b'x,y\n1,2\n'))
+            self.assertTrue(ok)
+        finally:
+            for fpath in ted.uploaded_files:
+                if os.path.exists(fpath):
+                    os.remove(fpath)
+
     def test_handle_file_upload(self):
         """Test file upload and encryption."""
         ted = TikTokExportDonation.objects.create()

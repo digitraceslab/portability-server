@@ -2,6 +2,7 @@
 
 import sys
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -29,6 +30,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "donations",
     "accounts",
+    "axes",
 ]
 
 MIDDLEWARE = [
@@ -43,6 +45,16 @@ MIDDLEWARE = [
     "django_permissions_policy.PermissionsPolicyMiddleware",
     "portability_server.middleware.CrossOriginResourcePolicyMiddleware",
     "django_ratelimit.middleware.RatelimitMiddleware",
+    # Must be last: axes needs to see the response of every other
+    # middleware/backend before deciding whether to lock the request out.
+    "axes.middleware.AxesMiddleware",
+]
+
+#: axes.backends.AxesStandaloneBackend must come first so a locked-out
+#: account is rejected before Django's own backend checks the password.
+AUTHENTICATION_BACKENDS = [
+    "axes.backends.AxesStandaloneBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
 ROOT_URLCONF = "portability_server.urls"
@@ -85,6 +97,18 @@ else:
 RATELIMIT_ENABLE = not DEBUG and not TESTING
 RATELIMIT_VIEW = "portability_server.views.rate_limited"
 
+#: Failed admin logins per account before axes locks it out. Locking by
+#: username rather than address, since all operators share the university
+#: network and an address-based lock would lock everyone out at once.
+AXES_FAILURE_LIMIT = 5
+#: How long a locked account stays locked before it can be tried again.
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+#: Lock the account, not the source address (see AXES_FAILURE_LIMIT above).
+AXES_LOCKOUT_PARAMETERS = ["username"]
+#: A successful login clears the account's failure count immediately,
+#: rather than waiting out the cooloff period.
+AXES_RESET_ON_SUCCESS = True
+
 UPLOAD_MAX_BYTES = env.int("UPLOAD_MAX_BYTES", default=59055800320)
 
 #: Largest zip member (uncompressed, as declared in the archive) the worker
@@ -97,6 +121,9 @@ ARCHIVE_MAX_MEMBER_BYTES = env.int(
 #: Most entries a zip archive may hold; a Google export has tens of
 #: thousands, a crafted archive can declare millions.
 ARCHIVE_MAX_MEMBERS = env.int("ARCHIVE_MAX_MEMBERS", default=1_000_000)
+#: How many uploaded archives a donation may have waiting for processing;
+#: bounds the disk a single participant can fill before the worker catches up.
+UPLOAD_MAX_PENDING_ARCHIVES = env.int("UPLOAD_MAX_PENDING_ARCHIVES", default=5)
 
 # Archives arrive here and are deleted as soon as they have been read. The
 # directory is separate from the processed data so that the cleanup task can
@@ -186,6 +213,9 @@ if not DEBUG:
     # Requests reach gunicorn over a Unix socket, so REMOTE_ADDR is empty;
     # nginx (proxy_params) sets X-Real-IP from the actual connection.
     RATELIMIT_IP_META_KEY = "HTTP_X_REAL_IP"
+    #: Same reasoning as RATELIMIT_IP_META_KEY above: axes must read the
+    #: client address from X-Real-IP, not REMOTE_ADDR, to log it correctly.
+    AXES_IPWARE_META_PRECEDENCE_ORDER = ["HTTP_X_REAL_IP"]
 
     CONTENT_SECURITY_POLICY = {
         "DIRECTIVES": {

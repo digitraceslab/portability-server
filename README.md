@@ -766,6 +766,9 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `OPENBAO_MOUNT` | Mount path of the transit secrets engine | `transit` |
 | `OPENBAO_KEY_NAME` | Name of the transit key used to wrap data keys and OAuth tokens | `portability` |
 | `ADMIN_ALLOWED_CIDRS` | Comma-separated networks allowed to reach `/admin/` and the researcher API under `/api/`; empty makes both unreachable through nginx | `130.233.0.0/16,10.0.0.0/8` |
+
+An admin account locks for 15 minutes after 5 failed logins. An operator can clear a
+lockout with `python manage.py axes_reset_username <username>`.
 | `OPENBAO_CACERT` | Path to a CA certificate for the vault's TLS, if not publicly trusted | |
 | `CELERY_BROKER_URL` | Redis URL for Celery task broker | `redis://localhost:6379/1` |
 | `CELERY_RESULT_BACKEND` | Redis URL for Celery result storage | `redis://localhost:6379/1` |
@@ -773,6 +776,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `UPLOAD_MAX_BYTES` | Maximum accepted upload size in bytes (default 55 GB) | |
 | `ARCHIVE_MAX_MEMBER_BYTES` | Largest uncompressed zip member the worker will read; larger archives are rejected (default: half of physical memory) | |
 | `ARCHIVE_MAX_MEMBERS` | Most entries a zip archive may contain; archives with more are rejected (default 1000000) | |
+| `UPLOAD_MAX_PENDING_ARCHIVES` | Uploaded archives one donation may have awaiting processing before further uploads are refused (default 5) | |
 | `CLAMAV_ENABLED` | Scan ingested files with ClamAV (clamdscan); default enabled when `DEBUG=False` | `True` / `False` |
 | `DOMAINS` | Domains nginx serves, comma-separated; defaults to the first `ALLOWED_HOSTS` entry | `a.example,b.example` |
 | `ARCHIVE_DIR` | Where archives are held while being processed (default `data/archives`) | |

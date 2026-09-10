@@ -428,7 +428,8 @@ set one so the instance is not left with a passwordless superuser.
 The scripts never modify an existing ``.env``, and per-deployment values such as the domain and
 credentials are never version-controlled — the nginx domain is derived from ``ALLOWED_HOSTS`` in
 ``.env``, and TLS certificate paths default to the Let's Encrypt layout, all overridable via the
-``DOMAIN``, ``SSL_CERT`` and ``SSL_KEY`` environment variables.
+``DOMAIN``, ``SSL_CERT``, ``SSL_KEY`` and ``SSL_CHAIN`` (the issuing chain used to verify
+OCSP staples) environment variables.
 
 Updating
 ~~~~~~~~
@@ -499,7 +500,7 @@ Gunicorn service
    User=USERNAME
    Group=USERNAME
    WorkingDirectory=/opt/portability-server
-   ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application
+   ExecStart=/opt/portability-server/venv/bin/gunicorn --workers 3 --bind unix:/run/portability-server/portability-server.sock portability_server.wsgi:application
    RuntimeDirectory=portability-server
 
    [Install]
@@ -653,7 +654,7 @@ All configuration is done via ``.env`` (copy from ``.env.example``):
      - ``localhost,127.0.0.1``
    * - ``DATABASE_URL``
      - PostgreSQL connection string
-     - ``postgres://portability_user:password@localhost:5432/portability_db``
+     - ``postgres://portability_user:example-123@localhost:5432/portability_db``
    * - ``GOOGLE_OAUTH_CLIENT_ID``
      - Google OAuth 2.0 client ID
      -
@@ -681,11 +682,23 @@ All configuration is done via ``.env`` (copy from ``.env.example``):
    * - ``UPLOAD_MAX_BYTES``
      - Maximum accepted upload size in bytes (default 55 GB)
      -
+   * - ``ARCHIVE_MAX_MEMBER_BYTES``
+     - Largest uncompressed zip member the worker will read; larger archives are rejected (default: half of physical memory)
+     -
+   * - ``ARCHIVE_MAX_MEMBERS``
+     - Most entries a zip archive may contain; archives with more are rejected (default 1000000)
+     -
+   * - ``UPLOAD_MAX_PENDING_ARCHIVES``
+     - Uploaded archives one donation may have awaiting processing before further uploads are refused (default 5)
+     -
    * - ``CLAMAV_ENABLED``
      - Scan ingested files with ClamAV (clamdscan); default enabled when ``DEBUG=False``
      - ``True`` / ``False``
    * - ``RESEARCHER_SESSION_LIFETIME_SECONDS``
      - How long a researcher API session lasts, capped at the researcher token's own expiry (default 43200, 12 hours)
+     -
+   * - ``SESSION_COOKIE_AGE``
+     - Maximum lifetime of a browser session (participant pages and admin) in seconds; sessions also end when the browser closes (default 14400, 4 hours)
      -
 
 

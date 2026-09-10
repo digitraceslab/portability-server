@@ -113,10 +113,16 @@ class TikTokExportDonation(ArchiveDonationMixin, Donation):
             self.save()
 
 
+    def pending_archive_count(self):
+        """Uploaded archives still on disk, i.e. not yet processed."""
+        return sum(1 for path in self.uploaded_files if os.path.exists(path))
+
     def handle_file_upload(self, file):
         if file.size > settings.UPLOAD_MAX_BYTES:
             max_gb = settings.UPLOAD_MAX_BYTES / (1024 ** 3)
             return False, f"File is too large (maximum {max_gb:.0f} GB)."
+        if self.pending_archive_count() >= settings.UPLOAD_MAX_PENDING_ARCHIVES:
+            return False, "Earlier uploads are still being processed; please try again later."
         stored_filename = generated_archive_name(self.pk, file.name)
         stored_path = os.path.join(settings.ARCHIVE_DIR, stored_filename)
         os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
