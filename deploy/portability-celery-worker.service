@@ -6,6 +6,10 @@ After=network.target redis-server.service
 User=@RUN_USER@
 Group=@RUN_USER@
 UMask=077
+# Backstop for archive readers that load a member into memory: a runaway
+# worker is killed rather than taking the host down.
+MemoryHigh=70%
+MemoryMax=80%
 # Secrets come from /etc/credstore/portability.* (root-only), never from .env
 ImportCredential=portability.*
 WorkingDirectory=@APP_DIR@

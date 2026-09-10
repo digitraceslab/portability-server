@@ -9,7 +9,7 @@ import tempfile
 
 import pandas as pd
 from cryptography.fernet import Fernet
-from django.test import TestCase
+from django.test import override_settings, TestCase
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from unittest.mock import patch
@@ -109,6 +109,20 @@ class TestExtractionStep(StepTestCase):
         self._extract(_frame("2024-01-01", 3))
         self.assertEqual(self.donation.get_data_types(), ["activity_log"])
         self.assertEqual(self.donation.count_rows("activity_log"), 3)
+
+    @override_settings(ARCHIVE_MAX_MEMBER_BYTES=100)
+    def test_oversized_zip_member_is_rejected_and_discarded(self):
+        import zipfile
+        path = os.path.join(self._workdir, "bomb.zip")
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("member.json", b"0" * 10_000)
+        self.donation.downloaded_files.append(path)
+        self.donation.save()
+        self.donation.extract_and_process()
+        self.donation.refresh_from_db()
+        self.assertIn("Archive rejected by size limits", self.donation.processing_log)
+        self.assertFalse(os.path.exists(path))
+        self.assertEqual(self.donation.get_data_types(), [])
 
     def test_archive_is_marked_processed(self):
         self._extract(_frame("2024-01-01", 3))

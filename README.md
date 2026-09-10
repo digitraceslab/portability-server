@@ -771,6 +771,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `CELERY_RESULT_BACKEND` | Redis URL for Celery result storage | `redis://localhost:6379/1` |
 | `CACHE_URL` | Redis URL for the Django cache (rate-limit counters) | `redis://localhost:6379/2` |
 | `UPLOAD_MAX_BYTES` | Maximum accepted upload size in bytes (default 55 GB) | |
+| `ARCHIVE_MAX_MEMBER_BYTES` | Largest uncompressed zip member the worker will read; larger archives are rejected (default: half of physical memory) | |
 | `CLAMAV_ENABLED` | Scan ingested files with ClamAV (clamdscan); default enabled when `DEBUG=False` | `True` / `False` |
 | `DOMAINS` | Domains nginx serves, comma-separated; defaults to the first `ALLOWED_HOSTS` entry | `a.example,b.example` |
 | `ARCHIVE_DIR` | Where archives are held while being processed (default `data/archives`) | |

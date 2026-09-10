@@ -12,6 +12,7 @@ import pandas as pd
 from django.utils import timezone
 
 from donations.utils import parquet_store
+from donations.utils.archive_limits import check_archive_bounds
 from donations.utils.virus_scan import scan_path
 
 logger = logging.getLogger(__name__)
@@ -123,8 +124,13 @@ class ArchiveDonationMixin:
                 continue
 
             clean, detail = scan_path(filepath)
+            if clean:
+                clean, detail = check_archive_bounds(filepath)
+                reason = "size limits"
+            else:
+                reason = "virus scan"
             if not clean:
-                self.processing_log += f"Archive rejected by virus scan: {detail}\n"
+                self.processing_log += f"Archive rejected by {reason}: {detail}\n"
                 self._discard_archive(filepath)
                 file_status[filepath] = {
                     'processed': True,

@@ -1,6 +1,7 @@
 """Django settings for portability-server project."""
 
 import sys
+import os
 from pathlib import Path
 
 import environ
@@ -85,6 +86,14 @@ RATELIMIT_ENABLE = not DEBUG and not TESTING
 RATELIMIT_VIEW = "portability_server.views.rate_limited"
 
 UPLOAD_MAX_BYTES = env.int("UPLOAD_MAX_BYTES", default=59055800320)
+
+#: Largest zip member (uncompressed, as declared in the archive) the worker
+#: will read. Readers load a member whole, so this must fit in memory;
+#: the default is half of physical memory.
+_PHYSICAL_MEMORY = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
+ARCHIVE_MAX_MEMBER_BYTES = env.int(
+    "ARCHIVE_MAX_MEMBER_BYTES", default=_PHYSICAL_MEMORY // 2
+)
 
 # Archives arrive here and are deleted as soon as they have been read. The
 # directory is separate from the processed data so that the cleanup task can
