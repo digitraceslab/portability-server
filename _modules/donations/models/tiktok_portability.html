@@ -273,7 +273,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_log&#39;</span><span class="p">])</span>
                 <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Invalid response from TikTok during token exchange.&quot;</span>
 
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;TikTok token exchange response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">token_info</span><span class="p">)</span>
+            <span class="c1"># Debug aid only; never log the values, they are the credentials.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;TikTok token exchange for donation </span><span class="si">%s</span><span class="s2"> returned keys </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">token_info</span><span class="p">))</span>
 
             <span class="c1"># If TikTok returns an OAuth error payload, surface it directly.</span>
             <span class="k">if</span> <span class="n">token_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>

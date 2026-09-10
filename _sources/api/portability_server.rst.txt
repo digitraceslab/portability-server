@@ -1,6 +1,14 @@
 portability\_server package
 ===========================
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   portability_server.logging
+
 Submodules
 ----------
 

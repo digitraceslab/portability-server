@@ -1,0 +1,18 @@
+portability\_server.logging package
+===================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   portability_server.logging.redaction
+
+Module contents
+---------------
+
+.. automodule:: portability_server.logging
+   :members:
+   :show-inheritance:
+   :undoc-members:

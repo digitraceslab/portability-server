@@ -1,0 +1,7 @@
+portability\_server.logging.redaction module
+============================================
+
+.. automodule:: portability_server.logging.redaction
+   :members:
+   :show-inheritance:
+   :undoc-members:
