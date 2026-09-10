@@ -237,6 +237,60 @@ class GoogleDonationModelTests(TestCase):
         self.assertTrue(any('oauth2.googleapis.com/token' in url for url in call_urls))
         self.assertFalse(any('authorization:reset' in url for url in call_urls))
 
+    @patch('donations.models.google_portability.requests.get')
+    @patch('donations.models.google_portability.requests.post')
+    def test_download_data_files_skips_disallowed_urls(self, mock_post, mock_get):
+        archive_dir = tempfile.mkdtemp(prefix="google-archives-")
+        self.addCleanup(shutil.rmtree, archive_dir, ignore_errors=True)
+        patcher = override_settings(ARCHIVE_DIR=archive_dir)
+        patcher.enable()
+        self.addCleanup(patcher.disable)
+
+        token_response = MagicMock()
+        token_response.raise_for_status = MagicMock()
+        token_response.json.return_value = {'access_token': 'test-token', 'expires_in': 3600}
+        mock_post.return_value = token_response
+
+        status_response = MagicMock()
+        status_response.json.return_value = {
+            'state': 'COMPLETE',
+            'urls': [
+                'https://storage.googleusercontent.com/allowed-archive',
+                'https://evil.com/not-allowed',
+            ],
+        }
+
+        file_response = MagicMock()
+        file_response.raise_for_status = MagicMock()
+        file_response.iter_content.return_value = [b'chunk']
+
+        def get_side_effect(url, **kwargs):
+            if url == 'https://dataportability.googleapis.com/v1/archiveJobs/job-1/portabilityArchiveState':
+                return status_response
+            return file_response
+
+        mock_get.side_effect = get_side_effect
+
+        gd = GoogleDonation.objects.create(
+            access_token=encrypt_text('test_access'),
+            refresh_token=encrypt_text('test_refresh'),
+            data_job_ids=['job-1'],
+        )
+
+        gd.download_data_files()
+
+        fetched_urls = [call.args[0] for call in mock_get.call_args_list if call.args]
+        self.assertIn('https://storage.googleusercontent.com/allowed-archive', fetched_urls)
+        self.assertNotIn('https://evil.com/not-allowed', fetched_urls)
+
+        allowed_call = next(
+            call for call in mock_get.call_args_list
+            if call.args and call.args[0] == 'https://storage.googleusercontent.com/allowed-archive'
+        )
+        self.assertTrue(allowed_call.kwargs.get('stream'))
+
+        self.assertIn('Refused archive download from unexpected host: https://evil.com/not-allowed', gd.processing_log)
+
     def test_fetch_data_and_count_with_encrypted_csv(self):
         gd = GoogleDonation.objects.create(
             processing_status='processed',

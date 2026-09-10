@@ -24,13 +24,15 @@ from niimpy.reading.google_portability import (
 from donations.models import Donation
 from donations.models.archive_donation import ArchiveDonationMixin
 import donations.utils.crypto as crypto
-from donations.utils import parquet_store
+from donations.utils.download_urls import is_allowed_google_download_url
 
 
 class GoogleDonation(ArchiveDonationMixin, Donation):
     source_type_display = 'Google'
     storage_name = 'google_portability'
     archive_field = 'downloaded_files'
+    DEFAULT_REQUEST_TIMEOUT = 10
+    DOWNLOAD_READ_TIMEOUT = 600
 
     PROCESSING_STATUS_CHOICES = (
         ('authorized', 'Authorized, waiting for download'),
@@ -312,7 +314,9 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
         body = {
             'resources': resources
         }
-        api_response = requests.post(api_url, headers=headers, json=body)
+        api_response = requests.post(
+            api_url, headers=headers, json=body, timeout=self.DEFAULT_REQUEST_TIMEOUT
+        )
 
         if api_response.ok:
             response_data = api_response.json()
@@ -349,7 +353,7 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
         }
 
         try:
-            response = requests.post(token_url, data=token_data)
+            response = requests.post(token_url, data=token_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
             response.raise_for_status()
             try:
                 tokens = response.json()
@@ -407,7 +411,7 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
         }
 
         try:
-            response = requests.post(token_url, data=token_data)
+            response = requests.post(token_url, data=token_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
             response.raise_for_status()
             try:
                 tokens = response.json()
@@ -444,7 +448,9 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
                 'Content-Type': 'application/json',
             }
             try:
-                response = requests.post(revoke_url, headers=headers)
+                response = requests.post(
+                    revoke_url, headers=headers, timeout=self.DEFAULT_REQUEST_TIMEOUT
+                )
                 response.raise_for_status()
             except requests.RequestException as e:
                 error_message = f"Failed to revoke Google OAuth token: {e}"
@@ -470,7 +476,8 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
 
         try:
             token_response = requests.post(
-                'https://oauth2.googleapis.com/token', data=token_data
+                'https://oauth2.googleapis.com/token', data=token_data,
+                timeout=self.DEFAULT_REQUEST_TIMEOUT,
             )
             token_response.raise_for_status()
             tokens = token_response.json()
@@ -486,20 +493,35 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
                     continue
 
                 api_url = f'https://dataportability.googleapis.com/v1/archiveJobs/{job_id}/portabilityArchiveState'
-                api_response = requests.get(api_url, headers=headers)
+                api_response = requests.get(
+                    api_url, headers=headers, timeout=self.DEFAULT_REQUEST_TIMEOUT
+                )
                 status_data = api_response.json()
                 if status_data.get('state') != 'COMPLETE':
                     return False, "Data export is still processing. Please check back later."
 
                 download_urls = status_data.get('urls', [])
                 for i, url in enumerate(download_urls):
-                    file_response = requests.get(url)
+                    if not is_allowed_google_download_url(url):
+                        self.processing_log += (
+                            f"Refused archive download from unexpected host: {url}\n"
+                        )
+                        continue
+                    # The timeout below is per socket operation (connect/read),
+                    # not a total-time cap, so a large file can still take much
+                    # longer than DOWNLOAD_READ_TIMEOUT to fully download.
+                    file_response = requests.get(
+                        url, stream=True,
+                        timeout=(self.DEFAULT_REQUEST_TIMEOUT, self.DOWNLOAD_READ_TIMEOUT),
+                    )
+                    file_response.raise_for_status()
                     os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
                     path = os.path.join(
                         settings.ARCHIVE_DIR, f'google_data_{job_id}_{i}.zip'
                     )
                     with open(path, 'wb') as handle:
-                        handle.write(file_response.content)
+                        for chunk in file_response.iter_content(chunk_size=1024 * 1024):
+                            handle.write(chunk)
                     self.downloaded_files.append(path)
                     self.claim_processing()
                 self.processing_status = 'processing'

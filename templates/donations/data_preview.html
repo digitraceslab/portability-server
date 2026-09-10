@@ -42,11 +42,11 @@
 {% if rows.has_other_pages %}
 <div class="pagination">
     {% if rows.has_previous %}
-    <a href="?data_type={{ selected_type }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ rows.previous_page_number }}">Previous</a>
+    <a href="?data_type={{ selected_type|urlencode }}&start_date={{ start_date|urlencode }}&end_date={{ end_date|urlencode }}&page={{ rows.previous_page_number }}">Previous</a>
     {% endif %}
     Page {{ rows.number }} of {{ rows.paginator.num_pages }}
     {% if rows.has_next %}
-    <a href="?data_type={{ selected_type }}&start_date={{ start_date }}&end_date={{ end_date }}&page={{ rows.next_page_number }}">Next</a>
+    <a href="?data_type={{ selected_type|urlencode }}&start_date={{ start_date|urlencode }}&end_date={{ end_date|urlencode }}&page={{ rows.next_page_number }}">Next</a>
     {% endif %}
 </div>
 {% endif %}
