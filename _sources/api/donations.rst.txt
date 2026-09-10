@@ -21,6 +21,7 @@ Submodules
 
    donations.api
    donations.apps
+   donations.audit
    donations.authentication
    donations.tasks
    donations.testing
