@@ -1,6 +1,5 @@
 """ Donation model for data exported from TikTok. Participant provided the donation by uploading a file downloaded from TikTok. """
 import os
-import secrets
 from datetime import timedelta
 import pandas as pd
 from django.conf import settings
@@ -12,6 +11,7 @@ from django.utils import timezone
 
 from donations.models import Donation
 from donations.models.archive_donation import ArchiveDonationMixin
+from donations.utils.archive_names import generated_archive_name
 
 
 def watch_history_dummy_reader(file_path):
@@ -117,9 +117,7 @@ class TikTokExportDonation(ArchiveDonationMixin, Donation):
         if file.size > settings.UPLOAD_MAX_BYTES:
             max_gb = settings.UPLOAD_MAX_BYTES / (1024 ** 3)
             return False, f"File is too large (maximum {max_gb:.0f} GB)."
-        filename = file.name
-        unique_suffix = secrets.token_hex(8)
-        stored_filename = f"{self.pk}_{unique_suffix}_{filename}"
+        stored_filename = generated_archive_name(self.pk, file.name)
         stored_path = os.path.join(settings.ARCHIVE_DIR, stored_filename)
         os.makedirs(settings.ARCHIVE_DIR, exist_ok=True)
         # Written straight to disk: scanning and reading it are the worker's

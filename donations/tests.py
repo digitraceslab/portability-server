@@ -400,6 +400,59 @@ class TikTokDonationModelTests(TestCase):
         td = TikTokDonation.objects.create()
         self.assertEqual(td.get_data_types(), ['tiktok_portability'])
 
+    def test_user_info_defaults_to_empty_dict(self):
+        td = TikTokDonation.objects.create()
+        self.assertEqual(td.user_info, {})
+
+    def test_user_info_roundtrip_through_encrypted_column(self):
+        td = TikTokDonation.objects.create()
+        td.user_info = {'display_name': 'Jane Doe', 'user_name': 'janedoe'}
+        td.save()
+        td.refresh_from_db()
+
+        self.assertEqual(
+            td.user_info,
+            {'display_name': 'Jane Doe', 'user_name': 'janedoe'},
+        )
+        self.assertNotIn('Jane Doe', td.user_info_encrypted)
+        self.assertNotIn('janedoe', td.user_info_encrypted)
+
+    @patch('donations.models.tiktok_portability.requests.get')
+    def test_fetch_user_info_leaves_no_display_name_in_log(self, mock_get):
+        td = TikTokDonation.objects.create()
+        td.access_token = encrypt_text('test-access-token')
+        td.save()
+
+        response = MagicMock()
+        response.raise_for_status.return_value = None
+        response.json.return_value = {
+            'data': {
+                'user': {
+                    'open_id': 'open-1',
+                    'union_id': 'union-1',
+                    'username': 'janedoe',
+                    'display_name': 'Jane Doe',
+                    'avatar_url': 'https://example.com/avatar.png',
+                }
+            }
+        }
+        mock_get.return_value = response
+
+        success, _message = td._fetch_user_info()
+
+        self.assertTrue(success)
+        self.assertEqual(
+            td.user_info,
+            {
+                'open_id': 'open-1',
+                'union_id': 'union-1',
+                'user_name': 'janedoe',
+                'display_name': 'Jane Doe',
+            },
+        )
+        self.assertNotIn('Jane Doe', td.processing_log)
+        self.assertNotIn('avatar_url', td.user_info)
+
 
 @override_encryption_key(TEST_ENCRYPTION_KEY)
 class TikTokExportDonationModelTests(TestCase):

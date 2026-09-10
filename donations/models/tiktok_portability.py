@@ -1,6 +1,7 @@
 """TikTok Portability data source model and OAuth flow."""
 import base64
 import hashlib
+import json
 import logging
 import secrets
 from datetime import timedelta
@@ -35,7 +36,7 @@ class TikTokDonation(Donation):
     refresh_token = models.CharField(max_length=500, blank=True, null=True)
     token_expiry = models.DateTimeField(null=True, blank=True)
     tiktok_user_id = models.CharField(max_length=255, blank=True, null=True)
-    user_info = models.JSONField(default=dict, blank=True, help_text="User info from TikTok API (display_name, user_name, etc.)")
+    user_info_encrypted = models.TextField(blank=True, default='')
     code_verifier = models.CharField(max_length=200, blank=True)
     oauth_state = models.CharField(max_length=100, blank=True, null=True)
 
@@ -44,6 +45,19 @@ class TikTokDonation(Donation):
         choices=PROCESSING_STATUS_CHOICES,
         default='authorized',
     )
+
+    @property
+    def user_info(self):
+        if not self.user_info_encrypted:
+            return {}
+        return json.loads(crypto.decrypt_text(self.user_info_encrypted))
+
+    @user_info.setter
+    def user_info(self, value):
+        if not value:
+            self.user_info_encrypted = ''
+        else:
+            self.user_info_encrypted = crypto.encrypt_text(json.dumps(value))
 
     def save(self, *args, **kwargs):
         if not self.source_type:
@@ -297,11 +311,10 @@ class TikTokDonation(Donation):
                 'union_id': user_data.get('union_id'),
                 'user_name': user_data.get('username') or user_data.get('user_name'),
                 'display_name': user_data.get('display_name'),
-                'avatar_url': user_data.get('avatar_url'),
             }
-            
-            self.processing_log += f"Successfully fetched user info: {self.user_info.get('display_name', 'Unknown')}\n"
-            logger.info(f"Fetched TikTok user info for donation {self.pk}: {self.user_info}")
+
+            self.processing_log += "Fetched user info.\n"
+            logger.info("Fetched TikTok user info for donation %s", self.pk)
             
             return True, "User info fetched successfully."
             
