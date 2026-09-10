@@ -90,7 +90,8 @@ reliable bound.</p>
 <dt class="sig sig-object py" id="donations.utils.archive_limits.check_archive_bounds">
 <span class="sig-prename descclassname"><span class="pre">donations.utils.archive_limits.</span></span><span class="sig-name descname"><span class="pre">check_archive_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/utils/archive_limits.html#check_archive_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.utils.archive_limits.check_archive_bounds" title="Link to this definition"></a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">(ok,</span> <span class="pre">detail)</span></code>: refuse a zip whose largest member exceeds
-<code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBER_BYTES</span></code>. Non-zip files are accepted unchanged.</p>
+<code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBER_BYTES</span></code> or whose member count exceeds
+<code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBERS</span></code>. Non-zip files are accepted unchanged.</p>
 </dd></dl>
 
 </section>

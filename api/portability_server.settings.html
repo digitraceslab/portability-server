@@ -43,6 +43,7 @@
               <!-- Local TOC -->
               <div class="local-toc"><ul>
 <li><a class="reference internal" href="#">portability_server.settings module</a><ul>
+<li><a class="reference internal" href="#portability_server.settings.ARCHIVE_MAX_MEMBERS"><code class="docutils literal notranslate"><span class="pre">ARCHIVE_MAX_MEMBERS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS"><code class="docutils literal notranslate"><span class="pre">PROCESSING_CLAIM_TIMEOUT_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.RESEARCHER_SESSION_LIFETIME_SECONDS"><code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.SESSION_COOKIE_AGE"><code class="docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a></li>
@@ -78,6 +79,13 @@
   <section id="module-portability_server.settings">
 <span id="portability-server-settings-module"></span><h1>portability_server.settings module<a class="headerlink" href="#module-portability_server.settings" title="Link to this heading"></a></h1>
 <p>Django settings for portability-server project.</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.ARCHIVE_MAX_MEMBERS">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">ARCHIVE_MAX_MEMBERS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000000</span></span><a class="headerlink" href="#portability_server.settings.ARCHIVE_MAX_MEMBERS" title="Link to this definition"></a></dt>
+<dd><p>Most entries a zip archive may hold; a Google export has tens of
+thousands, a crafted archive can declare millions.</p>
+</dd></dl>
+
 <dl class="py data">
 <dt class="sig sig-object py" id="portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS">
 <span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">PROCESSING_CLAIM_TIMEOUT_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1800</span></span><a class="headerlink" href="#portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS" title="Link to this definition"></a></dt>
