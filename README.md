@@ -332,7 +332,7 @@ instance is not left with a passwordless superuser.
 The scripts never modify an existing `.env`, and per-deployment values such as the domain and
 credentials are never version-controlled — the nginx domain is derived from `ALLOWED_HOSTS` in
 `.env`, and TLS certificate paths default to the Let's Encrypt layout, all overridable via the
-`DOMAIN`, `SSL_CERT` and `SSL_KEY` environment variables.
+`DOMAIN`, `SSL_CERT`, `SSL_KEY` and `SSL_CHAIN` (the issuing chain used to verify OCSP staples) environment variables.
 
 ### Updating
 
@@ -772,6 +772,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `CACHE_URL` | Redis URL for the Django cache (rate-limit counters) | `redis://localhost:6379/2` |
 | `UPLOAD_MAX_BYTES` | Maximum accepted upload size in bytes (default 55 GB) | |
 | `ARCHIVE_MAX_MEMBER_BYTES` | Largest uncompressed zip member the worker will read; larger archives are rejected (default: half of physical memory) | |
+| `ARCHIVE_MAX_MEMBERS` | Most entries a zip archive may contain; archives with more are rejected (default 1000000) | |
 | `CLAMAV_ENABLED` | Scan ingested files with ClamAV (clamdscan); default enabled when `DEBUG=False` | `True` / `False` |
 | `DOMAINS` | Domains nginx serves, comma-separated; defaults to the first `ALLOWED_HOSTS` entry | `a.example,b.example` |
 | `ARCHIVE_DIR` | Where archives are held while being processed (default `data/archives`) | |

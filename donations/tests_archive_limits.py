@@ -72,5 +72,16 @@ class ArchiveBoundsTests(SimpleTestCase):
             ok, _ = check_archive_bounds(handle.name)
             self.assertFalse(ok)
 
+    @override_settings(ARCHIVE_MAX_MEMBER_BYTES=1000, ARCHIVE_MAX_MEMBERS=3)
+    def test_too_many_members_is_rejected(self):
+        ok, detail = check_archive_bounds(self._zip([1, 1, 1, 1]))
+        self.assertFalse(ok)
+        self.assertIn('4 members', detail)
+
+    @override_settings(ARCHIVE_MAX_MEMBER_BYTES=1000, ARCHIVE_MAX_MEMBERS=3)
+    def test_member_count_at_limit_passes(self):
+        ok, _ = check_archive_bounds(self._zip([1, 1, 1]))
+        self.assertTrue(ok)
+
     def test_physical_memory_is_positive_here(self):
         self.assertGreater(physical_memory_bytes(), 0)

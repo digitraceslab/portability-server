@@ -94,6 +94,9 @@ _PHYSICAL_MEMORY = os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE")
 ARCHIVE_MAX_MEMBER_BYTES = env.int(
     "ARCHIVE_MAX_MEMBER_BYTES", default=_PHYSICAL_MEMORY // 2
 )
+#: Most entries a zip archive may hold; a Google export has tens of
+#: thousands, a crafted archive can declare millions.
+ARCHIVE_MAX_MEMBERS = env.int("ARCHIVE_MAX_MEMBERS", default=1_000_000)
 
 # Archives arrive here and are deleted as soon as they have been read. The
 # directory is separate from the processed data so that the cleanup task can

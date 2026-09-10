@@ -448,10 +448,16 @@ PYEOF
     for domain in $domains; do
         ssl_cert="${SSL_CERT:-/etc/letsencrypt/live/$domain/fullchain.pem}"
         ssl_key="${SSL_KEY:-/etc/letsencrypt/live/$domain/privkey.pem}"
-        cert_state=0
+        ssl_chain="${SSL_CHAIN:-/etc/letsencrypt/live/$domain/chain.pem}"
+        cert_state=0 missing_path="$ssl_cert"
         _cert_present "$ssl_cert" || cert_state=$?
+        if [ "$cert_state" -eq 0 ] && ! _cert_present "$ssl_chain"; then
+            # The chain is only used for OCSP stapling, but nginx refuses to
+            # start without it, so treat it like the certificate itself.
+            cert_state=1 missing_path="$ssl_chain"
+        fi
         if [ "$cert_state" -eq 1 ]; then
-            echo "Warning: TLS certificate for $domain is missing at $ssl_cert." >&2
+            echo "Warning: TLS certificate for $domain is missing at $missing_path." >&2
             missing_certs=$((missing_certs + 1))
             CERT_PROBLEMS=$((CERT_PROBLEMS + 1))
         elif [ "$cert_state" -eq 2 ]; then
@@ -460,7 +466,8 @@ PYEOF
             echo "Warning: cannot verify the TLS certificate for $domain at $ssl_cert (needs root, and passwordless sudo is unavailable)." >&2
             CERT_PROBLEMS=$((CERT_PROBLEMS + 1))
         fi
-        sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" -e "s|@APP_DIR@|$APP_DIR|g" \
+        sed -e "s|@DOMAIN@|$domain|g" -e "s|@SSL_CERT@|$ssl_cert|g" -e "s|@SSL_KEY@|$ssl_key|g" \
+            -e "s|@SSL_CHAIN@|$ssl_chain|g" -e "s|@APP_DIR@|$APP_DIR|g" \
             -e "s|^@ADMIN_ALLOW@$|$admin_allow|" "$APP_DIR/deploy/nginx-site.conf" >> "$tmp_site"
         echo >> "$tmp_site"
     done
