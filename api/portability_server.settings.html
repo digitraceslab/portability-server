@@ -45,6 +45,7 @@
 <li><a class="reference internal" href="#">portability_server.settings module</a><ul>
 <li><a class="reference internal" href="#portability_server.settings.PROCESSING_CLAIM_TIMEOUT_SECONDS"><code class="docutils literal notranslate"><span class="pre">PROCESSING_CLAIM_TIMEOUT_SECONDS</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.RESEARCHER_SESSION_LIFETIME_SECONDS"><code class="docutils literal notranslate"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></code></a></li>
+<li><a class="reference internal" href="#portability_server.settings.SESSION_COOKIE_AGE"><code class="docutils literal notranslate"><span class="pre">SESSION_COOKIE_AGE</span></code></a></li>
 <li><a class="reference internal" href="#portability_server.settings.RETENTION_WARNING_DAYS"><code class="docutils literal notranslate"><span class="pre">RETENTION_WARNING_DAYS</span></code></a></li>
 </ul>
 </li>
@@ -89,6 +90,14 @@ Longer than the gap between refreshes, shorter than anyone’s patience.</p>
 <span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">RESEARCHER_SESSION_LIFETIME_SECONDS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">43200</span></span><a class="headerlink" href="#portability_server.settings.RESEARCHER_SESSION_LIFETIME_SECONDS" title="Link to this definition"></a></dt>
 <dd><p>How long a researcher API session lasts once issued, capped at the
 researcher token’s own expiry.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="portability_server.settings.SESSION_COOKIE_AGE">
+<span class="sig-prename descclassname"><span class="pre">portability_server.settings.</span></span><span class="sig-name descname"><span class="pre">SESSION_COOKIE_AGE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">14400</span></span><a class="headerlink" href="#portability_server.settings.SESSION_COOKIE_AGE" title="Link to this definition"></a></dt>
+<dd><p>Browser sessions (participants and the admin) end when the browser is
+closed and after this many seconds at most; a participant can always
+re-enter through their donation or participant link.</p>
 </dd></dl>
 
 <dl class="py data">
