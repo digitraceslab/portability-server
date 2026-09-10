@@ -229,8 +229,15 @@ TIKTOK_REDIRECT_URI = env("TIKTOK_REDIRECT_URI", default="")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        # Masks UUIDs so a logged request path never contains a token.
+        "redacting": {
+            "()": "portability_server.logging.redaction.RedactingFormatter",
+            "format": "%(levelname)s %(name)s: %(message)s",
+        },
+    },
     "handlers": {
-        "console": {"class": "logging.StreamHandler"},
+        "console": {"class": "logging.StreamHandler", "formatter": "redacting"},
     },
     "loggers": {
         "donations": {"handlers": ["console"], "level": "INFO"},

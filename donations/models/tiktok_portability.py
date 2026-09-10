@@ -182,7 +182,9 @@ class TikTokDonation(Donation):
                 self.save(update_fields=['processing_log'])
                 return False, "Invalid response from TikTok during token exchange."
 
-            logger.info("TikTok token exchange response: %s", token_info)
+            # Debug aid only; never log the values, they are the credentials.
+            logger.debug("TikTok token exchange for donation %s returned keys %s",
+                         self.pk, sorted(token_info))
 
             # If TikTok returns an OAuth error payload, surface it directly.
             if token_info.get('error'):

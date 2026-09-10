@@ -421,7 +421,7 @@ Group=portability
 UMask=077
 ImportCredential=portability.*
 WorkingDirectory=/opt/portability-server
-ExecStart=/opt/portability-server/venv/bin/gunicorn --access-logfile - --workers 3 --timeout 120 --bind unix:/run/portability/portability-server.sock portability_server.wsgi:application
+ExecStart=/opt/portability-server/venv/bin/gunicorn --workers 3 --timeout 120 --bind unix:/run/portability/portability-server.sock portability_server.wsgi:application
 RuntimeDirectory=portability
 
 [Install]
