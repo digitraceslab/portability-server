@@ -69,7 +69,6 @@
   <h1>Source code for donations.models.tiktok_export</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot; Donation model for data exported from TikTok. Participant provided the donation by uploading a file downloaded from TikTok. &quot;&quot;&quot;</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.conf</span><span class="w"> </span><span class="kn">import</span> <span class="n">settings</span>
@@ -81,6 +80,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Donation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">donations.models.archive_donation</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArchiveDonationMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">donations.utils.archive_names</span><span class="w"> </span><span class="kn">import</span> <span class="n">generated_archive_name</span>
 
 
 <div class="viewcode-block" id="watch_history_dummy_reader">
@@ -202,9 +202,7 @@
         <span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">settings</span><span class="o">.</span><span class="n">UPLOAD_MAX_BYTES</span><span class="p">:</span>
             <span class="n">max_gb</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">UPLOAD_MAX_BYTES</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;File is too large (maximum </span><span class="si">{</span><span class="n">max_gb</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2"> GB).&quot;</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">unique_suffix</span> <span class="o">=</span> <span class="n">secrets</span><span class="o">.</span><span class="n">token_hex</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
-        <span class="n">stored_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">unique_suffix</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">stored_filename</span> <span class="o">=</span> <span class="n">generated_archive_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pk</span><span class="p">,</span> <span class="n">file</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">stored_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ARCHIVE_DIR</span><span class="p">,</span> <span class="n">stored_filename</span><span class="p">)</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">ARCHIVE_DIR</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Written straight to disk: scanning and reading it are the worker&#39;s</span>

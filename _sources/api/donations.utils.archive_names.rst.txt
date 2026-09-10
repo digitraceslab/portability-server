@@ -1,0 +1,7 @@
+donations.utils.archive\_names module
+=====================================
+
+.. automodule:: donations.utils.archive_names
+   :members:
+   :show-inheritance:
+   :undoc-members:
