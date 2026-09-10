@@ -110,6 +110,12 @@ RESEARCHER_SESSION_LIFETIME_SECONDS = env.int(
     "RESEARCHER_SESSION_LIFETIME_SECONDS", default=12 * 60 * 60
 )
 
+#: Browser sessions (participants and the admin) end when the browser is
+#: closed and after this many seconds at most; a participant can always
+#: re-enter through their donation or participant link.
+SESSION_COOKIE_AGE = env.int("SESSION_COOKIE_AGE", default=4 * 60 * 60)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
 RETENTION_DAYS = env.int("RETENTION_DAYS", default=14)
 CAN_DELETE_RETENTION_DAYS = env.int("CAN_DELETE_RETENTION_DAYS", default=2)
 #: Donations expiring within this many days are named in the daily mail,

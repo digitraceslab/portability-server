@@ -780,6 +780,7 @@ All configuration is done via `.env` (copy from `.env.example`):
 | `CAN_DELETE_RETENTION_DAYS` | Days kept after the researcher confirms a verified copy (default 2) | |
 | `RETENTION_WARNING_DAYS` | Unflagged donations expiring within this many days are named in the daily mail (default 2) | |
 | `RESEARCHER_SESSION_LIFETIME_SECONDS` | How long a researcher API session lasts, capped at the researcher token's own expiry (default 43200, 12 hours) | |
+| `SESSION_COOKIE_AGE` | Maximum lifetime of a browser session (participant pages and admin) in seconds; sessions also end when the browser closes (default 14400, 4 hours) | |
 | `EMAIL_FROM` | Sender for administrator mail; must be an `aalto.fi` address | `portability@aalto.fi` |
 | `ADMIN_EMAILS` | Comma-separated recipients of the daily retention mail | |
 
