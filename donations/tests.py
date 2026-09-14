@@ -1212,10 +1212,14 @@ class ParticipantHomeViewTests(TestCase):
         self.assertFalse(Session.objects.filter(session_key=old_key).exists())
 
     def test_logout_rotates_session_key_and_drops_participant(self):
+        self.client.get(f'/participant/select/{self.donation1.pk}/')
         old_key = self.client.session.session_key
         response = self.client.post('/participant/logout/')
         self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
         self.assertIsNone(self.client.session.get('participant_token'))
+        self.assertIsNone(self.client.session.get('donation_pk'))
+        self.assertIsNone(self.client.session.get('donation_token'))
         self.assertNotEqual(self.client.session.session_key, old_key)
         self.assertFalse(Session.objects.filter(session_key=old_key).exists())
 

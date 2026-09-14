@@ -19,11 +19,11 @@
 
     {% block content %}{% endblock %}
 
-    {% if request.session.participant_token %}
+    {% if request.session.participant_token or request.session.donation_pk %}
     <hr>
     <form method="post" action="{% url 'logout-participant' %}">
         {% csrf_token %}
-        <button type="submit" class="btn">Log out participant</button>
+        <button type="submit" class="btn">Log out</button>
     </form>
     {% endif %}
     <hr>
