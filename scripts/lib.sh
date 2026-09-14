@@ -386,6 +386,19 @@ render_services() {
     fi
 }
 
+# Migrations can encrypt data, so they need the encryption key. It lives in
+# root-only /etc/credstore and reaches the services via ImportCredential, so
+# run migrate the same way: as a transient systemd unit, under RUN_USER, with
+# the same credential import. The deploy account never sees the key.
+run_migrations() {
+    echo "==> Running migrations"
+    sudo systemd-run --wait --pipe --collect --quiet \
+        -p "ImportCredential=portability.*" \
+        -p "User=$RUN_USER" -p "Group=$RUN_USER" \
+        -p "WorkingDirectory=$APP_DIR" \
+        "$VENV/bin/python" manage.py migrate --noinput
+}
+
 verify_services_active() {
     echo "==> Verifying services are active"
     local failed=()

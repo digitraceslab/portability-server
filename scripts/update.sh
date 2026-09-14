@@ -43,8 +43,8 @@ validate_env
 echo "==> Running deployment checks"
 "$VENV/bin/python" manage.py check --deploy --fail-level WARNING
 
-echo "==> Running migrations and collecting static files"
-"$VENV/bin/python" manage.py migrate --noinput
+run_migrations
+echo "==> Collecting static files"
 "$VENV/bin/python" manage.py collectstatic --noinput
 
 render_services
