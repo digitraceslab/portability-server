@@ -356,6 +356,61 @@
             <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Invalid response from TikTok during token refresh.&quot;</span></div>
 
 
+<div class="viewcode-block" id="TikTokDonation.revoke">
+<a class="viewcode-back" href="../../../api/donations.models.tiktok_portability.html#donations.models.TikTokDonation.revoke">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">revoke</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Revoke the TikTok grant so the next login asks for consent again.</span>
+
+<span class="sd">        Revoking the access token also invalidates the refresh token on</span>
+<span class="sd">        TikTok&#39;s side. A donation that never got a token has nothing to revoke.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">access_token</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;No TikTok token to revoke.&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_expiry</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_expiry</span> <span class="o">&lt;=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_token</span><span class="p">:</span>
+            <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">refresh_access_token</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">message</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">access_plain</span> <span class="o">=</span> <span class="n">crypto</span><span class="o">.</span><span class="n">decrypt_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_token</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;Failed to decrypt access_token: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_log&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;Failed to decrypt access token.&quot;</span>
+
+        <span class="n">revoke_url</span> <span class="o">=</span> <span class="s1">&#39;https://open.tiktokapis.com/v2/oauth/revoke/&#39;</span>
+        <span class="n">revoke_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;client_key&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_CLIENT_KEY</span><span class="p">,</span>
+            <span class="s1">&#39;client_secret&#39;</span><span class="p">:</span> <span class="n">settings</span><span class="o">.</span><span class="n">TIKTOK_CLIENT_SECRET</span><span class="p">,</span>
+            <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="n">access_plain</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">revoke_url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">revoke_data</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_REQUEST_TIMEOUT</span><span class="p">)</span>
+            <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">RequestException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Failed to revoke TikTok OAuth token: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="n">error_message</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_log&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">error_message</span>
+
+        <span class="c1"># TikTok reports failures as a JSON body with an ``error`` key.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">):</span>
+            <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;TikTok refused to revoke the token: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;error_description&#39;</span><span class="p">)</span><span class="w"> </span><span class="ow">or</span><span class="w"> </span><span class="n">body</span><span class="p">[</span><span class="s1">&#39;error&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="n">error_message</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;processing_log&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="kc">False</span><span class="p">,</span> <span class="n">error_message</span>
+
+        <span class="k">return</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;Authorization revoked successfully.&quot;</span></div>
+
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_user_info</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch user info from TikTok API using the access token.</span>
 <span class="sd">        </span>

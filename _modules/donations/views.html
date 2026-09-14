@@ -435,17 +435,21 @@
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;POST&#39;</span><span class="p">:</span>
         <span class="n">audit</span><span class="p">(</span><span class="s1">&#39;donation_revoked&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">donation</span><span class="p">)</span>
+        <span class="c1"># Local data is deleted whether or not the platform accepts the</span>
+        <span class="c1"># revocation; a failed platform call only leaves the grant open there.</span>
+        <span class="n">revoke_error</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">donation</span><span class="p">,</span> <span class="s1">&#39;revoke&#39;</span><span class="p">):</span>
             <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">revoke</span><span class="p">()</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">success</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span>
-                    <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
-                    <span class="s1">&#39;error&#39;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
-                <span class="p">})</span>
+                <span class="n">revoke_error</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="n">source_type</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">source_type</span>
         <span class="n">donation</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span>
         <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoked.html&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoked.html&#39;</span><span class="p">,</span> <span class="p">{</span>
+            <span class="s1">&#39;revoke_error&#39;</span><span class="p">:</span> <span class="n">revoke_error</span><span class="p">,</span>
+            <span class="s1">&#39;source_type&#39;</span><span class="p">:</span> <span class="n">source_type</span><span class="p">,</span>
+        <span class="p">})</span>
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/revoke_confirm.html&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">})</span></div>
 
 

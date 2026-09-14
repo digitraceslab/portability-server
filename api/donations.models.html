@@ -201,6 +201,7 @@
 <li><a class="reference internal" href="#donations.models.TikTokDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_auth_url()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.handle_auth_callback()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.refresh_access_token()</span></code></a></li>
+<li><a class="reference internal" href="#donations.models.TikTokDonation.revoke"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.revoke()</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.DoesNotExist</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.MultipleObjectsReturned</span></code></a></li>
 <li><a class="reference internal" href="#donations.models.TikTokDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.donation_ptr</span></code></a></li>
@@ -376,6 +377,7 @@
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.get_auth_url"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.get_auth_url()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.handle_auth_callback"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.handle_auth_callback()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.refresh_access_token"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.refresh_access_token()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.revoke"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.revoke()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.DoesNotExist"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.DoesNotExist</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.MultipleObjectsReturned"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.MultipleObjectsReturned</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="donations.models.tiktok_portability.html#donations.models.tiktok_portability.TikTokDonation.donation_ptr"><code class="docutils literal notranslate"><span class="pre">TikTokDonation.donation_ptr</span></code></a></li>
@@ -1358,6 +1360,14 @@ non-SQL backends), respectively. Normally, they should not be set.</p>
 <dt class="sig sig-object py" id="donations.models.TikTokDonation.refresh_access_token">
 <span class="sig-name descname"><span class="pre">refresh_access_token</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_portability.html#TikTokDonation.refresh_access_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.refresh_access_token" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="donations.models.TikTokDonation.revoke">
+<span class="sig-name descname"><span class="pre">revoke</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/models/tiktok_portability.html#TikTokDonation.revoke"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.models.TikTokDonation.revoke" title="Link to this definition"></a></dt>
+<dd><p>Revoke the TikTok grant so the next login asks for consent again.</p>
+<p>Revoking the access token also invalidates the refresh token on
+TikTok’s side. A donation that never got a token has nothing to revoke.</p>
+</dd></dl>
 
 <dl class="py exception">
 <dt class="sig sig-object py" id="donations.models.TikTokDonation.DoesNotExist">
