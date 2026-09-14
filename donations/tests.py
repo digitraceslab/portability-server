@@ -892,13 +892,14 @@ class RevokeDonationViewTests(TestCase):
         self.assertFalse(Donation.objects.filter(pk=pk).exists())
 
     @patch('donations.models.google_portability.GoogleDonation.revoke')
-    def test_revoke_post_keeps_donation_on_failure(self, mock_revoke):
+    def test_revoke_post_deletes_donation_on_failure(self, mock_revoke):
         mock_revoke.return_value = (False, "Token refresh failed: network error")
         pk = self.donation.pk
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(Donation.objects.filter(pk=pk).exists())
+        self.assertFalse(Donation.objects.filter(pk=pk).exists())
         self.assertContains(response, "Token refresh failed: network error")
+        self.assertContains(response, "myaccount.google.com/permissions")
 
     @patch('donations.models.google_portability.GoogleDonation.revoke')
     def test_revoke_post_deletes_donation_on_success(self, mock_revoke):

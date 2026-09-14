@@ -2,5 +2,16 @@
 {% block title %}Donation Revoked{% endblock %}
 {% block content %}
 <h1>Donation Revoked</h1>
-<p>Your data donation has been successfully revoked and all associated data has been deleted.</p>
+<p>Your data donation has been revoked and all associated data has been deleted.</p>
+{% if revoke_error %}
+<div class="alert alert-danger">
+    <strong>Access could not be revoked at the platform:</strong> {{ revoke_error }}
+    <p>Your data has still been deleted from this service, but the platform may still list this app as authorized.</p>
+    {% if source_type == 'tiktok_portability' %}
+    <p>To remove the authorization manually, open the TikTok app and go to Settings and privacy &rarr; Security &amp; permissions &rarr; Apps and websites, then remove the portability app.</p>
+    {% else %}
+    <p>To remove the authorization manually, visit <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer">myaccount.google.com/permissions</a> and remove the portability app.</p>
+    {% endif %}
+</div>
+{% endif %}
 {% endblock %}

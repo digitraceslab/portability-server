@@ -332,17 +332,21 @@ def revoke_donation(request):
     donation = _get_session_donation(request)
     if request.method == 'POST':
         audit('donation_revoked', request, donation)
+        # Local data is deleted whether or not the platform accepts the
+        # revocation; a failed platform call only leaves the grant open there.
+        revoke_error = None
         if hasattr(donation, 'revoke'):
             success, message = donation.revoke()
             if not success:
-                return render(request, 'donations/revoke_confirm.html', {
-                    'donation': donation,
-                    'error': message,
-                })
+                revoke_error = message
+        source_type = donation.source_type
         donation.delete()
         request.session.pop(SESSION_DONATION_KEY, None)
         request.session.pop(SESSION_DONATION_PK_KEY, None)
-        return render(request, 'donations/revoked.html')
+        return render(request, 'donations/revoked.html', {
+            'revoke_error': revoke_error,
+            'source_type': source_type,
+        })
     return render(request, 'donations/revoke_confirm.html', {'donation': donation})
 
 

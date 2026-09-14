@@ -261,6 +261,58 @@ class TikTokDonation(Donation):
         except KeyError:
             return False, "Invalid response from TikTok during token refresh."
 
+    def revoke(self):
+        """Revoke the TikTok grant so the next login asks for consent again.
+
+        Revoking the access token also invalidates the refresh token on
+        TikTok's side. A donation that never got a token has nothing to revoke.
+        """
+        if not self.access_token:
+            return True, "No TikTok token to revoke."
+
+        if self.token_expiry and self.token_expiry <= timezone.now() and self.refresh_token:
+            success, message = self.refresh_access_token()
+            if not success:
+                return False, message
+
+        try:
+            access_plain = crypto.decrypt_text(self.access_token)
+        except (ValueError, TypeError) as e:
+            self.processing_log += f"Failed to decrypt access_token: {e}\n"
+            self.save(update_fields=['processing_log'])
+            return False, "Failed to decrypt access token."
+
+        revoke_url = 'https://open.tiktokapis.com/v2/oauth/revoke/'
+        revoke_data = {
+            'client_key': settings.TIKTOK_CLIENT_KEY,
+            'client_secret': settings.TIKTOK_CLIENT_SECRET,
+            'token': access_plain,
+        }
+        try:
+            response = requests.post(revoke_url, data=revoke_data, timeout=self.DEFAULT_REQUEST_TIMEOUT)
+            response.raise_for_status()
+        except requests.RequestException as e:
+            error_message = f"Failed to revoke TikTok OAuth token: {e}"
+            self.processing_log += error_message + "\n"
+            self.save(update_fields=['processing_log'])
+            return False, error_message
+
+        # TikTok reports failures as a JSON body with an ``error`` key.
+        try:
+            body = response.json()
+        except ValueError:
+            body = {}
+        if isinstance(body, dict) and body.get('error'):
+            error_message = (
+                f"TikTok refused to revoke the token: "
+                f"{body.get('error_description') or body['error']}"
+            )
+            self.processing_log += error_message + "\n"
+            self.save(update_fields=['processing_log'])
+            return False, error_message
+
+        return True, "Authorization revoked successfully."
+
     def _fetch_user_info(self):
         """Fetch user info from TikTok API using the access token.
         

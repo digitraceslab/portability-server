@@ -28,3 +28,10 @@ docs/_static/
 docs/_templates/
 docs/api/
 
+
+# TikTok application mocks and personal working notes
+scripts/render_tiktok_mocks.py
+scripts/tiktok_mocks/
+tiktok_application
+tiktokapplication/
+notes/
