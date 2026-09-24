@@ -176,19 +176,24 @@ def _participant_link_url(request):
 @ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["POST"])
 def generate_participant_token(request):
-    """Link the current donation to the participant identified by the
-    donation's ``suggested_participant_token`` and stash the raw token in the
-    session for display. If the donation is already linked to a different
-    participant, this re-links it (the original participant is unaffected;
-    its other donations remain linked to it)."""
+    """Link the current donation to a freshly generated participant and stash
+    the raw token in the session for display. Only the hash is stored, so the
+    raw token exists nowhere but this session; a participant who lost theirs
+    gets a new identity here. If the donation is already linked to the
+    session's own participant, nothing changes; if it is linked to a
+    different participant, this re-links it (the original participant is
+    unaffected; its other donations remain linked to it)."""
     donation = _get_session_donation(request)
-    suggested = donation.suggested_participant_token
-    suggested_hash = hash_token(suggested)
-    if donation.participant_id is None or donation.participant.token != suggested_hash:
-        participant, _ = Participant.objects.get_or_create(token=suggested_hash)
-        donation.participant = participant
-        donation.save()
-    _set_participant_session(request, suggested)
+    raw = request.session.get(SESSION_PARTICIPANT_KEY)
+    if raw and donation.participant_id:
+        current = Participant.get_by_raw_token(raw)
+        if current is not None and donation.participant_id == current.pk:
+            return redirect('donation-landing')
+    participant = Participant()
+    participant.save()
+    donation.participant = participant
+    donation.save()
+    _set_participant_session(request, participant._raw_token)
     return redirect('donation-landing')
 
 
@@ -232,17 +237,17 @@ def donation_landing(request):
                 _set_participant_session(request, token_uuid)
                 return redirect('donation-landing')
 
-    suggested_participant_token = None
+    session_participant_token = None
     raw = request.session.get(SESSION_PARTICIPANT_KEY)
     if raw and Participant.get_by_raw_token(raw) is not None:
-        suggested_participant_token = raw
+        session_participant_token = raw
 
     return render(request, 'donations/landing.html', {
         'donation': donation,
         'donation_account_name': donation_account_name,
         'participant_link_url': _participant_link_url(request),
         'token_error': token_error,
-        'suggested_participant_token': suggested_participant_token,
+        'session_participant_token': session_participant_token,
     })
 
 
@@ -354,21 +359,17 @@ def revoke_donation(request):
 def _ensure_participant_for_donation(donation):
     """After OAuth, link a fresh participant if one isn't already attached.
 
-    Returns the raw participant token (UUID/string) for whichever participant
-    is now linked, so callers can use it to set the participant session.
+    Returns the raw participant token (UUID/string) for the newly linked
+    participant, so callers can use it to set the participant session.
     Returns ``None`` if a participant was already linked and no raw is recoverable.
     """
     if donation.participant:
         return None
-    suggested = donation.suggested_participant_token
-    participant = Participant.get_by_raw_token(suggested)
-    if participant is None:
-        participant = Participant(token=hash_token(suggested))
-        participant._raw_token = str(suggested)
-        participant.save()
+    participant = Participant()
+    participant.save()
     donation.participant = participant
     donation.save(update_fields=['participant'])
-    return str(suggested)
+    return participant._raw_token
 
 
 def _queue_processing_after_callback(donation):
