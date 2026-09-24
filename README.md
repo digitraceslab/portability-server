@@ -597,71 +597,40 @@ deleted and what is due within `RETENTION_WARNING_DAYS`.
 
 The encryption key that wraps Parquet data keys and OAuth tokens should not
 sit on the application host. In production it is held by an
-[OpenBao](https://openbao.org/) transit engine running on a separate,
-university-managed host; the application only ever holds short-lived AppRole
+[OpenBao](https://openbao.org/) transit engine running on a separate
+host; the application only ever holds short-lived AppRole
 credentials, delivered as root-only files by systemd.
 
-**1. Set up the vault host.** Use a separate VM (e.g. an Aalto VM) with
-inbound access denied to everything except TCP 8200 from the application
-host.
+**1. Set up the vault host.** Use a separate host. The design assumes the
+hosting environment does not expose the vault beyond the network the
+client applications live on; network policy is the hosting environment's
+responsibility, not this project's. Install and configure OpenBao
+following the [official documentation](https://openbao.org/docs/)
+(installation, [server configuration](https://openbao.org/docs/configuration/),
+initialization and unsealing) rather than any copied command listing —
+the details change between OpenBao versions. The decisions made for this
+deployment, on top of the standard single-node setup:
 
-```bash
-# Install OpenBao (verify the checksum against the release page)
-curl -LO https://github.com/openbao/openbao/releases/download/<version>/bao_<version>_linux_amd64.deb
-sha256sum bao_<version>_linux_amd64.deb   # compare against the published checksum
-sudo dpkg -i bao_<version>_linux_amd64.deb
-```
-
-`/etc/openbao/openbao.hcl`:
-
-```hcl
-listener "tcp" {
-  address       = "0.0.0.0:8200"
-  tls_cert_file = "/etc/openbao/tls/cert.pem"
-  tls_key_file  = "/etc/openbao/tls/key.pem"
-}
-
-storage "file" {
-  path = "/var/lib/openbao"
-}
-
-disable_mlock = false  # the openbao unit needs CAP_IPC_LOCK
-```
-
-Initialize with a single key share, since this is not a multi-operator
-setup:
-
-```bash
-bao operator init -key-shares=1 -key-threshold=1
-```
-
-Store the unseal key at `/etc/openbao/unseal.key`, root-owned, mode 0400, and
-the root token in the university password manager. OpenBao seals itself on
-every restart, so auto-unseal it with a small systemd unit:
-
-```ini
-# /etc/systemd/system/openbao-unseal.service
-[Unit]
-Description=Unseal OpenBao
-After=openbao.service
-
-[Service]
-Type=oneshot
-Environment=BAO_ADDR=https://127.0.0.1:8200
-Environment=BAO_CACERT=/etc/openbao/tls/cert.pem
-ExecStart=/bin/sh -c 'bao operator unseal "$(cat /etc/openbao/unseal.key)"'
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable it with `systemctl enable openbao-unseal.service` so it runs on every
-boot after the vault itself.
-
-This is a file-based unseal: whoever can read the vault host's disk or its
-backups holds the unseal key. There is no TPM available on this host to do
-better, so the vault host's isolation (no inbound access beyond the transit
-port) is what actually protects the key.
+- Integrated raft storage, one node; `api_addr`/`cluster_addr` carry the
+  vault's FQDN.
+- The TLS listener serves a publicly trusted certificate issued for the
+  vault's hostname, installed as copies the `openbao` user can read.
+  After a certificate renewal OpenBao must be **reloaded, not
+  restarted** — it reads certificates only at startup, and a restart
+  seals the vault.
+- Initialized with a single key share
+  (`bao operator init -key-shares=1 -key-threshold=1`), since this is
+  not a multi-operator setup. The unseal key lives at
+  `/etc/openbao/unseal.key` (root-owned, mode 0400) and is applied by a
+  small oneshot unit `openbao-unseal.service` installed with
+  `WantedBy=openbao.service`, so the vault unseals automatically after
+  every start, not just at boot. The unseal key and root token are also
+  kept in a password manager the operators control.
+- This is a file-based unseal: whoever can read the vault host's disk or
+  its backups holds the unseal key, and no TPM is available to do
+  better. Host isolation and access controls are what protect it; keep
+  the service from swapping key material to disk (`MemorySwapMax=0` in
+  the systemd unit, which the packaged unit sets).
 
 **2. Configure the transit engine and an AppRole for the application.**
 
@@ -787,7 +756,7 @@ lockout with `python manage.py axes_reset_username <username>`.
 | `RETENTION_WARNING_DAYS` | Unflagged donations expiring within this many days are named in the daily mail (default 2) | |
 | `RESEARCHER_SESSION_LIFETIME_SECONDS` | How long a researcher API session lasts, capped at the researcher token's own expiry (default 43200, 12 hours) | |
 | `SESSION_COOKIE_AGE` | Maximum lifetime of a browser session (participant pages and admin) in seconds; sessions also end when the browser closes (default 14400, 4 hours) | |
-| `EMAIL_FROM` | Sender for administrator mail; must be an `aalto.fi` address | `portability@aalto.fi` |
+| `EMAIL_FROM` | Sender for administrator mail; must be an address the local mail setup is allowed to send as | `portability@example.org` |
 | `ADMIN_EMAILS` | Comma-separated recipients of the daily retention mail | |
 
 ## Testing
