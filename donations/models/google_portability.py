@@ -2,7 +2,7 @@
 import os
 import secrets
 from datetime import timedelta
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 import pandas as pd
 import requests
@@ -503,8 +503,14 @@ class GoogleDonation(ArchiveDonationMixin, Donation):
                 download_urls = status_data.get('urls', [])
                 for i, url in enumerate(download_urls):
                     if not is_allowed_google_download_url(url):
+                        # Only the hostname: these URLs carry signed
+                        # query-string credentials that must not persist.
+                        try:
+                            host = urlsplit(url).hostname or "(unparseable)"
+                        except ValueError:
+                            host = "(unparseable)"
                         self.processing_log += (
-                            f"Refused archive download from unexpected host: {url}\n"
+                            f"Refused archive download from unexpected host: {host}\n"
                         )
                         continue
                     # The timeout below is per socket operation (connect/read),
