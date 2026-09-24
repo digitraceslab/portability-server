@@ -1,0 +1,7 @@
+donations.management.commands.regenerate\_token module
+======================================================
+
+.. automodule:: donations.management.commands.regenerate_token
+   :members:
+   :show-inheritance:
+   :undoc-members:

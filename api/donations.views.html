@@ -127,11 +127,13 @@ credential.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="donations.views.generate_participant_token">
 <span class="sig-prename descclassname"><span class="pre">donations.views.</span></span><span class="sig-name descname"><span class="pre">generate_participant_token</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/donations/views.html#generate_participant_token"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#donations.views.generate_participant_token" title="Link to this definition"></a></dt>
-<dd><p>Link the current donation to the participant identified by the
-donation’s <code class="docutils literal notranslate"><span class="pre">suggested_participant_token</span></code> and stash the raw token in the
-session for display. If the donation is already linked to a different
-participant, this re-links it (the original participant is unaffected;
-its other donations remain linked to it).</p>
+<dd><p>Link the current donation to a freshly generated participant and stash
+the raw token in the session for display. Only the hash is stored, so the
+raw token exists nowhere but this session; a participant who lost theirs
+gets a new identity here. If the donation is already linked to the
+session’s own participant, nothing changes; if it is linked to a
+different participant, this re-links it (the original participant is
+unaffected; its other donations remain linked to it).</p>
 </dd></dl>
 
 <dl class="py function">

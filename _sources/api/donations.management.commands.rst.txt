@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    donations.management.commands.create_researcher_token
+   donations.management.commands.regenerate_token
 
 Module contents
 ---------------

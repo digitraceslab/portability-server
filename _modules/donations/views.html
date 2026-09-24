@@ -77,10 +77,11 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.core.paginator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Paginator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Http404</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">Http404</span><span class="p">,</span> <span class="n">HttpResponseBadRequest</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.shortcuts</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_object_or_404</span><span class="p">,</span> <span class="n">redirect</span><span class="p">,</span> <span class="n">render</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.urls</span><span class="w"> </span><span class="kn">import</span> <span class="n">reverse</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">timezone</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">django.utils.dateparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">parse_date</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django.views.decorators.http</span><span class="w"> </span><span class="kn">import</span> <span class="n">require_http_methods</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">django_ratelimit.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">ratelimit</span>
 
@@ -218,6 +219,7 @@
 
 <div class="viewcode-block" id="logout_participant">
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.logout_participant">[docs]</a>
+<span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;30/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">logout_participant</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Clear every participant and donation credential from the session.</span>
@@ -261,19 +263,24 @@
 <span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;30/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">generate_participant_token</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Link the current donation to the participant identified by the</span>
-<span class="sd">    donation&#39;s ``suggested_participant_token`` and stash the raw token in the</span>
-<span class="sd">    session for display. If the donation is already linked to a different</span>
-<span class="sd">    participant, this re-links it (the original participant is unaffected;</span>
-<span class="sd">    its other donations remain linked to it).&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Link the current donation to a freshly generated participant and stash</span>
+<span class="sd">    the raw token in the session for display. Only the hash is stored, so the</span>
+<span class="sd">    raw token exists nowhere but this session; a participant who lost theirs</span>
+<span class="sd">    gets a new identity here. If the donation is already linked to the</span>
+<span class="sd">    session&#39;s own participant, nothing changes; if it is linked to a</span>
+<span class="sd">    different participant, this re-links it (the original participant is</span>
+<span class="sd">    unaffected; its other donations remain linked to it).&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
-    <span class="n">suggested</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span>
-    <span class="n">suggested_hash</span> <span class="o">=</span> <span class="n">hash_token</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="o">.</span><span class="n">token</span> <span class="o">!=</span> <span class="n">suggested_hash</span><span class="p">:</span>
-        <span class="n">participant</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">objects</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">suggested_hash</span><span class="p">)</span>
-        <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
-        <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-    <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">suggested</span><span class="p">)</span>
+    <span class="n">raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">raw</span> <span class="ow">and</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span><span class="p">:</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant_id</span> <span class="o">==</span> <span class="n">current</span><span class="o">.</span><span class="n">pk</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="p">()</span>
+    <span class="n">participant</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
+    <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">participant</span><span class="o">.</span><span class="n">_raw_token</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span></div>
 
 
@@ -320,17 +327,17 @@
                 <span class="n">_set_participant_session</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="n">token_uuid</span><span class="p">)</span>
                 <span class="k">return</span> <span class="n">redirect</span><span class="p">(</span><span class="s1">&#39;donation-landing&#39;</span><span class="p">)</span>
 
-    <span class="n">suggested_participant_token</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">session_participant_token</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">raw</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">SESSION_PARTICIPANT_KEY</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">raw</span> <span class="ow">and</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">suggested_participant_token</span> <span class="o">=</span> <span class="n">raw</span>
+        <span class="n">session_participant_token</span> <span class="o">=</span> <span class="n">raw</span>
 
     <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;donations/landing.html&#39;</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;donation&#39;</span><span class="p">:</span> <span class="n">donation</span><span class="p">,</span>
         <span class="s1">&#39;donation_account_name&#39;</span><span class="p">:</span> <span class="n">donation_account_name</span><span class="p">,</span>
         <span class="s1">&#39;participant_link_url&#39;</span><span class="p">:</span> <span class="n">_participant_link_url</span><span class="p">(</span><span class="n">request</span><span class="p">),</span>
         <span class="s1">&#39;token_error&#39;</span><span class="p">:</span> <span class="n">token_error</span><span class="p">,</span>
-        <span class="s1">&#39;suggested_participant_token&#39;</span><span class="p">:</span> <span class="n">suggested_participant_token</span><span class="p">,</span>
+        <span class="s1">&#39;session_participant_token&#39;</span><span class="p">:</span> <span class="n">session_participant_token</span><span class="p">,</span>
     <span class="p">})</span></div>
 
 
@@ -357,6 +364,7 @@
 <div class="viewcode-block" id="authorize">
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.authorize">[docs]</a>
 <span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;30/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Redirect to OAuth URL. Requires terms accepted.&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -393,6 +401,7 @@
 <div class="viewcode-block" id="data_preview">
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.data_preview">[docs]</a>
 <span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;60/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">data_preview</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Paginated data preview with filtering.&quot;&quot;&quot;</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">_get_session_donation</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
@@ -400,8 +409,20 @@
     <span class="n">selected_type</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_type&#39;</span><span class="p">,</span> <span class="n">data_types</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">data_types</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
     <span class="n">audit</span><span class="p">(</span><span class="s1">&#39;data_preview&#39;</span><span class="p">,</span> <span class="n">request</span><span class="p">,</span> <span class="n">donation</span><span class="p">,</span> <span class="n">data_type</span><span class="o">=</span><span class="n">selected_type</span> <span class="ow">or</span> <span class="kc">None</span><span class="p">)</span>
     <span class="c1"># The form submits empty strings for unset dates; treat them as absent.</span>
-    <span class="n">start_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
-    <span class="n">end_date</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;end_date&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
+    <span class="c1"># Anything non-empty must be a valid ISO date, or the request is refused.</span>
+    <span class="n">dates</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;start_date&#39;</span><span class="p">,</span> <span class="s1">&#39;end_date&#39;</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">or</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">valid</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">valid</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">valid</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">HttpResponseBadRequest</span><span class="p">(</span><span class="s2">&quot;Invalid date filter.&quot;</span><span class="p">)</span>
+        <span class="n">dates</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="n">start_date</span> <span class="o">=</span> <span class="n">dates</span><span class="p">[</span><span class="s1">&#39;start_date&#39;</span><span class="p">]</span>
+    <span class="n">end_date</span> <span class="o">=</span> <span class="n">dates</span><span class="p">[</span><span class="s1">&#39;end_date&#39;</span><span class="p">]</span>
     <span class="n">page_number</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;page&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">selected_type</span> <span class="ow">and</span> <span class="n">selected_type</span> <span class="ow">in</span> <span class="n">data_types</span><span class="p">:</span>
@@ -458,21 +479,17 @@
 <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_participant_for_donation</span><span class="p">(</span><span class="n">donation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;After OAuth, link a fresh participant if one isn&#39;t already attached.</span>
 
-<span class="sd">    Returns the raw participant token (UUID/string) for whichever participant</span>
-<span class="sd">    is now linked, so callers can use it to set the participant session.</span>
+<span class="sd">    Returns the raw participant token (UUID/string) for the newly linked</span>
+<span class="sd">    participant, so callers can use it to set the participant session.</span>
 <span class="sd">    Returns ``None`` if a participant was already linked and no raw is recoverable.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">donation</span><span class="o">.</span><span class="n">participant</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
-    <span class="n">suggested</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">suggested_participant_token</span>
-    <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="o">.</span><span class="n">get_by_raw_token</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">participant</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="p">(</span><span class="n">token</span><span class="o">=</span><span class="n">hash_token</span><span class="p">(</span><span class="n">suggested</span><span class="p">))</span>
-        <span class="n">participant</span><span class="o">.</span><span class="n">_raw_token</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
-        <span class="n">participant</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">participant</span> <span class="o">=</span> <span class="n">Participant</span><span class="p">()</span>
+    <span class="n">participant</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">participant</span> <span class="o">=</span> <span class="n">participant</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;participant&#39;</span><span class="p">])</span>
-    <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">suggested</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">participant</span><span class="o">.</span><span class="n">_raw_token</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_queue_processing_after_callback</span><span class="p">(</span><span class="n">donation</span><span class="p">):</span>
@@ -492,6 +509,7 @@
 <div class="viewcode-block" id="google_auth_callback">
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.google_auth_callback">[docs]</a>
 <span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;30/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">google_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle Google OAuth callback via oauth_state lookup.&quot;&quot;&quot;</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
@@ -523,6 +541,7 @@
 <div class="viewcode-block" id="tiktok_auth_callback">
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.tiktok_auth_callback">[docs]</a>
 <span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;30/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">tiktok_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle TikTok OAuth callback via oauth_state lookup.&quot;&quot;&quot;</span>
     <span class="n">state</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">GET</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;state&#39;</span><span class="p">)</span>
@@ -530,8 +549,11 @@
         <span class="k">raise</span> <span class="n">Http404</span><span class="p">(</span><span class="s2">&quot;Missing state parameter&quot;</span><span class="p">)</span>
     <span class="n">donation</span> <span class="o">=</span> <span class="n">get_object_or_404</span><span class="p">(</span><span class="n">TikTokDonation</span><span class="p">,</span> <span class="n">oauth_state</span><span class="o">=</span><span class="n">state</span><span class="p">)</span>
     <span class="n">success</span><span class="p">,</span> <span class="n">message</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">handle_auth_callback</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+    <span class="c1"># Both single-use values are cleared whether or not the exchange</span>
+    <span class="c1"># succeeded; a replayed callback URL must resolve to nothing.</span>
     <span class="n">donation</span><span class="o">.</span><span class="n">oauth_state</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;oauth_state&#39;</span><span class="p">])</span>
+    <span class="n">donation</span><span class="o">.</span><span class="n">code_verifier</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">donation</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">update_fields</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;oauth_state&#39;</span><span class="p">,</span> <span class="s1">&#39;code_verifier&#39;</span><span class="p">])</span>
     <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="p">[</span><span class="n">SESSION_DONATION_PK_KEY</span><span class="p">]</span> <span class="o">=</span> <span class="n">donation</span><span class="o">.</span><span class="n">pk</span>
     <span class="k">if</span> <span class="n">success</span><span class="p">:</span>
         <span class="n">participant_raw</span> <span class="o">=</span> <span class="n">_ensure_participant_for_donation</span><span class="p">(</span><span class="n">donation</span><span class="p">)</span>
@@ -554,6 +576,7 @@
 <div class="viewcode-block" id="participant_home">
 <a class="viewcode-back" href="../../api/donations.views.html#donations.views.participant_home">[docs]</a>
 <span class="nd">@ratelimit</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s2">&quot;ip&quot;</span><span class="p">,</span> <span class="n">rate</span><span class="o">=</span><span class="s2">&quot;60/m&quot;</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nd">@require_http_methods</span><span class="p">([</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">participant_home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Show all donations for a participant.&quot;&quot;&quot;</span>
     <span class="n">participant</span> <span class="o">=</span> <span class="n">_get_session_participant</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>

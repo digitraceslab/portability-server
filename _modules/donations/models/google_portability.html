@@ -71,7 +71,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">secrets</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlencode</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlencode</span><span class="p">,</span> <span class="n">urlsplit</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">requests</span>
@@ -597,8 +597,14 @@
                 <span class="n">download_urls</span> <span class="o">=</span> <span class="n">status_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;urls&#39;</span><span class="p">,</span> <span class="p">[])</span>
                 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">url</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">download_urls</span><span class="p">):</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_allowed_google_download_url</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+                        <span class="c1"># Only the hostname: these URLs carry signed</span>
+                        <span class="c1"># query-string credentials that must not persist.</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">host</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">hostname</span> <span class="ow">or</span> <span class="s2">&quot;(unparseable)&quot;</span>
+                        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                            <span class="n">host</span> <span class="o">=</span> <span class="s2">&quot;(unparseable)&quot;</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">processing_log</span> <span class="o">+=</span> <span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;Refused archive download from unexpected host: </span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Refused archive download from unexpected host: </span><span class="si">{</span><span class="n">host</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                         <span class="p">)</span>
                         <span class="k">continue</span>
                     <span class="c1"># The timeout below is per socket operation (connect/read),</span>
