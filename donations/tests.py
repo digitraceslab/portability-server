@@ -289,7 +289,9 @@ class GoogleDonationModelTests(TestCase):
         )
         self.assertTrue(allowed_call.kwargs.get('stream'))
 
-        self.assertIn('Refused archive download from unexpected host: https://evil.com/not-allowed', gd.processing_log)
+        # Only the hostname is recorded: the full URL carries signed credentials.
+        self.assertIn('Refused archive download from unexpected host: evil.com', gd.processing_log)
+        self.assertNotIn('not-allowed', gd.processing_log)
 
     def test_fetch_data_and_count_with_encrypted_csv(self):
         gd = GoogleDonation.objects.create(
@@ -870,6 +872,13 @@ class DataPreviewViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Data Preview')
 
+    def test_data_preview_rejects_malformed_dates(self):
+        for bad in ('not-a-date', '2024-13-01', '2024-02-31'):
+            response = self.client.get(self.url, {'start_date': bad})
+            self.assertEqual(response.status_code, 400)
+            response = self.client.get(self.url, {'end_date': bad})
+            self.assertEqual(response.status_code, 400)
+
 
 class RevokeDonationViewTests(TestCase):
     """Tests for the donation revocation view."""
@@ -1100,24 +1109,35 @@ class DonationLandingParticipantTests(TestCase):
         self.assertEqual(response.status_code, 405)
 
     def test_generate_relinks_when_existing_participant_is_unrecoverable(self):
-        # Donation linked to a non-suggested participant (e.g. user previously
-        # pasted a custom token). Clicking Generate must re-link the donation
-        # to the suggested-token participant so the URL can be displayed.
+        # Donation linked to a participant whose raw token this session does
+        # not hold (e.g. the link was lost). Clicking Generate must re-link
+        # the donation to a fresh participant whose URL can be displayed.
         previous = Participant.objects.create()
         self.donation.participant = previous
         self.donation.save()
-        suggested = self.donation.suggested_participant_token
         response = self.client.post('/donate/generate-participant/')
         self.assertEqual(response.status_code, 302)
         self.donation.refresh_from_db()
-        self.assertEqual(
-            self.donation.participant.token, hash_token(suggested))
         self.assertNotEqual(self.donation.participant_id, previous.pk)
+        raw = self.client.session.get('participant_token')
+        self.assertEqual(hash_token(raw), self.donation.participant.token)
         # The previous participant still exists; only the donation moved.
         self.assertTrue(Participant.objects.filter(pk=previous.pk).exists())
         # GET shows the link.
         response = self.client.get(self.url)
-        self.assertContains(response, str(suggested))
+        self.assertContains(response, raw)
+
+    def test_generate_is_idempotent_within_a_session(self):
+        # A second click while the session still holds the raw token must
+        # keep the same participant rather than minting another one.
+        self.client.post('/donate/generate-participant/')
+        self.donation.refresh_from_db()
+        first_pk = self.donation.participant_id
+        first_raw = self.client.session.get('participant_token')
+        self.client.post('/donate/generate-participant/')
+        self.donation.refresh_from_db()
+        self.assertEqual(self.donation.participant_id, first_pk)
+        self.assertEqual(self.client.session.get('participant_token'), first_raw)
 
     @patch('donations.views.process_donation')
     @patch.object(GoogleDonation, 'handle_auth_callback', return_value=(True, ''))
@@ -1127,10 +1147,8 @@ class DonationLandingParticipantTests(TestCase):
         self.client.get('/oauth/google/callback/?state=test-state-create&code=testcode')
         self.donation.refresh_from_db()
         self.assertIsNotNone(self.donation.participant)
-        self.assertEqual(
-            self.donation.participant.token,
-            hash_token(self.donation.suggested_participant_token),
-        )
+        raw = self.client.session.get('participant_token')
+        self.assertEqual(hash_token(raw), self.donation.participant.token)
 
     @patch('donations.views.process_donation')
     @patch.object(GoogleDonation, 'handle_auth_callback', return_value=(True, ''))
@@ -1354,6 +1372,51 @@ class HashingModelTests(TestCase):
         self.assertEqual(p.token, hash_token(new_raw))
         self.assertIsNone(Participant.get_by_raw_token(old_raw))
         self.assertEqual(Participant.get_by_raw_token(new_raw), p)
+
+
+class RegenerateTokenCommandTests(TestCase):
+    """Tests for the regenerate_token management command."""
+
+    def _run(self, *args):
+        from io import StringIO
+
+        from django.core.management import call_command
+        out = StringIO()
+        call_command('regenerate_token', *args, stdout=out)
+        return out.getvalue()
+
+    def test_regenerates_researcher_token_and_deletes_sessions(self):
+        token = ResearcherToken.objects.create(name='study')
+        old_key = token.key
+        create_session(token)
+        output = self._run('researcher', str(token.pk))
+        token.refresh_from_db()
+        self.assertNotEqual(token.key, old_key)
+        self.assertEqual(token.sessions.count(), 0)
+        # The printed raw value hashes to the stored key.
+        raw = output.splitlines()[0].rsplit(': ', 1)[1]
+        self.assertEqual(ResearcherToken.hash_key(raw), token.key)
+
+    def test_regenerates_donation_token(self):
+        d = GoogleDonation.objects.create()
+        old_raw = d._raw_token
+        output = self._run('donation', str(d.pk))
+        raw = output.splitlines()[0].rsplit(': ', 1)[1]
+        self.assertIsNone(Donation.get_by_raw_token(old_raw))
+        self.assertEqual(Donation.get_by_raw_token(raw).pk, d.pk)
+
+    def test_regenerates_participant_token(self):
+        p = Participant.objects.create()
+        old_raw = p._raw_token
+        output = self._run('participant', str(p.pk))
+        raw = output.splitlines()[0].rsplit(': ', 1)[1]
+        self.assertIsNone(Participant.get_by_raw_token(old_raw))
+        self.assertEqual(Participant.get_by_raw_token(raw), p)
+
+    def test_unknown_pk_is_a_command_error(self):
+        from django.core.management import CommandError
+        with self.assertRaises(CommandError):
+            self._run('researcher', '9999')
 
 
 class TestScopeFiltering(TestCase):

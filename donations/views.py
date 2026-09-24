@@ -9,10 +9,11 @@ import logging
 import uuid
 
 from django.core.paginator import Paginator
-from django.http import Http404
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.views.decorators.http import require_http_methods
 from django_ratelimit.decorators import ratelimit
 
@@ -139,6 +140,7 @@ def select_donation(request, donation_pk):
     return redirect('donation-landing')
 
 
+@ratelimit(key="ip", rate="30/m", block=True)
 @require_http_methods(["POST"])
 def logout_participant(request):
     """Clear every participant and donation credential from the session.
@@ -268,6 +270,7 @@ def accept_terms(request):
 
 
 @ratelimit(key="ip", rate="30/m", block=True)
+@require_http_methods(["GET"])
 def authorize(request):
     """Redirect to OAuth URL. Requires terms accepted."""
     donation = _get_session_donation(request)
@@ -298,6 +301,7 @@ def upload_data(request):
 
 
 @ratelimit(key="ip", rate="60/m", block=True)
+@require_http_methods(["GET"])
 def data_preview(request):
     """Paginated data preview with filtering."""
     donation = _get_session_donation(request)
@@ -305,8 +309,20 @@ def data_preview(request):
     selected_type = request.GET.get('data_type', data_types[0] if data_types else '')
     audit('data_preview', request, donation, data_type=selected_type or None)
     # The form submits empty strings for unset dates; treat them as absent.
-    start_date = request.GET.get('start_date') or None
-    end_date = request.GET.get('end_date') or None
+    # Anything non-empty must be a valid ISO date, or the request is refused.
+    dates = {}
+    for name in ('start_date', 'end_date'):
+        value = request.GET.get(name) or None
+        if value is not None:
+            try:
+                valid = parse_date(value) is not None
+            except ValueError:
+                valid = False
+            if not valid:
+                return HttpResponseBadRequest("Invalid date filter.")
+        dates[name] = value
+    start_date = dates['start_date']
+    end_date = dates['end_date']
     page_number = request.GET.get('page', 1)
 
     if selected_type and selected_type in data_types:
@@ -387,6 +403,7 @@ def _queue_processing_after_callback(donation):
 
 
 @ratelimit(key="ip", rate="30/m", block=True)
+@require_http_methods(["GET"])
 def google_auth_callback(request):
     """Handle Google OAuth callback via oauth_state lookup."""
     state = request.GET.get('state')
@@ -415,6 +432,7 @@ def google_auth_callback(request):
 
 
 @ratelimit(key="ip", rate="30/m", block=True)
+@require_http_methods(["GET"])
 def tiktok_auth_callback(request):
     """Handle TikTok OAuth callback via oauth_state lookup."""
     state = request.GET.get('state')
@@ -422,8 +440,11 @@ def tiktok_auth_callback(request):
         raise Http404("Missing state parameter")
     donation = get_object_or_404(TikTokDonation, oauth_state=state)
     success, message = donation.handle_auth_callback(request)
+    # Both single-use values are cleared whether or not the exchange
+    # succeeded; a replayed callback URL must resolve to nothing.
     donation.oauth_state = None
-    donation.save(update_fields=['oauth_state'])
+    donation.code_verifier = ''
+    donation.save(update_fields=['oauth_state', 'code_verifier'])
     request.session[SESSION_DONATION_PK_KEY] = donation.pk
     if success:
         participant_raw = _ensure_participant_for_donation(donation)
@@ -443,6 +464,7 @@ def tiktok_auth_callback(request):
 
 
 @ratelimit(key="ip", rate="60/m", block=True)
+@require_http_methods(["GET"])
 def participant_home(request):
     """Show all donations for a participant."""
     participant = _get_session_participant(request)

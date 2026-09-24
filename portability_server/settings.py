@@ -78,7 +78,11 @@ TEMPLATES = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "donations.authentication.ResearcherTokenAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
+    ],
+    # JSON only: without this DRF also enables the browsable API, which
+    # renders HTML for browser Accept headers.
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
     ],
 }
 
@@ -114,21 +118,6 @@ SILENCED_SYSTEM_CHECKS = [
     # username is deliberate (see AXES_FAILURE_LIMIT above); per-address
     # throttling is done by the nginx rate limit instead.
     "axes.W006",
-    # OpenBao is optional. Running on a locally held key is a supported
-    # configuration and must not fail the deploy check; the install step
-    # still prints a warning banner when no vault is configured.
-    "donations.W001",
-]
-
-
-SILENCED_SYSTEM_CHECKS = [
-    # axes.W006 wants 'ip_address' in AXES_LOCKOUT_PARAMETERS. Locking by
-    # username is deliberate (see AXES_FAILURE_LIMIT above); per-address
-    # throttling is done by the nginx rate limit instead.
-    "axes.W006",
-    # TODO: remove once OpenBao is deployed. Until then the deploy check would
-    # abort every update; the local-key warning still prints at install time.
-    "donations.W001",
 ]
 
 UPLOAD_MAX_BYTES = env.int("UPLOAD_MAX_BYTES", default=59055800320)
