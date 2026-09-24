@@ -78,10 +78,10 @@ else
     missing="$(comm -23 <(_keys "$APP_DIR/.env.example") <(_keys "$APP_DIR/.env") | tr '\n' ' ')"
     extra="$(comm -13 <(_keys "$APP_DIR/.env.example") <(_keys "$APP_DIR/.env") | tr '\n' ' ')"
     if [ -n "${missing// /}" ]; then
-        note "keys in .env.example but not in .env: $missing"
+        fail "keys in .env.example but not in .env: $missing"
     fi
     if [ -n "${extra// /}" ]; then
-        note "keys in .env but not in .env.example: $extra"
+        fail "keys in .env but not in .env.example: $extra"
     fi
 fi
 

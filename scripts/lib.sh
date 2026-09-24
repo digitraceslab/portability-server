@@ -74,8 +74,8 @@ if not getattr(settings, "CSRF_TRUSTED_ORIGINS", None):
     problems.append("CSRF_TRUSTED_ORIGINS is empty")
 db_password = settings.DATABASES["default"].get("PASSWORD") or ""
 db_host = settings.DATABASES["default"].get("HOST") or ""
-if db_password == "example-123":
-    problems.append("DATABASE_URL still uses the .env.example password")
+if db_password in ("password", "example-123"):
+    problems.append("DATABASE_URL still uses a documented example password")
 elif db_host and len(db_password) < 12:
     problems.append("DATABASE_URL password is shorter than 12 characters")
 if problems:
